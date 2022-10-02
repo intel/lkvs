@@ -1,0 +1,9 @@
+quick_test
+shstk_alloc
+shstk_huge_page
+test_shadow_stack
+wrss
+umip_exceptions_32
+umip_exceptions_64
+umip_utils_32.o
+umip_utils_64.o
