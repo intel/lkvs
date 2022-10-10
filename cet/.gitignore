@@ -1,0 +1,5 @@
+quick_test
+shstk_alloc
+shstk_huge_page
+test_shadow_stack
+wrss
