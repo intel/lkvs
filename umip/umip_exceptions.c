@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * umip_exceptions.c
- * Contributors:
+ * Author: Ricardo Neri Calderon <ricardo.neri-calderon@linux.intel.com>
  *      Neri, Ricardo <ricardo.neri@intel.com>
  *      - Tested sgdt, sidt, sldt, smsw and str instructions
  *      - test UMIP emulation code when a page fault should be
@@ -10,7 +10,7 @@
  *      - maperr_pf
  *      - lock_prefix
  *      - register_operand
- *      Pengfei, Xu <pengfei.xu@intel.com>
+ * Contributor: Pengfei Xu <pengfei.xu@intel.com>
  *      - Add parameter for each instruction test and unify the code style
  *      - Some formatting improvements
  */
