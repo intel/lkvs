@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Contributors:
- *      Neri, Ricardo <ricardo.neri@intel.com>
+ * Author: Ricardo Neri Calderon <ricardo.neri-calderon@linux.intel.com>
  *      - Use: assistant for Intel User-Mode Execution Prevention
  *      - 0 no exit on signal
  *      - 1 receiving a signal means the test failed
  *      - 2 receiving a signal means the test passed
- *      Pengfei, Xu <pengfei.xu@intel.com>
+ * Contributor: Pengfei Xu <pengfei.xu@intel.com>
  *      - Some formatting improvements
  *      - A kernel bug was found and now fixed, it caused umip test to go into
  *        an infinite loop, so add 1000 loop checks to avoid the infinite loop
