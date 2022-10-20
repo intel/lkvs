@@ -130,7 +130,7 @@ static int create_huge_page_ssp(void)
 	asm("movq %%rbx,%0" : "=r"(asm_ssp));
 	asm("movq %%rbp,%0" : "=r"(bp));
 
-	printf("[INFO]\trstorssp, print origin_ssp:%p(%lx) new_ssp:%lx(%lx)\n",
+	printf("[INFO]\trstorssp, print origin_ssp:%lx(%lx) new_ssp:%lx(%lx)\n",
 	       ssp_origin, *(unsigned long *)ssp_origin, new_ssp,
 	       *(unsigned long *)new_ssp);
 	printf("[INFO]\tAfter rstorssp and print twice, new ssp:%lx(%lx)\n",
