@@ -212,7 +212,7 @@ static void violate_ss(void)
 	saved_ssp = get_ssp();
 	saved_ssp_val = *(unsigned long *)saved_ssp;
 
-	printf("[INFO]\tsaved_ssp:%x, saved_ssp_val:%x\n", saved_ssp,
+	printf("[INFO]\tsaved_ssp:%lx, saved_ssp_val:%lx\n", saved_ssp,
 	       saved_ssp_val);
 	/* Corrupt shadow stack */
 	printf("[INFO]\tCorrupting shadow stack content to 0\n");
