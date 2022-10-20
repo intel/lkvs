@@ -126,7 +126,7 @@ static void *sigill_receive_expected(int signum, siginfo_t *info,
 		printf("[FAIL]\tError creating shadow stack: %d\n", errno);
 		exit(1);
 	}
-	printf("[INFO]\tWill write shstk from addr:%p, content:0x%x\n", shstk,
+	printf("[INFO]\tWill write shstk from addr:%p, content:0x%lx\n", shstk,
 	       *shstk);
 
 	printf("[INFO]\tEnabled write permit for SHSTK\n");
@@ -146,7 +146,7 @@ static void *sigill_receive_expected(int signum, siginfo_t *info,
 		printf("[FAIL]\twrss failed to write\n");
 		exit(1);
 	}
-	printf("[PASS]\twrss write succeded in addr:%p, content:%x\n", shstk,
+	printf("[PASS]\twrss write succeded in addr:%p, content:%lx\n", shstk,
 	       *shstk);
 
 	clearhandler(SIGILL);
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 
 	sethandler(SIGILL, sigill_receive_expected, 0);
 	current_shstk = (unsigned long *)_get_ssp();
-	printf("[INFO]\tSHSTK addr:%p,content:0x%x, illegal to change to 1.\n",
+	printf("[INFO]\tSHSTK addr:%p,content:0x%lx, illegal to change to 1.\n",
 		current_shstk, *current_shstk);
 	write_shstk(current_shstk, 1);
 	clearhandler(SIGILL);
