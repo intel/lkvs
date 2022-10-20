@@ -363,10 +363,9 @@ int main(int argc, char *argv[])
 	} else {
 		ret = sscanf(argv[1], "%c", &parm);
 		if (ret != 1) {
-			printf("argv[2]:%c is not a char value.\n", argv[2]);
+			printf("Get argv[1]:%s failed.\n", argv[1]);
 			return 2;
 		}
-		sscanf(argv[1], "%c", &parm);
 		pr_info("Only get 1st parameter: parm=%c\n", parm);
 	}
 
