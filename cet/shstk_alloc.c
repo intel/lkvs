@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (c) 2022 Intel Corporation.
+
 // SPDX-License-Identifier: GPL-2.0
 /*
  * shstk_alloc.c - allocate a new shadow stack buffer aligenment by instructions
