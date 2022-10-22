@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: GPL-2.0
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (c) 2022 Intel Corporation.
+
 /*
  * xstate.c - tests XSAVE feature with fork and signal handling.
  *

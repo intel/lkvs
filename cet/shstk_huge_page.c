@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
+// Copyright (c) 2022 Intel Corporation.
+
 /* shstk_huge_page.c - allocate a 4M shadow stack buffer and works well. */
 
 #include <stdio.h>

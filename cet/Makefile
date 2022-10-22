@@ -1,4 +1,6 @@
-# SPDX-License-Identifier: GPL-2.0
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (c) 2022 Intel Corporation.
+
 CETFLAGS := -O0 -fcf-protection=full -mshstk -fno-stack-check -fno-stack-protector -no-pie
 SHSTKFLAGS := -O0 -mshstk -fcf-protection=return -fno-stack-check -fno-stack-protector -no-pie
 NOCETFLAGS := -O0 -fcf-protection=none -mshstk -fno-stack-check -fno-stack-protector -no-pie

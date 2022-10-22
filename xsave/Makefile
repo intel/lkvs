@@ -1,4 +1,6 @@
-# SPDX-License-Identifier: GPL-2.0
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (c) 2022 Intel Corporation.
+
 BIN := xstate_64
 
 CFLAGS += -O2 -g -std=gnu99 -pthread -Wall -no-pie

@@ -1,4 +1,6 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (c) 2022 Intel Corporation.
+
 #include "../common/kselftest.h"
 
 #define XSTATE_TESTBYTE		0x8f
