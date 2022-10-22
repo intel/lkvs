@@ -1,0 +1,17 @@
+FROM ubuntu:22.04
+
+ENV http_proxy=http://child-prc.intel.com:913
+ENV https_proxy=http://child-prc.intel.com:913
+
+RUN dpkg --add-architecture i386
+RUN dpkg --print-foreign-architectures
+RUN \
+	apt-get update && \
+	apt-get install gcc-11=11.2.0-19ubuntu1 make=4.3-4.1build1 libelf1  gcc-multilib g++-multilib -y --no-install-recommends && \
+	apt-get clean && \
+	rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /src
+WORKDIR /src
+
+CMD ["sh"]
