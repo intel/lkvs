@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: GPL-2.0
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (c) 2022 Intel Corporation.
+
 /*
  * wrss.c: enable writable shadow stack and write value into shadow stack.
  *

@@ -1,4 +1,6 @@
-# SPDX-License-Identifier: GPL-2.0
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (c) 2022 Intel Corporation.
+
 BIN := umip_exceptions_64 umip_exceptions_32
 
 all: $(BIN)
