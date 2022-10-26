@@ -2,3 +2,4 @@
 	url = https://github.com/intel/state-components-validation-utilities.git
 	path = state-components-validation-utilities
 	active = true
+	branch = main
