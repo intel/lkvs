@@ -32,7 +32,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <fcntl.h>
+#include <fcntl.h>	// for open
+#include <unistd.h>	// for close
 #include <sys/mman.h>
 #include <string.h>
 #include <stdint.h>
@@ -64,7 +65,7 @@ static int set_policy(int fd, const char *policy)
 
 	id->size = size;
 	id->width = 64;
-	strncpy(id->id, policy, sizeof(id->id));
+	memcpy(id->id, policy, sizeof(id->id));
 	fprintf(stdout, "start to ioctl with STP_POLICY_ID_SET\n");
 	ret = ioctl(fd, STP_POLICY_ID_SET, id);
 	fprintf(stderr, "ioctl result : %d\n", ret);
@@ -86,7 +87,7 @@ static int get_policy(int fd, const char *policy)
 
 	id->size = size;
 	id->width = 64;
-	strncpy(id->id, policy, sizeof(id->id));
+	memcpy(id->id, policy, sizeof(id->id));
 	fprintf(stdout, "start to ioctl with STP_POLICY_ID_SET\n");
 	ret = ioctl(fd, STP_POLICY_ID_GET, id);
 	fprintf(stderr, "ioctl result : %d\n", ret);
@@ -113,7 +114,6 @@ int get_policy_test() {
 	char *dev = "/dev/0-sth";
 	char *policy_name = "th_test";
 	int fd = -1, ret;
-	struct intel_th_channel *base;
 	fprintf(stdout, "start to open device %s\n", dev);
 	fd = open(dev, O_RDWR | O_SYNC);
 	if (fd < 0)
