@@ -1,17 +1,14 @@
-// SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2022 Intel Corporation.
-
+// SPDX-License-Identifier: GPL-2.0
 /*
- * Author: Edgecombe, Rick P <rick.p.edgecombe@intel.com>
+ * Author: Edgecombe Rick <rick.p.edgecombe@intel.com>
  *
  * The purpose is to facilitate CET verification for customers.
  *
  * Yu, Yu-cheng <yu-cheng.yu@intel.com> provided some initial hints.
  * It's from kernel self-tests, will keep this code consistent with the latest
  * kernel self-test code in the future.
- *
- * This program tests basic kernel shadow stack support. It enables shadow
- * stack manually via the arch_prctl(), instead of relying on glibc. It's
+ * This program test's basic kernel shadow stack support. It enables shadow
+ * stack manual via the arch_prctl(), instead of relying on glibc. It's
  * Makefile doesn't compile with shadow stack support, so it doesn't rely on
  * any particular glibc. As a result it can't do any operations that require
  * special glibc shadow stack support (longjmp(), swapcontext(), etc). Just
@@ -21,8 +18,10 @@
 #define _GNU_SOURCE
 
 #include <sys/syscall.h>
+#include <asm/mman.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -35,57 +34,44 @@
 #include <sys/prctl.h>
 #include <stdint.h>
 #include <signal.h>
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
+#include <pthread.h>
+#include <sys/ioctl.h>
+#include <linux/userfaultfd.h>
 
 #define SS_SIZE 0x200000
 
 /* It's from arch/x86/include/uapi/asm/mman.h file. */
-#define SHADOW_STACK_SET_TOKEN	0x1
+#define SHADOW_STACK_SET_TOKEN	(1ULL << 0)
 /* It's from arch/x86/include/uapi/asm/prctl.h file. */
-#define ARCH_CET_ENABLE		0x4001
-#define ARCH_CET_DISABLE	0x4002
-#define CET_SHSTK		0x1
-#define CET_WRSS		0x2
+#define ARCH_CET_ENABLE		0x5001
+#define ARCH_CET_DISABLE	0x5002
+#define ARCH_CET_LOCK		0x5003
+#define ARCH_CET_UNLOCK		0x5004
+#define CET_SHSTK		(1ULL <<  0)
+#define CET_WRSS		(1ULL <<  1)
 /* It's from arch/x86/entry/syscalls/syscall_64.tbl file. */
 #define __NR_map_shadow_stack	451
 
-static unsigned long saved_ssp;
-static unsigned long saved_ssp_val;
-static bool segv_triggered;
-
-#ifdef __i386__
-#define get_ssp() \
-({								\
-	long _ret;						\
-	asm volatile("xor %0, %0; rdsspd %0" : "=r" (_ret));	\
-	_ret;							\
-})
-#else
-#define get_ssp() \
-({								\
-	long _ret;						\
-	asm volatile("xor %0, %0; rdsspq %0" : "=r" (_ret));	\
-	_ret;							\
-})
-#endif
-
 #if (__GNUC__ < 8) || (__GNUC__ == 8 && __GNUC_MINOR__ < 5)
-int main(void)
+int main(int argc, char *argv[])
 {
 	printf("[SKIP]\tCompiler does not support CET.\n");
 	return 0;
 }
 #else
-
-static void write_shstk(unsigned long *addr, unsigned long val)
+void write_shstk(unsigned long *addr, unsigned long val)
 {
-#ifdef __i386__
-	asm volatile("wrssd %[val], (%[addr])\n" :: [addr] "r" (addr), [val] "r" (val));
-#else
-	asm volatile("1: wrssq %[val], (%[addr])\n" :: [addr] "r" (addr), [val] "r" (val));
-#endif
+	asm volatile("wrssq %[val], (%[addr])\n"
+		     : "=m" (addr)
+		     : [addr] "r" (addr), [val] "r" (val));
+}
+
+static inline unsigned long __attribute__((always_inline)) get_ssp(void)
+{
+	unsigned long ret = 0;
+
+	asm volatile("xor %0, %0; rdsspq %0" : "=r" (ret));
+	return ret;
 }
 
 /*
@@ -115,56 +101,48 @@ static void write_shstk(unsigned long *addr, unsigned long val)
 	_ret;							\
 })
 
-static void *create_shstk(unsigned long addr)
+void *create_shstk(void *addr)
 {
-	return (void *)syscall(__NR_map_shadow_stack, addr, SS_SIZE,
-			       SHADOW_STACK_SET_TOKEN);
+	return (void *)syscall(__NR_map_shadow_stack, addr, SS_SIZE, SHADOW_STACK_SET_TOKEN);
 }
 
-static void free_shstk(void *shstk)
+void *create_normal_mem(void *addr)
+{
+	return mmap(addr, SS_SIZE, PROT_READ | PROT_WRITE,
+		    MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+}
+
+void free_shstk(void *shstk)
 {
 	munmap(shstk, SS_SIZE);
 }
 
-static int reset_shstk(void *shstk)
+int reset_shstk(void *shstk)
 {
 	return madvise(shstk, SS_SIZE, MADV_DONTNEED);
 }
 
-static void try_shstk(unsigned long new_ssp)
+void try_shstk(unsigned long new_ssp)
 {
-	unsigned long ssp0, ssp1;
+	unsigned long ssp;
 
-	ssp0 = get_ssp();
-	printf("[INFO]\tChange ssp from ssp0:%lx(*ssp0:%lx) to new ssp:%lx\n",
-	       ssp0, *(unsigned long *)ssp0, *((unsigned long *)new_ssp));
+	printf("[INFO]\tnew_ssp = %lx, *new_ssp = %lx\n",
+		new_ssp, *((unsigned long *)new_ssp));
 
-	/* Make sure ssp address is aligned to 8 bytes */
-	if ((ssp0 & 0xf) != 0)
-		ssp0 = (unsigned long)(ssp0 & -8);
+	ssp = get_ssp();
+	printf("[INFO]\tchanging ssp from %lx to %lx, old *ssp:%lx\n", ssp, new_ssp, *(unsigned long *)ssp);
 
 	asm volatile("rstorssp (%0)\n":: "r" (new_ssp));
 	asm volatile("saveprevssp");
-	ssp1 = get_ssp();
-	printf("[INFO]\tssp is now %lx\n", ssp1);
+	printf("[INFO]\tssp is now %lx\n", get_ssp());
 
-	/*
-	 * Switch back to original shadow stack, it saves the previous ssp
-	 * address to origin ssp - 8bytes addr, and *(ssp - 8bytes) is the ssp
-	 * address, and rstorssp will save the ssp content into ssp address.
-	 */
-	ssp0 -= 8;
-	printf("[INFO]\tssp0-8, ssp0:%lx, *ssp0:%lx, *(ssp0 + 1):%lx.\n",
-	       ssp0, *(unsigned long *)ssp0, *((unsigned long *)ssp0 + 1));
-	asm volatile("rstorssp (%0)\n":: "r" (ssp0));
-	printf("[INFO]\trstorssp ssp0:%lx, *ssp0:%lx, *(ssp0 + 1):%lx\n",
-	       ssp0, *(unsigned long *)ssp0, *((unsigned long *)ssp0 + 1));
+	/* Switch back to original shadow stack */
+	ssp -= 8;
+	asm volatile("rstorssp (%0)\n":: "r" (ssp));
 	asm volatile("saveprevssp");
-	printf("[INFO]\tsaveprevssp ssp0:%lx, *ssp0:%lx, *(ssp0 + 1):%lx\n",
-	       ssp0, *(unsigned long *)ssp0, *((unsigned long *)ssp0 + 1));
 }
 
-static int test_shstk_pivot(void)
+int test_shstk_pivot(void)
 {
 	void *shstk = create_shstk(0);
 
@@ -179,15 +157,13 @@ static int test_shstk_pivot(void)
 	return 0;
 }
 
-static int test_shstk_faults(void)
+int test_shstk_faults(void)
 {
 	unsigned long *shstk = create_shstk(0);
 
 	/* Read shadow stack, test if it's zero to not get read optimized out */
-	if (*shstk != 0) {
-		printf("[FAIL]\tCreate shstk failed with non-zero buf.\n");
+	if (*shstk != 0)
 		goto err;
-	}
 
 	/* Wrss memory that was already read. */
 	write_shstk(shstk, 1);
@@ -202,26 +178,28 @@ static int test_shstk_faults(void)
 	if (*shstk != 1)
 		goto err;
 
-	printf("[OK]\tCreate SHSTK buf and wrss with 0 fault value\n");
+	printf("[OK]\tShadow stack faults\n");
 	return 0;
 
 err:
 	return 1;
 }
 
-static void violate_ss(void)
+unsigned long saved_ssp;
+unsigned long saved_ssp_val;
+volatile bool segv_triggered;
+
+void __attribute__((noinline)) violate_ss(void)
 {
 	saved_ssp = get_ssp();
 	saved_ssp_val = *(unsigned long *)saved_ssp;
 
-	printf("[INFO]\tsaved_ssp:%lx, saved_ssp_val:%lx\n", saved_ssp,
-	       saved_ssp_val);
 	/* Corrupt shadow stack */
-	printf("[INFO]\tCorrupting shadow stack content to 0\n");
+	printf("[INFO]\tCorrupting shadow stack\n");
 	write_shstk((void *)saved_ssp, 0);
 }
 
-static void segv_handler(int signum, siginfo_t *si, void *uc)
+void segv_handler(int signum, siginfo_t *si, void *uc)
 {
 	printf("[INFO]\tGenerated shadow stack violation successfully\n");
 
@@ -231,7 +209,7 @@ static void segv_handler(int signum, siginfo_t *si, void *uc)
 	write_shstk((void *)saved_ssp, saved_ssp_val);
 }
 
-static int test_shstk_violation(void)
+int test_shstk_violation(void)
 {
 	struct sigaction sa;
 
@@ -239,6 +217,7 @@ static int test_shstk_violation(void)
 	if (sigaction(SIGSEGV, &sa, NULL))
 		return 1;
 	sa.sa_flags = SA_SIGINFO;
+
 	segv_triggered = false;
 
 	/* Make sure segv_triggered is set before violate_ss() */
@@ -253,12 +232,294 @@ static int test_shstk_violation(void)
 	return !segv_triggered;
 }
 
-int main(void)
+/* Gup test state */
+#define MAGIC_VAL 0x12345678
+bool is_shstk_access;
+void *shstk_ptr;
+int fd;
+
+void reset_test_shstk(void *addr)
+{
+	if (shstk_ptr != NULL)
+		free_shstk(shstk_ptr);
+	shstk_ptr = create_shstk(addr);
+}
+
+void test_access_fix_handler(int signum, siginfo_t *si, void *uc)
+{
+	printf("[INFO]\tViolation from %s\n", is_shstk_access ? "shstk access" : "normal write");
+
+	segv_triggered = true;
+
+	/* Fix shadow stack */
+	if (is_shstk_access) {
+		reset_test_shstk(shstk_ptr);
+		return;
+	}
+
+	free_shstk(shstk_ptr);
+	create_normal_mem(shstk_ptr);
+}
+
+bool test_shstk_access(void *ptr)
+{
+	is_shstk_access = true;
+	segv_triggered = false;
+	write_shstk(ptr, MAGIC_VAL);
+
+	asm volatile("" : : : "memory");
+
+	return segv_triggered;
+}
+
+bool test_write_access(void *ptr)
+{
+	is_shstk_access = false;
+	segv_triggered = false;
+	*(unsigned long *)ptr = MAGIC_VAL;
+
+	asm volatile("" : : : "memory");
+
+	return segv_triggered;
+}
+
+bool gup_write(void *ptr)
+{
+	unsigned long val;
+
+	lseek(fd, (unsigned long)ptr, SEEK_SET);
+	if (write(fd, &val, sizeof(val)) < 0)
+		return 1;
+
+	return 0;
+}
+
+bool gup_read(void *ptr)
+{
+	unsigned long val;
+
+	lseek(fd, (unsigned long)ptr, SEEK_SET);
+	if (read(fd, &val, sizeof(val)) < 0)
+		return 1;
+
+	return 0;
+}
+
+int test_gup(void)
+{
+	struct sigaction sa;
+	int status;
+	pid_t pid;
+
+	sa.sa_sigaction = test_access_fix_handler;
+	if (sigaction(SIGSEGV, &sa, NULL))
+		return 1;
+	sa.sa_flags = SA_SIGINFO;
+
+	segv_triggered = false;
+
+	fd = open("/proc/self/mem", O_RDWR);
+	if (fd == -1)
+		return 1;
+
+	reset_test_shstk(0);
+	if (gup_read(shstk_ptr))
+		return 1;
+	if (test_shstk_access(shstk_ptr))
+		return 1;
+	printf("[INFO]\tGup read -> shstk access success\n");
+
+	reset_test_shstk(0);
+	if (gup_write(shstk_ptr))
+		return 1;
+	if (test_shstk_access(shstk_ptr))
+		return 1;
+	printf("[INFO]\tGup write -> shstk access success\n");
+
+	reset_test_shstk(0);
+	if (gup_read(shstk_ptr))
+		return 1;
+	if (!test_write_access(shstk_ptr))
+		return 1;
+	printf("[INFO]\tGup read -> write access success\n");
+
+	reset_test_shstk(0);
+	if (gup_write(shstk_ptr))
+		return 1;
+	if (!test_write_access(shstk_ptr))
+		return 1;
+	printf("[INFO]\tGup write -> write access success\n");
+
+	close(fd);
+
+	/* COW/gup test */
+	reset_test_shstk(0);
+	pid = fork();
+	if (!pid) {
+		fd = open("/proc/self/mem", O_RDWR);
+		if (fd == -1)
+			exit(1);
+
+		if (gup_write(shstk_ptr)) {
+			close(fd);
+			exit(1);
+		}
+		close(fd);
+		exit(0);
+	}
+	waitpid(pid, &status, 0);
+	if (WEXITSTATUS(status)) {
+		printf("[FAIL]\tWrite in child failed\n");
+		return 1;
+	}
+	if (*(unsigned long *)shstk_ptr == MAGIC_VAL) {
+		printf("[FAIL]\tWrite in child wrote through to shared memory\n");
+		return 1;
+	}
+
+	printf("[INFO]\tCow gup write -> write access success\n");
+
+	free_shstk(shstk_ptr);
+
+	signal(SIGSEGV, SIG_DFL);
+
+	printf("[OK]\tShadow gup test\n");
+
+	return 0;
+}
+
+int test_mprotect(void)
+{
+	struct sigaction sa;
+
+	sa.sa_sigaction = test_access_fix_handler;
+	if (sigaction(SIGSEGV, &sa, NULL))
+		return 1;
+	sa.sa_flags = SA_SIGINFO;
+
+	segv_triggered = false;
+
+	/* mprotect a shaodw stack as read only */
+	reset_test_shstk(0);
+	if (mprotect(shstk_ptr, SS_SIZE, PROT_READ) < 0) {
+		printf("[FAIL]\tmprotect(PROT_READ) failed\n");
+		return 1;
+	}
+
+	/* try to wrss it and fail */
+	if (!test_shstk_access(shstk_ptr)) {
+		printf("[FAIL]\tShadow stack access to read-only memory succeeded\n");
+		return 1;
+	}
+
+	/* then back to writable */
+	if (mprotect(shstk_ptr, SS_SIZE, PROT_WRITE | PROT_READ) < 0) {
+		printf("[FAIL]\tmprotect(PROT_WRITE) failed\n");
+		return 1;
+	}
+
+	/* then pivot to it and succeed */
+	if (test_shstk_access(shstk_ptr)) {
+		printf("[FAIL]\tShadow stack access to mprotect() writable memory failed\n");
+		return 1;
+	}
+
+	free_shstk(shstk_ptr);
+
+	signal(SIGSEGV, SIG_DFL);
+
+	printf("[OK]\tmprotect() test\n");
+
+	return 0;
+}
+
+char zero[4096];
+
+static void *uffd_thread(void *arg)
+{
+	struct uffdio_copy req;
+	int uffd = *(int *)arg;
+	struct uffd_msg msg;
+
+	if (read(uffd, &msg, sizeof(msg)) <= 0)
+		return (void *)1;
+
+	req.dst = msg.arg.pagefault.address;
+	req.src = (__u64)zero;
+	req.len = 4096;
+	req.mode = 0;
+
+	if (ioctl(uffd, UFFDIO_COPY, &req))
+		return (void *)1;
+
+	return (void *)0;
+}
+
+int test_userfaultfd(void)
+{
+	struct uffdio_register uffdio_register;
+	struct uffdio_api uffdio_api;
+	struct sigaction sa;
+	pthread_t thread;
+	void *res;
+	int uffd;
+
+	sa.sa_sigaction = test_access_fix_handler;
+	if (sigaction(SIGSEGV, &sa, NULL))
+		return 1;
+	sa.sa_flags = SA_SIGINFO;
+
+	uffd = syscall(__NR_userfaultfd, O_CLOEXEC | O_NONBLOCK);
+	if (uffd < 0) {
+		printf("[SKIP]\tUserfaultfd unavailable.\n");
+		return 0;
+	}
+
+	reset_test_shstk(0);
+
+	uffdio_api.api = UFFD_API;
+	uffdio_api.features = 0;
+	if (ioctl(uffd, UFFDIO_API, &uffdio_api))
+		goto err;
+
+	uffdio_register.range.start = (__u64)shstk_ptr;
+	uffdio_register.range.len = 4096;
+	uffdio_register.mode = UFFDIO_REGISTER_MODE_MISSING;
+	if (ioctl(uffd, UFFDIO_REGISTER, &uffdio_register))
+		goto err;
+
+	if (pthread_create(&thread, NULL, &uffd_thread, &uffd))
+		goto err;
+
+	reset_shstk(shstk_ptr);
+	test_shstk_access(shstk_ptr);
+
+	if (pthread_join(thread, &res))
+		goto err;
+
+	if (test_shstk_access(shstk_ptr))
+		goto err;
+
+	free_shstk(shstk_ptr);
+
+	signal(SIGSEGV, SIG_DFL);
+
+	if (!res)
+		printf("[OK]\tUserfaultfd test\n");
+	return !!res;
+err:
+	free_shstk(shstk_ptr);
+	close(uffd);
+	signal(SIGSEGV, SIG_DFL);
+	return 1;
+}
+
+int main(int argc, char *argv[])
 {
 	int ret = 0;
 
 	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_SHSTK)) {
-		printf("[SKIP]\tCould not enable Shadow stack.\n");
+		printf("[SKIP]\tCould not enable Shadow stack\n");
 		return 1;
 	}
 
@@ -268,38 +529,55 @@ int main(void)
 	}
 
 	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_SHSTK)) {
-		printf("[SKIP]\tCould not re-enable Shadow stack.\n");
+		printf("[SKIP]\tCould not re-enable Shadow stack\n");
 		return 1;
 	}
 
 	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_WRSS)) {
-		printf("[SKIP]\tCould not enable WRSS.\n");
+		printf("[SKIP]\tCould not enable WRSS\n");
 		ret = 1;
 		goto out;
 	}
 
-	/* Should have succeeded if here, but it's a test, so double check. */
+
+
+	/* Should have succeeded if here, but this is a test, so double check. */
 	if (!get_ssp()) {
-		printf("[FAIL]\tShadow stack disabled.\n");
+		printf("[FAIL]\tShadow stack disabled\n");
 		return 1;
 	}
 
 	if (test_shstk_pivot()) {
 		ret = 1;
-		printf("[FAIL]\tShadow stack pivot.\n");
+		printf("[FAIL]\tShadow stack pivot\n");
 		goto out;
 	}
 
 	if (test_shstk_faults()) {
 		ret = 1;
-		printf("[FAIL]\tShadow stack fault test.\n");
+		printf("[FAIL]\tShadow stack fault test\n");
 		goto out;
 	}
 
 	if (test_shstk_violation()) {
 		ret = 1;
-		printf("[FAIL]\tShadow stack violation test.\n");
+		printf("[FAIL]\tShadow stack violation test\n");
 		goto out;
+	}
+
+	if (test_gup()) {
+		ret = 1;
+		printf("[FAIL]\tShadow shadow stack gup\n");
+	}
+
+	if (test_mprotect()) {
+		ret = 1;
+		printf("[FAIL]\tShadow shadow mprotect test\n");
+	}
+
+	if (test_userfaultfd()) {
+		ret = 1;
+		printf("[FAIL]\tUserfaultfd test\n");
 	}
 
 out:
