@@ -23,7 +23,7 @@ shstk_alloc: shstk_alloc.c
 	gcc $(CETFLAGS) $^ -o $@
 
 test_shadow_stack: test_shadow_stack.c
-	gcc $(NOCETFLAGS) $^ -o $@
+	gcc -pthread $(NOCETFLAGS) $^ -o $@
 
 quick_test: quick_test.c
 	gcc $(CETFLAGS) $^ -o $@
