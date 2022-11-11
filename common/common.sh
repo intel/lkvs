@@ -25,20 +25,6 @@ root_check() {
 }
 root_check
 
-# set $LKVS_ROOT to use common shell libraries
-if [[ -z "$LKVS_ROOT" ]]; then
-    echo "LKVS_ROOT is not set!"
-    exit 1
-fi
-
-# Avoid that value of $PATH keeps growing when this file be sourced multiple times
-if [[ -z "$path_exported" ]]; then
-  NEW_PATH="${PATH}:$(find "$LKVS_ROOT" -type d -not -path '*.git*' | tr "\n" ":")"
-  NEW_PATH=${NEW_PATH%:}
-  export PATH="$NEW_PATH"
-  path_exported="1"
-fi
-
 TIME_FMT="%m%d_%H%M%S.%3N"
 
 # Print trace log.
