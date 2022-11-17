@@ -445,7 +445,7 @@ runtest() {
   eval "$* | tee -a $logfile" &
   wait $!
   code=$?
-  set -o pipefail
+  set +o pipefail
   stop=$(date +%s.%3N)
   duration=$(printf '%.3f' "$(bc <<< "$stop-$start")")
 
