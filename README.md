@@ -1,7 +1,7 @@
 # Linux Kernel Validation Suite
 
 Linux Kernel Validation Suite (LKVS) is a test suite of Linux Kernel. It's a
-developing project developed by Intel Core Linux Kernel Val Team. The gold is
+developing project developed by Intel Core Linux Kernel Val Team. The goal is
 to improve the quality of Linux Kernel code which is contributed by the Intel.
 
 So far, the initial version covers test cases for feature AMX (Advanced Matrix
