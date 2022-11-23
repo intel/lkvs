@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+###############################################################################
+# SPDX-License-Identifier: GPL-2.0-only                                       #
+# Copyright (c) 2022 Intel Corporation.                                       #
+#                                                                             #
+# Common Bash Functions                                                       #
+###############################################################################
+
+source .env
+
+usage() {
+  cat << _EOF
+Usage: ${0##*/} [-f CMDFILES] [-c CMDLINE] [-o LOGFILE]
+  -f CMDFILES   execute user defined list of tests in files separated by ','
+  -c CMDLINE    execute test case
+  -o LOGFILE    redirect output of tests to file
+
+Examples:
+  ./runtests -f cet/tests
+  ./runtests -f cet/tests -o cet_tests.log
+  ./runtests -c ./cet/quick_test -o cet_quick_test.log
+_EOF
+}
+
+err() {
+  echo -e "\n$*" >&2
+  exit 1
+}
+
+runtest() {
+  local cmdline=$1
+  local logfile=$2
+  local start
+  local stop
+  local duration
+  local code
+  local result
+
+  if [[ -n "$logfile" ]]; then
+    echo "<<<test start - '$cmdline'>>" | tee -a "$logfile"
+  else
+    echo "<<<test start - '$cmdline'>>"
+  fi
+
+  set -o pipefail
+  start=$(date +%s.%3N)
+
+  if [[ -n "$logfile" ]]; then
+    eval "$cmdline |& tee -a $logfile" &
+  else
+    eval "$cmdline" &
+  fi
+
+  wait $!
+  code=$?
+
+  stop=$(date +%s.%3N)
+  duration=$(printf '%.3f' "$(bc <<< "$stop-$start")")
+  set +o pipefail
+
+  case $code in
+    0)
+      result="pass"
+      ;;
+    2)
+      result="block"
+      ;;
+    32)
+      result="na"
+      ;;
+    *)
+      result="fail"
+      ;;
+  esac
+
+  if [[ -n "$logfile" ]]; then
+    echo -e "<<<test end, result: $result, duration: $duration>>\n" | tee -a "$logfile"
+  else
+    echo -e "<<<test end, result: $result, duration: ${duration}s>>\n"
+  fi
+}
+
+runcmdfile() {
+  local cmdfile=$1
+  local logfile=$2
+
+  while read -r line; do
+    if grep -Eq "^#.*" <<< "$line" || grep -Eq "^$" <<< "$line"; then
+      continue
+    fi
+
+    runtest "$line" "$logfile"
+  done < "$cmdfile"
+}
+
+: LOGFILE=""
+: CMDFILES=""
+: CMDLINE=""
+
+while getopts ":o:f:c:h" opt; do
+  case "$opt" in
+    o)
+      LOGFILE=$OPTARG
+      ;;
+    f)
+      CMDFILES=$OPTARG
+      ;;
+    c)
+      CMDLINE=$OPTARG
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    \?)
+      usage
+      err "Invalid option: -$OPTARG"
+      ;;
+    :)
+      usage
+      err "Option -$OPTARG requires an argument."
+      ;;
+  esac
+done
+
+if [[ -z "$CMDFILES" ]] && [[ -z "$CMDLINE" ]]; then
+  usage
+  err "no test to run!"
+fi
+
+for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
+  if [[ ! -f "$cmdfile" ]]; then
+    echo "WARNING: $cmdfile not found!"
+    continue
+  fi
+  runcmdfile "$cmdfile" "$LOGFILE"
+done
+
+if [[ -n "$CMDLINE" ]]; then
+  runtest "$CMDLINE" "$LOGFILE"
+fi
