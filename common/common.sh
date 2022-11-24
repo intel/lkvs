@@ -134,19 +134,6 @@ die() {
   exit 1
 }
 
-# Wrapper function to skip a test, accept a string
-# to explain why test is skipped. exec_teardown
-# is called before skipping the test.
-# Arguments:
-#   $1: Message to exaplain why the test is skipped
-skip_test() {
-  caller_info="${BASH_SOURCE[1]##*/}:${BASH_LINENO[0]}:${FUNCNAME[1]}()"
-  test_print_wrg "skip_test() is called by $caller_info"
-  test_print_wrg "SKIPPING TEST: $*"
-  exec_teardown
-  exit 0
-}
-
 # Wrapper function to block a test, it accepts a string
 # to explain why test should be blocked. exec_teardown
 # is called before blocking the test.
@@ -365,105 +352,44 @@ dmesg_pattern_check() {
   return 1
 }
 
-# Get the directory path of the file
-# that current code is located
+# Record last timestamp in dmesg and store the value in variable
+# LAST_DMESG_TIMESTAMP. The value is refered in function extract_case_dmesg.
+last_dmesg_timestamp() {
+  LAST_DMESG_TIMESTAMP=$(dmesg | tail -n1 | awk '{print $1}' | tr -d "[]")
+  echo "recorded dmesg timestamp: $LAST_DMESG_TIMESTAMP"
+  export LAST_DMESG_TIMESTAMP
+}
+
+# Extract dmesg generated since the recorded dmesg timestamp
 # Output:
-#   directory path
-fdirname() {
-  local index
-  local path
+#   if "-f" option is specified, the output will be path of a
+#   temporary file in which the dmesg is stored. Otherwise
+#   the output will be the dmesg content.
+extract_case_dmesg() {
+  local tempfile
+  local dmesg
 
-  index=$(( ${#BASH_SOURCE[@]} - 1 ))
-  path=${BASH_SOURCE[index]}
+  if [[ -z "$LAST_DMESG_TIMESTAMP" ]]; then
+    return
+  fi
 
-  dirname "$path"
-}
+  if [[ "$1" == "-f" ]]; then
+    tempfile=$(mktemp -p /tmp XXXXXX)
+  fi
 
-# Write log content to log file
-# Arguments:
-#   -l: log content
-#   -f: log file
-#   -n: if specified, append a newline line (empty line)
-#   -a: if specified, append the log to log file, otherwise overwrite log file
-log2file() {
-  local log
-  local logfile
-  local newline=0
-  local append=0
-  local OPTIND
+  dmesg=$(dmesg | tac | grep -m 1 "$LAST_DMESG_TIMESTAMP" -B 1000000 | tac)
+  if [[ -z "$dmesg" ]]; then
+    # dmesg of this test case is too long. Ring buffer cannot hold all of them,
+    # in this case, we capture all remained dmesg.
+    dmesg=$(dmesg)
+  fi
 
-  while getopts "l:f:na" opt; do
-    case "$opt" in
-      l)
-        log=$OPTARG
-        ;;
-      f)
-        logfile=$OPTARG
-        ;;
-      n)
-        newline=1
-        ;;
-      a)
-        append=1
-        ;;
-      \?)
-        die "Invalid option: -$OPTARG";;
-      :)
-        die "Option -$OPTARG requires an argument.";;
-    esac
-  done
-
-  if [[ "$append" == "1" ]]; then
-    echo "$log" | tee -a "$logfile"
+  if [[ -n "$tempfile" ]]; then
+    grep -v "$LAST_DMESG_TIMESTAMP" <<< "$dmesg"  > "$tempfile"
+    echo "$tempfile"
   else
-    echo "$log" | tee "$logfile"
+    grep -v "$LAST_DMESG_TIMESTAMP" <<< "$dmesg"
   fi
 
-  if [[ "$newline" == "1" ]]; then
-    echo "" | tee -a "$logfile"
-  fi
-}
-
-# Run a test. Format the output of the test and write
-# output to both *log* file and stdout.
-# Arguments:
-#   $*: cmdline of test case
-runtest() {
-  local result
-  local start
-  local stop
-  local duration
-  local code
-  local logfile
-
-  logfile="$(fdirname)/log"
-
-  log2file -f "$logfile" -l "<<<test start - $*>>>" -a
-
-  start=$(date +%s.%3N)
-  set -o pipefail
-  eval "$* | tee -a $logfile" &
-  wait $!
-  code=$?
-  set -o pipefail
-  stop=$(date +%s.%3N)
-  duration=$(printf '%.3f' "$(bc <<< "$stop-$start")")
-
-  case $code in
-    0)
-      result="[PASS]"
-      ;;
-    2)
-      result="[SKIP]"
-      ;;
-    32)
-      result="[NA]"
-      ;;
-    *)
-      result="[FAIL]"
-  esac
-
-  log2file -f "$logfile" \
-    -l "<<<test end - result: $result, cmdline: $*, duration: $duration>>>" \
-    -a -n
+  unset LAST_DMESG_TIMESTAMP
 }
