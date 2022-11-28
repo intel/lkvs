@@ -1,0 +1,9 @@
+# This file collects the CPU Core cstate cases which can run
+# on Intel® Architecture-based client platforms.
+
+powermgr_cstate_tests.sh -t verify_cstate_name
+powermgr_cstate_tests.sh -t verify_cstate_switch
+powermgr_cstate_tests.sh -t verify_client_core_c7_residency_during_runtime
+powermgr_cstate_tests.sh -t verify_client_core_c7_residency_during_s2idle
+powermgr_cstate_tests.sh -t verify_client_pkg6_by_disabling_cc8
+powermgr_cstate_tests.sh -t verify_client_pkg8_by_disabling_cc10
