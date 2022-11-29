@@ -1,0 +1,6 @@
+# This file collects the CPU Core cstate cases which can run
+# on Intel® Architecture-based server platforms.
+
+powermgr_cstate_tests.sh -t verify_cstate_name
+powermgr_cstate_tests.sh -t verify_server_all_cores_cstate6
+powermgr_cstate_tests.sh -t verify_server_core_cstate6_residency
