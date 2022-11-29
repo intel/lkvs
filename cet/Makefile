@@ -10,7 +10,7 @@ GCC_GE_8 := $(shell [ $(GCC_VER_MAJOR) -ge 8 ] && echo true)
 
 ifeq ($(GCC_GE_8),true)
 BIN := shstk_alloc test_shadow_stack quick_test wrss shstk_huge_page \
-       shstk_unlock_test
+       shstk_unlock_test shstk_cp
 
 $(info GCC major version: ${GCC_VER_MAJOR})
 else
@@ -36,6 +36,9 @@ shstk_huge_page: shstk_huge_page.c
 	gcc $(CETFLAGS) $^ -o $@
 
 shstk_unlock_test: shstk_unlock_test.c
+	gcc $(NOCETFLAGS) $^ -o $@
+
+shstk_cp: shstk_cp.c
 	gcc $(NOCETFLAGS) $^ -o $@
 
 clean:

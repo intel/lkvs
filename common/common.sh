@@ -6,6 +6,10 @@
 # Common Bash Functions                                                       #
 ###############################################################################
 
+BIN_OUTPUT=""
+BIN_DMESG=""
+BIN_RET=""
+
 # Check whether current user is root, if not, exit directly
 root_check() {
   local user=""
@@ -356,7 +360,7 @@ dmesg_pattern_check() {
 # LAST_DMESG_TIMESTAMP. The value is refered in function extract_case_dmesg.
 last_dmesg_timestamp() {
   LAST_DMESG_TIMESTAMP=$(dmesg | tail -n1 | awk '{print $1}' | tr -d "[]")
-  echo "recorded dmesg timestamp: $LAST_DMESG_TIMESTAMP"
+  test_print_trc "recorded dmesg timestamp: $LAST_DMESG_TIMESTAMP"
   export LAST_DMESG_TIMESTAMP
 }
 
@@ -392,4 +396,29 @@ extract_case_dmesg() {
   fi
 
   unset LAST_DMESG_TIMESTAMP
+}
+
+# Check specified pattern in dmesg
+# Arguments:
+#   $1: bin name
+#   $2: parm to execute the binary
+# Output:
+#   BIN_DMESG: the dmesg info of binary execution
+#   BIN_OUTPUT: the output of the binary execution
+#   BIN_RET: return value of the binary execution
+bin_output_dmesg() {
+  local bin_name=$1
+  local parm=$2
+  local dmesg_file=""
+
+  BIN_OUTPUT=""
+  BIN_RET=""
+  BIN_DMESG=""
+  last_dmesg_timestamp
+  test_print_trc "$bin_name $parm"
+  [[ -e "$bin_name" ]] || block_test "No $bin_name in lkvs, do you compile it?"
+  BIN_OUTPUT=$($bin_name $parm 2>/dev/null)
+  BIN_RET=$?
+  dmesg_file=$(extract_case_dmesg -f)
+  BIN_DMESG=$(cat $dmesg_file)
 }
