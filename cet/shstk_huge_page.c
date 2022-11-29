@@ -170,6 +170,7 @@ int main(int argc, char *argv[])
 	main_ssp = get_ssp();
 	if (!main_ssp) {
 		printf("[BLOCK]\tget ssp failed, shadow stack disabled.\n");
+		printf("[INFO]\tMaybe glibc doesn't support SHSTK!\n");
 		return 2;
 	}
 	printf("[INFO]\tpid:%d, main_ssp:%lx, *main_ssp:%lx\n",
