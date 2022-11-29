@@ -26,12 +26,12 @@
 #include <sys/prctl.h>
 
 /* It's from arch/x86/include/uapi/asm/mman.h file. */
-#define SHADOW_STACK_SET_TOKEN	0x1
+#define SHADOW_STACK_SET_TOKEN	(1ULL << 0)
 /* It's from arch/x86/include/uapi/asm/prctl.h file. */
-#define ARCH_CET_ENABLE		0x4001
-#define ARCH_CET_DISABLE	0x4002
-#define CET_SHSTK		0x1
-#define CET_WRSS		0x2
+#define ARCH_CET_ENABLE		0x5001
+#define ARCH_CET_DISABLE	0x5002
+#define CET_SHSTK		(1ULL <<  0)
+#define CET_WRSS		(1ULL <<  1)
 /* It's from arch/x86/entry/syscalls/syscall_64.tbl file. */
 #define __NR_map_shadow_stack	451
 
@@ -129,8 +129,6 @@ static void *sigill_receive_expected(int signum, siginfo_t *info,
 	printf("[INFO]\tWill write shstk from addr:%p, content:0x%lx\n", shstk,
 	       *shstk);
 
-	printf("[INFO]\tEnabled write permit for SHSTK\n");
-
 	/*
 	 * arch_prctl libc has same result as ARCH_PRCTL(),
 	 * ret = syscall(SYS_arch_prctl, ARCH_CET_ENABLE, CET_WRSS);
@@ -140,13 +138,14 @@ static void *sigill_receive_expected(int signum, siginfo_t *info,
 		ret = 1;
 		exit(ret);
 	}
-
+	printf("[PASS]\tEnabled write permit for SHSTK successfully\n");
+	printf("[INFO]\tBefore write, *shstk:%lx\n", *shstk);
 	write_shstk(shstk, 1);
-	if (shstk[0] != 1) {
+	if (*shstk != 1) {
 		printf("[FAIL]\twrss failed to write\n");
 		exit(1);
 	}
-	printf("[PASS]\twrss write succeded in addr:%p, content:%lx\n", shstk,
+	printf("[PASS]\twrss succeded write shstk addr:%p, *shstk:%lx\n", shstk,
 	       *shstk);
 
 	clearhandler(SIGILL);
@@ -159,6 +158,12 @@ int main(int argc, char *argv[])
 {
 	unsigned long *current_shstk;
 
+	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_SHSTK)) {
+		printf("[SKIP]\tCould not enable Shadow stack.\n");
+		return 1;
+	}
+	printf("[PASS]\tEnable SHSTK successfully\n");
+
 	if (!_get_ssp()) {
 		printf("[SKIP]\tSHSTK disabled, could not get shstk addr.\n");
 		return 1;
@@ -166,8 +171,8 @@ int main(int argc, char *argv[])
 
 	sethandler(SIGILL, sigill_receive_expected, 0);
 	current_shstk = (unsigned long *)_get_ssp();
-	printf("[INFO]\tSHSTK addr:%p,content:0x%lx, illegal to change to 1.\n",
-		current_shstk, *current_shstk);
+	printf("[INFO]\tSHSTK addr:%p, illegal to change to 1.\n",
+	       current_shstk);
 	write_shstk(current_shstk, 1);
 	clearhandler(SIGILL);
 
