@@ -30,7 +30,7 @@ quick_test: quick_test.c
 	gcc $(CETFLAGS) $^ -o $@
 
 wrss: wrss.c
-	gcc $(SHSTKFLAGS) $^ -o $@
+	gcc $(NOCETFLAGS) $^ -o $@
 
 shstk_huge_page: shstk_huge_page.c
 	gcc $(CETFLAGS) $^ -o $@
