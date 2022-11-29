@@ -28,6 +28,13 @@
 
 size_t shstk_size = 0x200000;
 
+#define get_ssp()						\
+({								\
+	unsigned long _ret;					\
+	asm volatile("xor %0, %0; rdsspq %0" : "=r" (_ret));	\
+	_ret;							\
+})
+
 void *create_shstk(void)
 {
 	return (void *)syscall(__NR_map_shadow_stack, 0, shstk_size,
@@ -49,7 +56,7 @@ void try_shstk(unsigned long new_ssp)
 	printf("new_ssp = %lx, *new_ssp = %lx\n",
 		new_ssp, *((unsigned long *)new_ssp));
 
-	ssp0 = _get_ssp();
+	ssp0 = get_ssp();
 	printf("changing ssp from %lx(*ssp:%lx) to %lx(%lx)\n",
 	       ssp0, *((unsigned long *)ssp0), new_ssp,
 	       *((unsigned long *)new_ssp));
@@ -61,14 +68,14 @@ void try_shstk(unsigned long new_ssp)
 	}
 	asm volatile("rstorssp (%0)\n":: "r" (new_ssp));
 	asm volatile("saveprevssp");
-	ssp1 = _get_ssp();
+	ssp1 = get_ssp();
 	printf("ssp is now %lx, *ssp:%lx\n", ssp1, *((unsigned long *)ssp1));
 
 	ssp0 -= 8;
 	asm volatile("rstorssp (%0)\n":: "r" (ssp0));
 	asm volatile("saveprevssp");
 
-	ssp2 = _get_ssp();
+	ssp2 = get_ssp();
 	printf("ssp changed back: %lx, *ssp:%lx\n", ssp2,
 	       *((unsigned long *)ssp2));
 }
@@ -78,12 +85,13 @@ int main(int argc, char *argv[])
 	void *shstk;
 	unsigned long ssp, *asm_ssp, *bp;
 
-	if (!_get_ssp()) {
+	if (!get_ssp()) {
 		printf("[SKIP]\tshadow stack was disabled.\n");
+		printf("[INFO]\tMaybe glibc doesn't support SHSTK!\n");
 		return 2;
 	}
 
-	ssp = _get_ssp();
+	ssp = get_ssp();
 	#ifdef __x86_64__
 		asm volatile ("rdsspq %rbx");
 		asm("movq %%rbx,%0" : "=r"(asm_ssp));
