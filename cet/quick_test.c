@@ -13,6 +13,13 @@
 #include <sys/wait.h>
 #include <sched.h>
 
+#define get_ssp()						\
+({								\
+	unsigned long _ret;					\
+	asm volatile("xor %0, %0; rdsspq %0" : "=r" (_ret));	\
+	_ret;							\
+})
+
 ucontext_t ucp;
 static int result[2] = {-1, -1};
 static int test_id;
@@ -74,10 +81,9 @@ static void user2_handler(int signum, siginfo_t *si, void *uc)
 int main(int argc, char *argv[])
 {
 	struct sigaction sa;
-	int ret;
-
-	int cpu;
+	int ret, cpu;
 	cpu_set_t set;
+	unsigned long ssp;
 
 	if (argc >= 2) {
 		cpu = atoi(argv[1]);
@@ -88,6 +94,13 @@ int main(int argc, char *argv[])
 			printf("[FAIL]\tset affinity failed\n");
 			return -1;
 		}
+	}
+
+	ssp = get_ssp();
+	if (!ssp) {
+		printf("[BLOCK]\tget ssp failed, shadow stack disabled.\n");
+		printf("[INFO]\tMaybe glibc doesn't support SHSTK!\n");
+		return 2;
 	}
 
 	printf("[INFO]\tresult[0-1]:{%d, %d}\n", result[0], result[1]);
