@@ -1,0 +1,10 @@
+# This file collects the CET(Control-flow Enforcement Technology) tests on
+# Intel® Architecture-based platforms.
+
+cet_tests.sh -t cp_test -n shstk_cp -k "control protection"
+quick_test
+shstk_alloc
+shstk_huge_page
+shstk_unlock_test
+test_shadow_stack
+wrss

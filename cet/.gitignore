@@ -1,5 +1,6 @@
 quick_test
 shstk_alloc
+shstk_cp
 shstk_huge_page
 shstk_unlock_test
 test_shadow_stack
