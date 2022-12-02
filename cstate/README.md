@@ -13,7 +13,7 @@ You can run the cases one by one, e.g. command
 You also can run the cases together with runtests command, e.g.
 
 ```
-cd ../lkvs
+cd ..
 ./runtests -f cstate/tests-client -o logfile
 ```
 
