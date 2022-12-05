@@ -1,0 +1,5 @@
+# This file collects the UMIP(User Mode Instruction Prevention) tests on
+# Intel® Architecture-based platforms.
+
+umip_exceptions_32 a
+umip_exceptions_64 a
