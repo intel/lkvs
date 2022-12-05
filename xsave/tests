@@ -1,0 +1,4 @@
+# This file collects the XSAVE feature tests on
+# Intel® Architecture-based platforms.
+
+xstate_64
