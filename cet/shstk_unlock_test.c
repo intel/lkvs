@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
+// Copyright (c) 2022 Intel Corporation.
+
+/*
+ * shstk_unlock_test.c: unlock child process shstk by ptrace and then tests
+ *                      get/set shstk regsets and shstk status syscalls
+ */
 
 #define _GNU_SOURCE
 
@@ -20,29 +26,27 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <err.h>
 
 /* It's from arch/x86/include/uapi/asm/mman.h file. */
 #define SHADOW_STACK_SET_TOKEN	(1ULL << 0)
 /* It's from arch/x86/include/uapi/asm/prctl.h file. */
-#define ARCH_CET_ENABLE		0x5001
-#define ARCH_CET_DISABLE	0x5002
-#define ARCH_CET_UNLOCK		0x5004
+#define ARCH_SHSTK_ENABLE	0x5001
+#define ARCH_SHSTK_DISABLE	0x5002
+#define ARCH_SHSTK_LOCK		0x5003
+#define ARCH_SHSTK_UNLOCK	0x5004
+#define ARCH_SHSTK_STATUS	0x5005
 #define CET_SHSTK		(1ULL <<  0)
 #define CET_WRSS		(1ULL <<  1)
 /* It's from arch/x86/entry/syscalls/syscall_64.tbl file. */
 #define __NR_map_shadow_stack	451
 /* It's from include/uapi/linux/elf.h. */
-#define NT_X86_CET		0x203
+#define NT_X86_SHSTK		0x204
 #define NT_X86_XSTATE		0x202
 #define CPUID_LEAF_XSTATE	0xd
 
-/*
- * State component 11 is Control-flow Enforcement user states
- */
-struct cet_user_state {
-	uint64_t user_cet;			/* user control-flow settings */
-	uint64_t user_ssp;			/* user shadow stack pointer */
-};
+/* err() exits. */
+#define fatal_error(msg, ...)	err(1, "[FAIL]\t" msg, ##__VA_ARGS__)
 
 #define rdssp() ({						\
 	long _ret;						\
@@ -84,13 +88,13 @@ static void write_shstk(unsigned long *addr, unsigned long val)
 		     : [addr] "r" (addr), [val] "r" (val));
 }
 
-int unlock_shstk(pid_t pid)
+long unlock_shstk(pid_t pid)
 {
 	int status;
-	int ret = 0;
-	struct cet_user_state cet_state;
+	long ret = 0, result = 0;
 	uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0, xstate_size, cet_offset;
-	uint64_t *xstate;
+	uint64_t *xstate, user_ssp = 0, feature = 0;
+
 	/*
 	 * CPUID.(EAX=0DH, ECX=0H):EBX: maximum size (bytes, from the beginning
 	 * of the XSAVE/XRSTOR save area) required by enabled features in XCR0.
@@ -99,7 +103,7 @@ int unlock_shstk(pid_t pid)
 	xstate_size = ebx;
 	xstate = aligned_alloc(64, ebx);
 	struct iovec iov = { .iov_base = xstate, .iov_len = ebx };
-	struct iovec iov_cet = { .iov_base = &cet_state, .iov_len = 16 };
+	struct iovec iov_cet = { .iov_base = &user_ssp, .iov_len = sizeof(user_ssp) };
 
 	if (ptrace(PTRACE_SEIZE, pid, 0, 0)) {
 		printf("[FAIL]\tCan't attach to %d", pid);
@@ -108,67 +112,76 @@ int unlock_shstk(pid_t pid)
 
 	if (ptrace(PTRACE_INTERRUPT, pid, 0, 0)) {
 		printf("[FAIL]\tCan't interrupt the %d task", pid);
+		result = 1;
 		goto detach;
 	}
 
 	if (wait4(pid, &status, __WALL, NULL) != pid) {
 		printf("[FAIL]\twaitpid(%d) failed", pid);
+		result = 1;
 		goto detach;
 	}
 
-	if (ptrace(PTRACE_ARCH_PRCTL, pid, CET_SHSTK, ARCH_CET_UNLOCK)) {
+	if (ptrace(PTRACE_ARCH_PRCTL, pid, CET_SHSTK, ARCH_SHSTK_UNLOCK)) {
 		printf("[FAIL]\tCan't unlock CET for %d task", pid);
+		result = 1;
 		goto detach;
 	} else {
 		printf("[PASS]\tUnlock CET successfully for pid:%d\n", pid);
 	}
 
-	cet_state.user_cet = 0;
-	cet_state.user_ssp = 0;
-
-	ret = ptrace(PTRACE_GETREGSET, pid, NT_X86_CET, &iov_cet);
+	ret = ptrace(PTRACE_GETREGSET, pid, NT_X86_SHSTK, &iov_cet);
 	if (ret) {
-		printf("[FAIL]\tGETREGSET NT_X86_CET fail ret:%d, errno:%d",
-			ret, errno);
-	} else if (cet_state.user_ssp == 0) {
-		printf("[FAIL]\tcet_ssp:%d is 0\n", cet_state.user_ssp);
+		printf("[FAIL]\tGETREGSET NT_X86_SHSTK fail ret:%d, errno:%d\n",
+		       ret, errno);
+		result = 1;
+	} else if (user_ssp == 0) {
+		printf("[FAIL]\tcet_ssp:%d is 0\n", user_ssp);
+		result = 1;
 	} else {
-		printf("[PASS]\tGET CET REG ret:%d, err:%d, cet:%lx, ssp:%lx\n",
-			ret, errno, cet_state.user_cet, cet_state.user_ssp);
+		printf("[PASS]\tGET CET REG ret:%d, err:%d, ssp:%lx\n",
+		       ret, errno, user_ssp);
 	}
 
-	ret = ptrace(PTRACE_SETREGSET, pid, NT_X86_CET, &iov_cet);
+	ret = ptrace(PTRACE_SETREGSET, pid, NT_X86_SHSTK, &iov_cet);
 	if (ret) {
-		printf("[FAIL]\tSETREGSET NT_X86_CET fail ret:%d, errno:%d",
-			ret, errno);
-	} else if (cet_state.user_ssp == 0) {
-		printf("[FAIL]\tcet_ssp:%d is 0\n", cet_state.user_ssp);
+		printf("[FAIL]\tSETREGSET NT_X86_SHSTK fail ret:%d, errno:%d\n",
+		       ret, errno);
+		result = 1;
+	} else if (user_ssp == 0) {
+		printf("[FAIL]\tcet_ssp:%d is 0\n", user_ssp);
+		result = 1;
 	} else {
-		printf("[PASS]\tSET CET REG ret:%d, err:%d, cet:%lx, ssp:%lx\n",
-			ret, errno, cet_state.user_cet, cet_state.user_ssp);
+		printf("[PASS]\tSET CET REG ret:%d, err:%d, ssp:%lx\n",
+		       ret, errno, user_ssp);
 	}
 
-	cet_state.user_ssp = -1;
-	ret = ptrace(PTRACE_SETREGSET, pid, NT_X86_CET, &iov_cet);
+	user_ssp = -1;
+	ret = ptrace(PTRACE_SETREGSET, pid, NT_X86_SHSTK, &iov_cet);
 	if (ret) {
 		printf("[PASS]\tSET ssp -1 failed(expected) ret:%d, errno:%d\n",
-			ret, errno);
+		       ret, errno);
 	} else {
-		printf("[FAIL]\tSET ssp -1 ret:%d, err:%d, cet:%lx, ssp:%lx\n",
-			ret, errno, cet_state.user_cet, cet_state.user_ssp);
+		printf("[FAIL]\tSET ssp -1 ret:%d, err:%d, ssp:%lx\n",
+		       ret, errno, user_ssp);
+		result = 1;
 	}
 
 	ret = ptrace(PTRACE_GETREGSET, pid, NT_X86_XSTATE, &iov);
-	if (ret)
+	if (ret) {
 		printf("[FAIL]\tGET xstate failed ret:%d\n", ret);
-	else
+		result = 1;
+	} else {
 		printf("[PASS]\tGET xstate successfully ret:%d\n", ret);
+	}
 
 detach:
-	if (ptrace(PTRACE_DETACH, pid, NULL, 0))
+	if (ptrace(PTRACE_DETACH, pid, NULL, 0)) {
 		printf("Unable to detach %d", pid);
+		result = 1;
+	}
 
-	return ret;
+	return result;
 }
 
 void check_ssp(void)
@@ -182,24 +195,30 @@ void check_ssp(void)
 int main(void)
 {
 	pid_t child;
-	int status;
-	unsigned long *ssp, i, loop_num = 1000000, ssp_origin;
-	unsigned long *bp;
-	long ret = 0;
+	int status, fd[2] = {0};
+	unsigned long *ssp, *bp, i, loop_num = 1000000;
+	long ret = 0, result = 0;
 
-	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_SHSTK))
-		printf("[FAIL]\tParent process could not enable shadow stack.\n");
-	else
-		printf("[PASS]\tParent process enable shadow stack.\n");
+	if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, CET_SHSTK)) {
+		printf("[FAIL]\tParent process could not enable SHSTK!\n");
+		return 1;
+	}
+	printf("[PASS]\tParent process enable SHSTK.\n");
 
+	/* Check ssp buf after enabled SHSTK. */
 	ssp = (unsigned long *)rdssp();
-
 	if (!ssp) {
 		printf("[FAIL]\tShadow stack disabled.\n");
 		return 1;
 	}
 	printf("[PASS]\tParent pid:%d, ssp:%p\n", getpid(), ssp);
+
+	/* There is no *ssp for main so call function to check *ssp. */
 	check_ssp();
+
+	/* Use pipe to transfer test result to parent process. */
+	if (pipe(fd) < 0)
+		fatal_error("create pipe failed");
 
 	child = fork();
 	if (child < 0) {
@@ -207,6 +226,8 @@ int main(void)
 		printf("[FAIL]\tfork failed\n");
 		return 2;
 	} else if (child == 0) {
+		unsigned long feature = 0, *ssp_verify;
+
 		/* Verify child process shstk is enabled. */
 		ssp = 0;
 		ssp = (unsigned long *)rdssp();
@@ -222,58 +243,122 @@ int main(void)
 		printf("[INFO]\tChild:%d, ssp:%p, bp,%p, *bp:%lx, *(bp+1):%lx\n",
 		       getpid(), ssp, bp, *bp, *(bp + 1));
 
-		/* Execute loop and wait for parent to unlock cet for child.*/
-		for (i = 1; i <= loop_num; i++) {
-			if (i == loop_num)
-				printf("[INFO]\tChild loop reached:%d\n",
-				       loop_num);
-		}
-
-		if (ARCH_PRCTL(ARCH_CET_DISABLE, CET_SHSTK)) {
+		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, CET_SHSTK)) {
 			printf("[FAIL]\tDisabling shadow stack failed\n");
-			ret = 1;
+			result = 1;
 		} else {
-			printf("[PASS]\tDisabling shadow stack succesfully\n");
+			printf("[PASS]\tDisabling shadow stack successfully\n");
 		}
 
-		if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_SHSTK)) {
+		ret = ARCH_PRCTL(ARCH_SHSTK_STATUS, &feature);
+		if (ret) {
+			printf("[FAIL]\tSHSTK_STATUS nok, feature:%lx, ret:%ld\n",
+			       feature, ret);
+			result = 1;
+		} else if (feature == 0) {
+			printf("[PASS]\tSHSTK_STATUS ok, feature:%lx is 0, ret:%ld\n",
+			       feature, ret);
+		} else {
+			printf("[FAIL]\tSHSTK_STATUS ok, feature:%lx isn't 1, ret:%ld\n",
+			       feature, ret);
+			result = 1;
+		}
+
+		if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, CET_SHSTK)) {
 			printf("[FAIL]\tCould not re-enable Shadow stack.\n");
-			ret = 1;
+			result = 1;
 		} else {
 			printf("[PASS]\tChild process re-enable ssp\n");
 		}
 
-		if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_WRSS)) {
+		ret = ARCH_PRCTL(ARCH_SHSTK_STATUS, &feature);
+		if (ret) {
+			printf("[FAIL]\tSHSTK_STATUS nok, feature:%lx, ret:%ld\n",
+			       feature, ret);
+			result = 1;
+		} else if ((feature & 1) == 1) {
+			printf("[PASS]\tSHSTK_STATUS ok, feature:%lx 1st bit is 1, ret:%ld\n",
+			       feature, ret);
+		} else {
+			printf("[FAIL]\tSHSTK_STATUS ok, feature:%lx isn't 1, ret:%ld\n",
+			       feature, ret);
+			result = 1;
+		}
+
+		if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, CET_WRSS)) {
 			printf("[FAIL]\tCould not enable WRSS in child pid.\n");
-			ret = 1;
+			result = 1;
 		} else {
 			printf("[PASS]\tChild process enabled wrss\n");
 		}
 
-		ssp = (unsigned long *)rdssp();
+		ret = ARCH_PRCTL(ARCH_SHSTK_STATUS, &feature);
+		if (ret) {
+			printf("[FAIL]\tSHSTK_STATUS nok, feature:%lx, ret:%ld\n",
+			       feature, ret);
+			result = 1;
+		} else if (((feature >> 1) & 1) == 1) {
+			printf("[PASS]\tSHSTK_STATUS ok, feature:%lx 2nd bit is 1, ret:%ld\n",
+			       feature, ret);
+		} else {
+			printf("[FAIL]\tSHSTK_STATUS ok, feature:%lx 2nd bit isn't 1, ret:%ld\n",
+			       feature, ret);
+			result = 1;
+		}
+
+		ssp_verify = (unsigned long *)rdssp();
 		asm("movq %%rbp,%0" : "=r"(bp));
 		printf("[INFO]\tChild:%d, ssp:%p, bp,%p, *bp:%lx, *(bp+1):%lx\n",
 		       getpid(), ssp, bp, *bp, *(bp + 1));
 
-		if (ARCH_PRCTL(ARCH_CET_DISABLE, CET_SHSTK))
-			printf("[FAIL]\tChild process could not disable shstk.\n");
-		else
-			printf("[PASS]\tChild process disable shstk successfully.\n");
+		if (ssp == ssp_verify) {
+			printf("[INFO]\tssp addr:%p is same as ssp_verify:%p\n",
+			       ssp, ssp_verify);
+		} else {
+			printf("[INFO]\tssp addr:%p isn't same as ssp_verify:%p\n",
+			       ssp, ssp_verify);
+			result = 1;
+		}
 
-		return 0;
+		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, CET_SHSTK)) {
+			printf("[FAIL]\tChild process could not disable shstk.\n");
+			result = 1;
+		} else {
+			printf("[PASS]\tChild process disable shstk successfully.\n");
+		}
+
+		/*
+		 * Transfer the child process test result to
+		 * the parent process for aggregation.
+		 */
+		close(fd[0]);
+		if (!write(fd[1], &result, sizeof(result)))
+			fatal_error("write fd failed");
+
+		return result;
 	}
 
 	if (child > 0) {
-		unlock_shstk(child);
-		if (waitpid(child, &status, 0) != child || !WIFEXITED(status))
+		result = unlock_shstk(child);
+		if (waitpid(child, &status, 0) != child || !WIFEXITED(status)) {
 			printf("Child exit with error status:%d\n", status);
-
+			result = 1;
+		} else {
+			/* Parent process fetch the child process's result. */
+			close(fd[1]);
+			if (!read(fd[0], &result, sizeof(result))) {
+				result = 1;
+				fatal_error("read fd failed");
+			}
+		}
 		/* Disable SHSTK in parent process to avoid segfault issue. */
-		if (ARCH_PRCTL(ARCH_CET_DISABLE, CET_SHSTK))
+		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, CET_SHSTK)) {
 			printf("[FAIL]\tParent process disable shadow stack failed.\n");
-		else
+			result = 1;
+		} else {
 			printf("[PASS]\tParent process disable shadow stack successfully.\n");
+		}
 	}
 
-	return ret;
+	return result;
 }
