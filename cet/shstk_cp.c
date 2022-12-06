@@ -110,7 +110,6 @@ int main(void)
 		printf("[PASS]\tDisabling shadow stack successfully\n");
 	}
 
-
 	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_SHSTK)) {
 		printf("[SKIP]\tCould not re-enable Shadow stack.\n");
 		return 1;
