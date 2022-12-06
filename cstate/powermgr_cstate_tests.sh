@@ -5,7 +5,7 @@
 # @Desc     Test script to verify Intel CPU Core Cstate functionality
 # @History  Created Nov 01 2022 - Created
 
-cd "$(dirname $0)" 2>/dev/null
+cd "$(dirname "$0")" 2> /dev/null || exit 1
 source ../.env
 
 CPU_SYSFS_PATH="/sys/devices/system/cpu"
