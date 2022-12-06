@@ -30,6 +30,7 @@ err() {
 runtest() {
   local cmdline=$1
   local logfile=$2
+  local subfolder=$3
   local start
   local stop
   local duration
@@ -40,6 +41,12 @@ runtest() {
     echo "<<<test start - '$cmdline'>>" | tee -a "$logfile"
   else
     echo "<<<test start - '$cmdline'>>"
+  fi
+
+  if [[ -z "$subfolder" ]]; then
+    echo "LKVS tests: $cmdline" >> /dev/kmsg
+  else
+    echo "LKVS tests: ${subfolder}/${cmdline}" >> /dev/kmsg
   fi
 
   set -o pipefail
@@ -83,13 +90,20 @@ runtest() {
 runcmdfile() {
   local cmdfile=$1
   local logfile=$2
+  local subfolder=""
+
+  if [[ "$cmdfile" == *"/"* ]]; then
+    subfolder=$(echo ${cmdfile%/*})
+  else
+    echo "cmdfile:$cmdfile(no '/') is not in a subfolder!"
+  fi
 
   while read -r line; do
     if grep -Eq "^#.*" <<< "$line" || grep -Eq "^$" <<< "$line"; then
       continue
     fi
 
-    runtest "$line" "$logfile"
+    runtest "$line" "$logfile" "$subfolder"
   done < "$cmdfile"
 }
 
