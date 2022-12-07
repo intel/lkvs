@@ -1,0 +1,25 @@
+name: Pull Request
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  CodeCheck:
+    runs-on: ubuntu-latest
+    container: hanning0511/lkvs-pr-check:latest
+    steps:
+      - name: Clean Workspace
+        run: git submodule status || rm -rf "$GITHUB_WORKSPACE"/* "$GITHUB_WORKSPACE"/.gi*
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check Code
+        run: ./.github/scripts/pr_check origin/${{ github.base_ref }} ${{ github.sha }}
+      - name: Report Job Status
+        run: echo "Job's status is ${{ job.status }}."
