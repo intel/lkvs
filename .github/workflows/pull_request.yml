@@ -13,13 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     container: hanning0511/lkvs-pr-check:latest
     steps:
-      - name: Clean Workspace
-        run: git submodule status || rm -rf "$GITHUB_WORKSPACE"/* "$GITHUB_WORKSPACE"/.gi*
       - name: Checkout Repository
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+        run: |
+          git pull "https://github.com/intel/lkvs" lkvs
       - name: Check Code
-        run: ./.github/scripts/pr_check origin/${{ github.base_ref }} ${{ github.sha }}
+        run: |
+          cd lkvs
+          pr_check origin/${{ github.base_ref }} ${{ github.sha }}
       - name: Report Job Status
         run: echo "Job's status is ${{ job.status }}."
