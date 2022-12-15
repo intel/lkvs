@@ -8,9 +8,9 @@ The isst cases are designed for Intel® Architecture-based server platforms,
 supported beginning from Cascade lake, then Cooper lake, Icelake and future platforms
 
 The prerequisites to run the ISST cases:
-## The server CPU supports the ISST feature 
-## BIOS enabled Dynamic SST-PP setting
-## User needs intel-speed-select, turbostat, stress tools
+- The server CPU supports the ISST feature
+- BIOS enabled Dynamic SST-PP setting
+- User needs intel-speed-select, turbostat, stress tools
 
 tests file collects the cases for Intel® server platforms where assume SUT supports
 SST perf profile level 0,3,4, users can add other SST-PP level cases
