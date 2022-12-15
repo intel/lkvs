@@ -18,15 +18,15 @@ ISST_IF_MBOX_PCI_DRIVER_PATH="/sys/module/isst_if_mbox_pci/drivers/pci"
 CPU_SYSFS_PATH="/sys/devices/system/cpu"
 COLUMNS="Package,Core,CPU,Busy%,Bzy_MHz,PkgWatt"
 
-#Turbostat tool is required to ISST cases
+# Turbostat tool is required to run ISST cases
 turbostat sleep 1 1>/dev/null 2>&1 || block_test "Turbostat tool is required to \
 run ISST cases, please get it from latest upstream kernel-tools."
 
-#intel-speed-select tool is required to run ISST cases
+# intel-speed-select tool is required to run ISST cases
 intel-speed-select --info 1>/dev/null 2>&1 || block_test "intel-speed-select tool is\
 required to run ISST cases, please get it from latest upstream kernel-tools."
 
-#stress tool is required to run ISST cases
+# stress tool is required to run ISST cases
 stress --help 1>/dev/null 2>&1 || block_test "stress tool is\
 required to run ISST cases, please get it from latest upstream kernel-tools."
 
@@ -83,7 +83,7 @@ $core_power_limitation_log"
   fi
 }
 
-#Function to check ISST features support status
+# Function to check ISST features support status
 isst_info() {
   do_cmd "intel-speed-select -o info.out -i"
   test_print_trc "The platform and driver capabilities are:"
@@ -101,8 +101,8 @@ isst_info() {
   fi
 }
 
-#Function to check isst lock status, if locked, then does not support the dynamic
-#isst perf profile level change
+# Function to check isst lock status, if locked, then does not support the dynamic
+# isst perf profile level change
 isst_unlock_status() {
   expected_lock_status=unlocked
   do_cmd "intel-speed-select -o pp.out perf-profile get-lock-status"
@@ -124,7 +124,7 @@ isst_unlock_status() {
   done
 }
 
-#Function to check if the isst perf profile config enable or not
+# Function to check if the isst perf profile config enable or not
 isst_pp_config_enable() {
   expected_config_status=enabled
   do_cmd "intel-speed-select -o pp.out perf-profile get-config-enabled"
@@ -145,7 +145,9 @@ isst_pp_config_enable() {
   done
 }
 
-#Function to do different supported perf profile levels change
+# Function to do different supported perf profile levels change
+# Input:
+#        $1: select different perf profile level
 isst_pp_level_change() {
   local level_id=$1
   do_cmd "intel-speed-select -o pp.out perf-profile get-config-current-level"
@@ -199,25 +201,27 @@ isst_pp_level_change() {
   do_cmd "intel-speed-select -o pp.out perf-profile set-config-level -l 0 -o"
 }
 
-#Function to check the base frequency alignment between sysfs and isst tool for each profile level
+# Function to check the base frequency alignment between sysfs and isst tool for each profile level
+# Input:
+#        $1: select different perf profile level
 isst_base_freq_pp_level_change() {
   local level_id=$1
 
   test_print_trc "Recover the config level to the default setting: 0"
   do_cmd "intel-speed-select -o pp.out perf-profile set-config-level -l 0 -o"
   sleep 2
-  #Read the base_freqency by default ISST perf-profile level
+  # Read the base_freqency by default ISST perf-profile level
   base_freq_bf_khz=$(cat "$CPU_SYSFS_PATH"/cpu0/cpufreq/base_frequency 2>&1)
   base_freq_bf_mhz=$(echo "$base_freq_bf_khz/1000" | bc)
   [[ -n "$base_freq_bf_khz" ]] || block_test "Did not get base_frequency from sysfs"
   test_print_trc "The default CPU base frequency is: $base_freq_bf_mhz"
 
-  #Change the PP level
+  # Change the PP level
   do_cmd "intel-speed-select -o pp.out perf-profile set-config-level -l $level_id -o"
   test_print_trc "The system perf profile level change status:"
   do_cmd "cat pp.out"
 
-  #Read the base-frequency(MHz) of enabled CPUs from isst perf-profile info
+  # Read the base-frequency(MHz) of enabled CPUs from isst perf-profile info
   do_cmd "intel-speed-select -o pp_info.out perf-profile info"
   do_cmd "cat pp_info.out"
   sleep 5
@@ -230,18 +234,18 @@ isst_base_freq_pp_level_change() {
     test_print_trc "The test enabled the cpu number is: $enabled_cpu"
     [[ -n "$enabled_cpu" ]] || block_test "Did not get enabled CPU number"
 
-    #High PP level should have the new CPU base_freqency
+    # High PP level should have the new CPU base_freqency
     base_freq_af_khz=$(cat "$CPU_SYSFS_PATH"/cpu"$enabled_cpu"/cpufreq/base_frequency 2>&1)
     base_freq_af_mhz=$(echo "$base_freq_af_khz/1000" | bc)
     test_print_trc "The base_frequency_af read from sysfs:$base_freq_af_mhz"
 
-    #Read the base-frequency(MHz) value from ISST log
+    # Read the base-frequency(MHz) value from ISST log
     base_freq_tool=$(grep -A 10 "perf-profile-level-$level_id" pp_info.out |
       grep "base-frequency(MHz)" | awk -F ":" '{print $2}' | sed -n "$i,1p")
     [[ -n "$base_freq_tool" ]] || block_test "Did not get base-freq value from ISST log."
     test_print_trc "The base-frequency(MHz) read from ISST log of CPU$i:$base_freq_tool"
 
-    #The base_freq reported from sysfs and isst tool should be the same value
+    # The base_freq reported from sysfs and isst tool should be the same value
     if [[ "$base_freq_af_mhz" -eq "$base_freq_tool" ]]; then
       test_print_trc "The CPU base frequency change from sysfs and isst tool are expected \
 for PP Level $level_id change, the new CPU base frequency is: $base_freq_af_mhz"
@@ -255,7 +259,7 @@ the tool report: $base_freq_tool, the sysfs reports: $base_freq_af_mhz"
   do_cmd "intel-speed-select -o pp.out perf-profile set-config-level -l 0 -o"
 }
 
-#Function to check isst core power feature enable and disable
+# Function to check isst core power feature enable and disable
 isst_cp_enable_disable() {
   local expected_status=$1
   local action=$2
@@ -298,7 +302,9 @@ isst_cp_enable_disable() {
   done
 }
 
-#Function to set isst core power configuration for clos id and min freq
+# Function to set isst core power configuration for clos id and min freq
+# Input:
+#        $1: select different class of service ID
 isst_cp_config_clos_min_set_get() {
   local clos_id=$1
   local min_khz=""
@@ -331,7 +337,9 @@ The system package $j isst core power clos min freq is: $isst_cp_status_by_num"
   done
 }
 
-#Function to set isst core power configuration for clos id and max freq
+# Function to set isst core power configuration for clos id and max freq
+# Input:
+#        $1: select different class of service ID
 isst_cp_config_clos_max_set_get() {
   local clos_id=$1
   local max_khz=""
@@ -364,7 +372,9 @@ The system package $j isst core power clos max freq is: $isst_cp_status_by_num"
   done
 }
 
-#Function to set isst core power configuration for clos id and clos-proportional-priority
+# Function to set isst core power configuration for clos id and clos-proportional-priority
+# Input:
+#        $1: select different class of service ID
 isst_cp_config_clos_prop_set_get() {
   local clos_id=$1
   local prop_pri=""
@@ -396,7 +406,9 @@ The system package $j isst core power clos proportional priority is: $isst_cp_st
   done
 }
 
-#Function to set and get one CPU1 association
+# Function to set and get one CPU1 association
+# Input:
+#        $1: select different class of service ID
 isst_cp_assoc_set_get() {
   local clos_id=$1
 
@@ -423,7 +435,9 @@ isst_cp_assoc_set_get() {
   fi
 }
 
-#Function to set and get the max CPU association
+# Function to set and get the max CPU association
+# Input:
+#        $1: select different class of service ID
 isst_cp_max_cpu_assoc_set_get() {
   local clos_id=$1
   local max_cpu=""
@@ -454,16 +468,16 @@ isst_cp_max_cpu_assoc_set_get() {
   fi
 }
 
-#This function will check the baseline base_freq is reachable before enabling isst_bf
+# This function will check the baseline base_freq is reachable before enabling isst_bf
 isst_bf_baseline_test() {
-  #Get base_freq from isst tool, the unit is MHz
+  # Get base_freq from isst tool, the unit is MHz
   do_cmd "intel-speed-select -o pp.out perf-profile info -l 0"
   do_cmd "cat pp.out"
   base_freq_isst_raw=$(grep "base-frequency(MHz)" pp.out | awk -F ":" '{print $2}' | sed -n "1, 1p")
   base_freq_isst=$(echo "$base_freq_isst_raw*1000" | bc)
   test_print_trc "The base_freq from isst tool is: $base_freq_isst KHz"
 
-  #Get base_freq from sysfs, the unit is KHz
+  # Get base_freq from sysfs, the unit is KHz
   base_freq_sysfs=$(cat "$CPU_SYSFS_PATH"/cpu0/cpufreq/base_frequency 2>&1)
   [[ -n "$base_freq_sysfs" ]] || block_test "Did not get base frequency from sysfs"
   test_print_trc "The base_freq from sysfs is: $base_freq_sysfs KHz"
@@ -474,12 +488,12 @@ isst_bf_baseline_test() {
     die "The base_freq from sysfs is not match with isst tool"
   fi
 
-  #Run stress to check if the system can reach the base_freq
+  # Run stress to check if the system can reach the base_freq
   cpu_num=$(lscpu --online --extended | awk '{print $1}' | sed -n '$p' 2>&1)
   cpu_num_all=$(("$cpu_num" + 1))
   test_print_trc "The online CPUs number is:$cpu_num_all"
 
-  #Add 100% workload for the online CPUs
+  # Add 100% workload for the online CPUs
   test_print_trc "Executing stress -c $cpu_num_all -t 90 & in background"
   do_cmd "stress -c $cpu_num_all -t 90 &"
   stress_pid=$!
@@ -509,15 +523,15 @@ isst_bf_baseline_test() {
   test_print_trc "Two core cpu freq delta is:$core_delta KHz"
 
   sleep 30
-  #Kill stress thread
+  # Kill stress thread
   [[ -z "$stress_pid" ]] || do_cmd "kill -9 $stress_pid"
 
   test_print_trc "Recover the config level to the default setting: 0"
   do_cmd "intel-speed-select -o pp.out perf-profile set-config-level -l 0 -o"
 
-  #If the first or last CPU delta freq is larger than 100 MHz(100000Khz),
-  #or two cores CPU delta freq is larger than 200 MHz,then check if thermal limitation is assert.
-  #Otherwise, expect the delta value is within 100Mhz(100000Khz).
+  # If the first or last CPU delta freq is larger than 100 MHz(100000Khz),
+  # or two cores CPU delta freq is larger than 200 MHz,then check if thermal limitation is assert.
+  # Otherwise, expect the delta value is within 100Mhz(100000Khz).
   if [[ $(echo "$first_delta > 100000" | bc) -eq 1 ]] ||
     [[ $(echo "$last_delta > 100000" | bc) -eq 1 ]] ||
     [[ $(echo "$core_delta > 200000" | bc) -eq 1 ]]; then
@@ -534,26 +548,28 @@ with power limitation log observed."
   fi
 }
 
-#Function to check isst high priority base freq feature
+# Function to check isst high priority base freq feature
+# Input:
+#        $1: select different perf profile level
 isst_bf_freq_test() {
   local level_id=$1
 
-  #Get the base_freq from sysfs, the unit is KHz
+  # Get the base_freq from sysfs, the unit is KHz
   base_freq_sysfs=$(cat "$CPU_SYSFS_PATH"/cpu0/cpufreq/base_frequency 2>&1)
   [[ -n "$base_freq_sysfs" ]] || block_test "Did not get base frequency from sysfs"
   test_print_trc "The base_freq from sysfs is: $base_freq_sysfs KHz"
 
-  #Set SST Perf profile level to $level_id
+  # Set SST Perf profile level to $level_id
   test_print_trc "Will change Perf profile config level to $level_id:"
   do_cmd "intel-speed-select -o pp.out perf-profile set-config-level -l $level_id -o"
   test_print_trc "The system perf profile config level change log:"
   do_cmd "cat pp.out"
 
-  #Disable CPU turbo
+  # Disable CPU turbo
   test_print_trc "Disable CPU Turbo"
   do_cmd "echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo"
 
-  #Enable ISST base_freq feature, -a option is used to enable core power CLOS related parameters
+  # Enable ISST base_freq feature, -a option is used to enable core power CLOS related parameters
   do_cmd "intel-speed-select -o bf.out base-freq enable -a"
   test_print_trc "Intel SST base_freq enable status:"
   do_cmd "cat bf.out"
@@ -571,30 +587,30 @@ isst_bf_freq_test() {
     fi
   done
 
-  #Get High and low priority base freq with perf profile level 0 from ISST tool
+  # Get High and low priority base freq with perf profile level 0 from ISST tool
   do_cmd "intel-speed-select -o bf.out base-freq info -l 0"
   test_print_trc "Intel SST base_freq info with perf profile level 0:"
   do_cmd "cat bf.out"
 
-  #Freq unit from ISST is: MHz
+  # Freq unit from ISST is: MHz
   hp_base_freq_isst=$(grep "high-priority-base-frequency(MHz)" bf.out | awk -F ":" '{print $2}' | sed -n "1, 1p")
   test_print_trc "The high priority base freq from ISST tool is: $hp_base_freq_isst MHz"
 
   lp_base_freq_isst=$(grep "low-priority-base-frequency(MHz)" bf.out | awk -F ":" '{print $2}' | sed -n "1, 1p")
   test_print_trc "The low priority base freq from ISST tool is: $lp_base_freq_isst MHz"
 
-  #Get the actual package number which support base_freq feature
+  # Get the actual package number which support base_freq feature
   hp_bf_cpus_num=$(grep "high-priority-cpu-list" bf.out | grep -v -c none)
   for ((i = 1; i <= hp_bf_cpus_num; i++)); do
-    #Get two high priority CPUs on the same package
+    # Get two high priority CPUs on the same package
     hp_bf_cpus_2nd=$(grep "high-priority-cpu-list" bf.out | grep -v none | awk -F "," '{print $2}' | sed -n "$i, 1p")
     hp_bf_cpus_3rd=$(grep "high-priority-cpu-list" bf.out | grep -v none | awk -F "," '{print $3}' | sed -n "$i, 1p")
-    #j below is used to check package number
+    # j below is used to check package number
     j=$(("$i" - 1))
     test_print_trc "The 2nd high priority cpu in package$j is: $hp_bf_cpus_2nd"
     test_print_trc "The 3rd high priority cpu in package$j is: $hp_bf_cpus_3rd"
 
-    #Run stress on 2 high priority CPUs
+    # Run stress on 2 high priority CPUs
     test_print_trc "Executing 100% workload stress on two high priority CPUs"
     do_cmd "taskset -c 0,$hp_bf_cpus_2nd,$hp_bf_cpus_3rd stress -c 3 -t 90 &"
     stress_pid=$!
@@ -605,13 +621,13 @@ isst_bf_freq_test() {
     test_print_trc "Turbostat output when 100% workload stress running is:"
     echo -e "$cpu_stat"
 
-    #Assume CPU0 is the low priority CPU
+    # Assume CPU0 is the low priority CPU
     actual_lp_cpu0_freq=$(echo "$cpu_stat" |
       awk '{for(k=0;++k<=NF;)a[k]=a[k]?a[k] FS $k:$k} END{for(k=0;k++<NF;)print a[k]}' |
       grep "Bzy_MHz" | awk -F " " '{print $3}')
     test_print_trc "Package$j CPU0 as the low priority CPU actual base_freq during stress is: $actual_lp_cpu0_freq MHz"
 
-    #Check if the 2nd and 3rd CPUs reached high priority base_freq
+    # Check if the 2nd and 3rd CPUs reached high priority base_freq
     actual_2nd_cpu_freq=$(echo "$cpu_stat" |
       awk '{for(k=0;++k<=NF;)a[k]=a[k]?a[k] FS $k:$k} END{for(k=0;k++<NF;)print a[k]}' |
       grep "Bzy_MHz" | awk -F " " '{print $4}')
@@ -628,22 +644,22 @@ isst_bf_freq_test() {
       'BEGIN{printf "%.1f\n", x-y}')
 
     sleep 30
-    #Kill stress thread
+    # Kill stress thread
     [[ -z "$stress_pid" ]] || do_cmd "kill -9 $stress_pid"
 
-    #Disable isst base freq
+    # Disable isst base freq
     do_cmd "intel-speed-select base-freq disable -a"
     test_print_trc "Recover the default isst base freq setting:disable"
 
-    #Recover the default SST Perf profile level to 0
+    # Recover the default SST Perf profile level to 0
     test_print_trc "Recover the config level to the default setting: 0"
     do_cmd "intel-speed-select -o pp.out perf-profile set-config-level -l 0 -o"
 
-    #Enable CPU turbo
+    # Enable CPU turbo
     test_print_trc "Enable CPU Turbo"
     do_cmd "echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo"
 
-    #Set the error deviation is 100 MHz
+    # Set the error deviation is 100 MHz
     if [[ $(echo "$delta_2nd_cpu > 100" | bc) -eq 1 ]] ||
       [[ $(echo "$delta_3rd_cpu > 100" | bc) -eq 1 ]] ||
       [[ "$actual_lp_cpu0_freq" -ne "$lp_base_freq_isst" ]]; then
@@ -662,25 +678,27 @@ expectation when stress is running."
   done
 }
 
-#Function to check isst high priority turbo freq feature
+# Function to check isst high priority turbo freq feature
+# Input:
+#        $1: select different perf profile level
 isst_tf_freq_test() {
   local level_id=$1
 
-  #Make sure CPU turbo is enabled
+  # Make sure CPU turbo is enabled
   test_print_trc "Make sure CPU Turbo is enabled by default"
   do_cmd "echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo"
 
-  #Set SST Perf profile level to $level_id
+  # Set SST Perf profile level to $level_id
   test_print_trc "Will change Perf profile config level to $level_id:"
   do_cmd "intel-speed-select -o pp.out perf-profile set-config-level -l $level_id -o"
   test_print_trc "The system perf profile config level change log:"
   do_cmd "cat pp.out"
 
-  #Make sure ISST TF is disabled at beginning
+  # Make sure ISST TF is disabled at beginning
   do_cmd "intel-speed-select -c 8,9 turbo-freq disable -a"
   test_print_trc "Make sure the default isst turbo freq setting:disable"
 
-  #Keep ISST TF disable to get base turbo freq when all CPUs running stress
+  # Keep ISST TF disable to get base turbo freq when all CPUs running stress
   test_print_trc "Executing 100% workload on all CPUs to get the base turbo freq:"
   cpu_num=$(lscpu --online --extended | awk '{print $1}' | sed -n '$p')
   [[ -n "$cpu_num" ]] || block_test "Did not get online cpu list"
@@ -689,12 +707,12 @@ isst_tf_freq_test() {
   stress_pid=$!
   [[ -n "$stress_pid" ]] || block_test "stress is not launched."
 
-  #List Core0 15 CPUs freq status by turbostat tool
+  # List Core0 15 CPUs freq status by turbostat tool
   cpu_stat=$(turbostat -q -c 0-14 --show $COLUMNS -i 10 sleep 10 2>&1)
   [[ -n "$cpu_stat" ]] || block_test "Did not get turbostat log"
   test_print_trc "Turbostat output when 100% workload stress running with turbo enabled:"
   echo -e "$cpu_stat"
-  #Take CPU8 and CPU9 to check the base turbo freq
+  # Take CPU8 and CPU9 to check the base turbo freq
   base_turbo_freq_cpu8=$(echo "$cpu_stat" |
     awk '{for(k=0;++k<=NF;)a[k]=a[k]?a[k] FS $k:$k} END{for(k=0;k++<NF;)print a[k]}' |
     grep "Bzy_MHz" | awk -F " " '{print $11}')
@@ -704,32 +722,32 @@ isst_tf_freq_test() {
     grep "Bzy_MHz" | awk -F " " '{print $12}')
   test_print_trc "The CPU9 base turbo freq is: $base_turbo_freq_cpu9 MHz"
 
-  #Enable ISST TF Feature, -a option sets the CPUs to high and low priority
-  #using Intel Speed Select Technology Core Power (Intel(R) SST-CP) features
-  #The CPU numbers passed with “-c” arguments are marked as high priority, including its siblings.
+  # Enable ISST TF Feature, -a option sets the CPUs to high and low priority
+  # using Intel Speed Select Technology Core Power (Intel(R) SST-CP) features
+  # The CPU numbers passed with “-c” arguments are marked as high priority, including its siblings.
   test_print_trc "Will enable CPU8 and CPU9 and their siblings as the high priority"
   do_cmd "intel-speed-select -o tf.out -c 8,9 turbo-freq enable -a"
   test_print_trc "Intel SST turbo_freq enable status:"
   do_cmd "cat tf.out"
 
-  #Get ISST TF marked high priority freq, which is opportunistic, when there is
-  #no thermal/power limitation, we have chance to meet, so we just take this num
-  #as reference.
+  # Get ISST TF marked high priority freq, which is opportunistic, when there is
+  # no thermal/power limitation, we have chance to meet, so we just take this number
+  # as reference.
   do_cmd "intel-speed-select -o tf.out -c 0 turbo-freq info -l 0"
   opportunistic_hp_tf=$(grep "high-priority-max-frequency(MHz)" tf.out | awk -F ":" '{print $2}' | sed -n "1, 1p")
 
-  #Execute hackbench workload on high priority CPUs: CPU8 and CPU9
+  # Execute hackbench workload on high priority CPUs: CPU8 and CPU9
   test_print_trc "Will execute hackbench workload on high priority CPUs: CPU8 and CPU9"
   do_cmd "taskset -c 8,9 perf bench -r 100 sched pipe &"
   perf_pid=$!
   [[ -n "$perf_pid" ]] || block_test "perf bench did not launch."
 
-  #List Core0 15 CPUs freq status after enable ISST TF by turbostat tool
+  # List Core0 15 CPUs freq status after enable ISST TF by turbostat tool
   cpu_stat=$(turbostat -q -c 0-14 --show $COLUMNS -i 10 sleep 10 2>&1)
   [[ -n "$cpu_stat" ]] || block_test "Did not get expected turbostat output."
   test_print_trc "Turbostat output when 100% workload stress and hackbench workload running:"
   echo -e "$cpu_stat"
-  #Take CPU8 and CPU9 to check high priority turbo freq
+  # Take CPU8 and CPU9 to check high priority turbo freq
   hp_turbo_freq_cpu8=$(echo "$cpu_stat" |
     awk '{for(k=0;++k<=NF;)a[k]=a[k]?a[k] FS $k:$k} END{for(k=0;k++<NF;)print a[k]}' |
     grep "Bzy_MHz" | awk -F " " '{print $11}')
@@ -744,26 +762,26 @@ isst_tf_freq_test() {
   delta_cpu9=$(("$hp_turbo_freq_cpu9" - "$base_turbo_freq_cpu9"))
   test_print_trc "The CPU9 delta between high priority turbo freq vs. base turbo freq: $delta_cpu9 MHz"
 
-  #Print the high priority turbo freq between opportunistic and real one
+  # Print the high priority turbo freq between opportunistic and real one
   hp_tf_gap_cpu8=$(("$opportunistic_hp_tf" - "$hp_turbo_freq_cpu8"))
   test_print_trc "The ISST HP TF gap between opportunistic vs. actual: $hp_tf_gap_cpu8 MHz"
   hp_tf_gap_cpu9=$(("$opportunistic_hp_tf" - "$hp_turbo_freq_cpu9"))
   test_print_trc "The ISST HP TF gap between opportunistic vs. actual: $hp_tf_gap_cpu9 MHz"
 
   sleep 30
-  #Kill stress threads
+  # Kill stress threads
   [[ -z "$stress_pid" ]] || do_cmd "kill -9 $stress_pid"
 
   sleep 30
-  #Recover the isst turbo freq disable state
+  # Recover the isst turbo freq disable state
   do_cmd "intel-speed-select -c 8,9 turbo-freq disable -a"
   test_print_trc "Recover the default isst turbo freq setting: disable"
 
-  #Recover the default SST Perf profile level to 0
+  # Recover the default SST Perf profile level to 0
   test_print_trc "Recover the config level to the default setting: 0"
   do_cmd "intel-speed-select -o pp.out perf-profile set-config-level -l 0 -o"
 
-  #Expect the high priority CPUs turbo freq should at least 100Mhz larger than the base turbo freq
+  # Expect the high priority CPUs turbo freq should at least 100Mhz larger than the base turbo freq
   if [[ $(echo "$delta_cpu8 < 100" | bc) -eq 1 ]] || [[ $(echo "$delta_cpu9 < 100" | bc) -eq 1 ]]; then
     test_print_trc "Will check power limit logs:"
     if power_limit_check; then
