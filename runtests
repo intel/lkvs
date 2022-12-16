@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
-###############################################################################
-# SPDX-License-Identifier: GPL-2.0-only                                       #
-# Copyright (c) 2022 Intel Corporation.                                       #
-#                                                                             #
-# Common Bash Functions                                                       #
-###############################################################################
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (c) 2022 Intel Corporation.
 
 source .env
 
@@ -93,7 +89,7 @@ runcmdfile() {
   local subfolder=""
 
   if [[ "$cmdfile" == *"/"* ]]; then
-    subfolder=$(echo ${cmdfile%/*})
+    subfolder=${cmdfile%/*}
   else
     echo "cmdfile:$cmdfile(no '/') is not in a subfolder!"
   fi
