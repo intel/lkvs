@@ -11,8 +11,16 @@ on:
 jobs:
   CodeCheck:
     runs-on: ubuntu-latest
-    container: hanning0511/lkvs-pr-check:latest
     steps:
+      - name: Setup Environment
+        run: |
+          sudo apt install -y python3 python3-pip python3-git python3-ply git shellcheck perl codespell
+          sudo mkdir -p /usr/share/codespell
+          sudo wget https://raw.githubusercontent.com/codespell-project/codespell/master/codespell_lib/data/dictionary.txt -O /usr/share/codespell/dictionary.txt
+          sudo wget https://raw.githubusercontent.com/torvalds/linux/master/scripts/spelling.txt -O /usr/bin/spelling.txt
+          sudo wget https://raw.githubusercontent.com/torvalds/linux/master/scripts/const_structs.checkpatch -O /usr/bin/const_structs.checkpatch
+          sudo wget https://raw.githubusercontent.com/torvalds/linux/master/scripts/checkpatch.pl -O /bin/checkpatch.pl
+          sudo chmod +x /bin/checkpatch.pl
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
@@ -20,6 +28,4 @@ jobs:
       - name: Check Code
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          pr_check "origin/${{ github.base_ref }}" "${{ github.sha }}"
-      - name: Report Job Status
-        run: echo "Job's status is ${{ job.status }}."
+          ./.github/scripts/pr_check "origin/${{ github.base_ref }}" "${{ github.sha }}"
