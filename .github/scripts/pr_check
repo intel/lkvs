@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
+
+
+import sys
+import json
+import subprocess as sp
+from pathlib import Path
+
+
+SC_BASE_URL = "https://github.com/koalaman/shellcheck/wiki/SC"
+
+
+class DiffFile:
+    def __init__(self, text: str):
+        items = text.split("\t")
+        self.Dtype = items[0]
+        self.Dpath = items[1]
+
+    def __str__(self):
+        return f"<DiffFile type={self.Dtype} path={self.Dpath}>"
+
+
+class BashChecker:
+
+    EXCLUDE_CODES = [1091, 2010, 2011]
+
+    def __init__(self, df: DiffFile):
+        self._diff_file = df
+        self._raw = []
+
+    def do(self):
+        self._shellcheck()
+        self._analyze()
+
+    def _shellcheck(self):
+        code = ",".join([str(c) for c in self.EXCLUDE_CODES])
+        cmd = f"shellcheck -e {code} -s bash -f json {self._diff_file.Dpath}"
+        self._raw = json.loads(sp.getoutput(cmd))
+
+    def _analyze(self):
+        if not len(self._raw):
+            return
+
+        for i in self._raw:
+            file = i["file"]
+            line = i["line"]
+            msg = i["message"]
+            code = i["code"]
+            print(f"{file}:{line} - {msg}, refer to {SC_BASE_URL}{code}")
+
+        raise Exception(f"taints found in {self._diff_file.Dpath}!")
+
+
+class CChecker:
+    def __init__(self, df: DiffFile):
+        self._diff_file = df
+
+    def do(self):
+        cmd = f"checkpatch.pl --no-tree --codespell --strict --file {self._diff_file.Dpath}"
+        code, output = sp.getstatusoutput(cmd)
+
+        if not code:
+            return
+
+        for line in output.split("\n"):
+            if not line:
+                continue
+            print(line)
+
+        raise Exception(f"taints found in {self._diff_file.Dpath}!")
+
+
+def new_checker(df: DiffFile):
+    if df.Dtype == "D" or not Path(df.Dpath).exists():
+        return
+
+    if df.Dtype == "D" or not Path(df.Dpath).exists():
+        return
+
+    if df.Dpath.endswith(".sh") and df.Dtype in ["A", "M"]:
+        return BashChecker(df)
+    elif df.Dtype in ["A", "M"] and (df.Dpath.endswith(".c") or df.Dpath.endswith(".h")):
+        return CChecker(df)
+
+
+class DiffText:
+    def __init__(self, dt: list):
+        self._file_list = [DiffFile(i) for i in dt]
+
+    @ classmethod
+    def load_diff(cls, diff_from, diff_to):
+        cmd = f"git diff --name-status {diff_from}..{diff_to}"
+        code, output = sp.getstatusoutput(cmd)
+        if code:
+            raise Exception(f"fail to get diff - {output}")
+        dt = [i for i in output.split("\n") if i]
+        return cls(dt)
+
+    def process(self):
+        for df in self._file_list:
+            print(f"Diff File: {df}")
+            checker = new_checker(df)
+            if checker is None:
+                continue
+            checker.do()
+
+
+DiffText.load_diff(sys.argv[1], sys.argv[2]).process()
