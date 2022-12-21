@@ -1,0 +1,22 @@
+#It will run perf_tests.sh for some basic tests for PT
+
+perf_tests.sh -t fp
+perf_tests.sh -t disablebranch
+perf_tests.sh -t pt
+perf_tests.sh -t pwr_evt
+perf_tests.sh -t pwr_evt_branch
+perf_tests.sh -t pwr_evt_itrace
+perf_tests.sh -t user
+perf_tests.sh -t kernel
+perf_tests.sh -t cyc
+perf_tests.sh -t mtc
+perf_tests.sh -t pebs
+perf_tests.sh -t lbr
+perf_tests.sh -t mtopa
+perf_tests.sh -t sample
+perf_tests.sh -t kernel_m
+perf_tests.sh -t miss_frequency
+perf_tests.sh -t virtual_lbr
+perf_tests.sh -t lost_data
+perf_tests.sh -t notnt
+perf_tests.sh -t event_trace
