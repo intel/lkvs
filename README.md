@@ -1,19 +1,17 @@
 # Linux Kernel Validation Suite
 
-Linux Kernel Validation Suite (LKVS) is a test suite of Linux Kernel. It's a
-developing project developed by Intel Core Linux Kernel Val Team. The goal is
-to improve the quality of Linux Kernel code which is contributed by the Intel.
+The Linux Kernel Validation Suite (LKVS) is a Linux Kernel test suite. It is a working project created by the Intel Core Linux Kernel Val Team.
+The purpose is to improve the quality of Intel-contributed Linux Kernel code. Furthermore, it shows the customer how to use or validate the features.
 
-So far, the initial version covers test cases for feature AMX (Advanced Matrix
-Extensions), Intel_TH (Trace Hub), CET (Control flow Enhancement Technology)
-shadow stack, XSTATE and UMIP(User-Mode Instruction Prevention). More detail
-and contribute rule please refer to the following.
+More details please refer to following.
 
-## Features (To-do)
+## Features
 
   * [AMX(Advanced Matrix Extensions)](amx/README.md)
   * [cet(Control flow Enhancement Technology)](cet/README.md)
+  * [cstate](cstate/README.md)
   * [Intel_TH(Trace Hub)](th/README.md)
+  * [Intel_PT](pt/README.md)
   * [UMIP(User-Mode Instruction Prevention)](umip/README.md)
   * [xsave](xsave/README.md)
 
@@ -27,11 +25,45 @@ cd lkvs
 make
 ```
 
+## Alternativly compile the whole project with Docker
+
+```
+make docker_image
+make docker_make
+```
+
 ## Compile a single test case
 
 ```
 cd lkvs/<test>
 make
+```
+
+# Run tests
+
+There're two ways to run the tests.
+
+## Binary/Shell directly
+
+Normally, there're one or more executable binaries or scirpts in a sub-project, once it is compiled successfully. The easiest way is to run them directly.
+
+## Case runner
+
+**runtests** is a straightforward test runner that can execute a single or a set of test cases and redirect the log.
+
+There are 2 ways to pass test to **runtests**:
+  1. `-c`: Pass test cmdline.
+  2. `-f <component/tests*>`: the `tests*` file under each component folder records the detailed test cmd lines.
+
+Output of tests can be saved in a file using `-o` option.
+
+Examples:
+
+```
+$ ./runtests -f <cmdfile>
+$ ./runtests -f <cmdfile> -o <logfile>
+$ ./runtests -c <cmdline>
+$ ./runtests -c <cmdline> -o <logfile>
 ```
 
 # Report a problem
@@ -45,12 +77,3 @@ Any pull request are welcomed, the canonical patch format please refer to the Ke
 # License
 
 See [LICENSE](https://github.com/intel/lkvs/blob/main/LICENSE) for details.
-
-# TO-DO
-
-    a, Fix compile warning.
-    b, Make use of docker to compile project.
-    c, Unify the output.
-    d, Pre-checkin check.
-    e, Post-checkin execution.
-    f, Feature introduction
