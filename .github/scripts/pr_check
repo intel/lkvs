@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 
+import re
 import sys
 import json
 import subprocess as sp
@@ -17,8 +18,27 @@ class DiffFile:
         self.Dtype = items[0]
         self.Dpath = items[1]
 
-    def __str__(self):
+    def __repr__(self):
         return f"<DiffFile type={self.Dtype} path={self.Dpath}>"
+
+
+class CheckResult:
+    def __init__(self, diff_file: DiffFile):
+        self._diff_file = diff_file
+        self.errors = []
+        self.fixes = []
+
+    def __str__(self):
+        s = f"\n>>>> Taints found in file: {self._diff_file.Dpath}"
+        if self.errors:
+            s += f"\n>>>> Hints:"
+            for hint in self.errors:
+                s += f"\n    {hint}"
+        if self.fixes:
+            s += f"\n>>>> Fixes:"
+            for fix in self.fixes:
+                s += f"\n    {fix}"
+        return s
 
 
 class BashChecker:
@@ -30,26 +50,23 @@ class BashChecker:
         self._raw = []
 
     def do(self):
-        self._shellcheck()
-        self._analyze()
-
-    def _shellcheck(self):
         code = ",".join([str(c) for c in self.EXCLUDE_CODES])
         cmd = f"shellcheck -e {code} -s bash -f json {self._diff_file.Dpath}"
-        self._raw = json.loads(sp.getoutput(cmd))
+        errors = json.loads(sp.getoutput(cmd))
 
-    def _analyze(self):
-        if not len(self._raw):
-            return
+        result = CheckResult(self._diff_file)
+        if not len(errors):
+            return None
 
-        for i in self._raw:
-            file = i["file"]
-            line = i["line"]
-            msg = i["message"]
-            code = i["code"]
-            print(f"{file}:{line} - {msg}, refer to {SC_BASE_URL}{code}")
+        for error in errors:
+            file = error["file"]
+            line = error["line"]
+            msg = error["message"]
+            code = error["code"]
+            result.errors.append(
+                f"{file}:{line} - {msg}, refer to {SC_BASE_URL}{code}")
 
-        raise Exception(f"taints found in {self._diff_file.Dpath}!")
+        return result
 
 
 class CChecker:
@@ -57,24 +74,34 @@ class CChecker:
         self._diff_file = df
 
     def do(self):
-        cmd = f"checkpatch.pl --no-tree --codespell --strict --file {self._diff_file.Dpath}"
-        code, output = sp.getstatusoutput(cmd)
-
-        if not code:
-            return
+        pattern = r"total: (\d{1,}) errors, (\d{1,}) warnings, (\d{1,}) checks,.+"
+        cmd = f"checkpatch.pl --no-tree --codespell --strict --fix --file {self._diff_file.Dpath}"
+        errors = 0
+        warnings = 0
+        output = sp.getoutput(cmd)
+        result = CheckResult(self._diff_file)
 
         for line in output.split("\n"):
-            if not line:
-                continue
-            print(line)
+            result.errors.append(line)
 
-        raise Exception(f"taints found in {self._diff_file.Dpath}!")
+            match = re.search(pattern, line)
+            if match:
+                errors, warnings, _ = match.groups()
+                break
+
+        # We only care about errors and warnings
+        if not int(errors) and not int(warnings):
+            return None
+
+        fix_file = Path(
+            f"{self._diff_file.Dpath}.EXPERIMENTAL-checkpatch-fixes")
+        if fix_file.exists():
+            result.fixes.extend(fix_file.read_text().split("\n"))
+
+        return result
 
 
 def new_checker(df: DiffFile):
-    if df.Dtype == "D" or not Path(df.Dpath).exists():
-        return
-
     if df.Dtype == "D" or not Path(df.Dpath).exists():
         return
 
@@ -98,12 +125,26 @@ class DiffText:
         return cls(dt)
 
     def process(self):
+        results = []
+
         for df in self._file_list:
-            print(f"Diff File: {df}")
             checker = new_checker(df)
             if checker is None:
                 continue
-            checker.do()
+
+            print(f"checking {df.Dpath} ...")
+
+            result = checker.do()
+            if result is None:
+                continue
+
+            results.append(result)
+
+        for result in results:
+            print(result)
+
+        if len(results):
+            sys.exit(1)
 
 
 DiffText.load_diff(sys.argv[1], sys.argv[2]).process()
