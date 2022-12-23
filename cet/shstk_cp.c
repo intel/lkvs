@@ -82,13 +82,13 @@ void shstk_violation(void)
 	asm("movq %%rbp,%0" : "=r"(rbp));
 
 	printf("[INFO]\tdo_hack() change address for return:\n");
-	printf("[INFO]\tBefore,ssp:%lx,*ssp:%lx,rbp:%p,*rbp:%lx,*(rbp+1):%lx\n",
+	printf("[INFO]\tBefore,ssp:%p,*ssp:%lx,rbp:%p,*rbp:%lx,*(rbp+1):%lx\n",
 	       ssp, *ssp, rbp, *rbp, *(rbp + 1));
 
 	/* rbp+1(8bytes) saved sp(ret ip), change rbp+1 to change sp content */
 	*(rbp + 1) = (unsigned long)hacked;
 
-	printf("[INFO]\tAfter, ssp:%lx,*ssp:%lx,rbp:%p,*rbp:%lx,*(rbp+1):%lx\n",
+	printf("[INFO]\tAfter, ssp:%p,*ssp:%lx,rbp:%p,*rbp:%lx,*(rbp+1):%lx\n",
 	       ssp, *ssp, rbp, *rbp, *(rbp + 1));
 }
 
@@ -119,7 +119,7 @@ int main(void)
 	ssp = rdssp();
 
 	if (!ssp) {
-		printf("[FAIL]\tCould not read ssp:%p.\n", ssp);
+		printf("[FAIL]\tCould not read ssp:%lx.\n", ssp);
 		return 1;
 	}
 	printf("[PASS]\tSHSTK enabled, ssp:%lx\n", ssp);
