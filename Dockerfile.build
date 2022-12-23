@@ -10,9 +10,12 @@ RUN dpkg --add-architecture i386
 RUN dpkg --print-foreign-architectures
 RUN \
 	apt-get update && \
-	apt-get install gcc-11=11.2.0-19ubuntu1 make=4.3-4.1build1 libelf1  gcc-multilib g++-multilib -y --no-install-recommends && \
+	apt-get install gcc-11=11.2.0-19ubuntu1 make=4.3-4.1build1 libelf1  gcc-multilib g++-multilib git cmake -y --no-install-recommends && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
+
+RUN export GIT_SSL_NO_VERIFY=true && git clone http://github.com/intel/libipt.git && \
+	cd libipt && cmake . && make install
 
 RUN mkdir -p /src
 WORKDIR /src
