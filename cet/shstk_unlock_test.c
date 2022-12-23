@@ -133,47 +133,47 @@ long unlock_shstk(pid_t pid)
 
 	ret = ptrace(PTRACE_GETREGSET, pid, NT_X86_SHSTK, &iov_cet);
 	if (ret) {
-		printf("[FAIL]\tGETREGSET NT_X86_SHSTK fail ret:%d, errno:%d\n",
+		printf("[FAIL]\tGETREGSET NT_X86_SHSTK fail ret:%ld, errno:%d\n",
 		       ret, errno);
 		result = 1;
 	} else if (user_ssp == 0) {
-		printf("[FAIL]\tcet_ssp:%d is 0\n", user_ssp);
+		printf("[FAIL]\tcet_ssp:%ld is 0\n", user_ssp);
 		result = 1;
 	} else {
-		printf("[PASS]\tGET CET REG ret:%d, err:%d, ssp:%lx\n",
+		printf("[PASS]\tGET CET REG ret:%ld, err:%d, ssp:%lx\n",
 		       ret, errno, user_ssp);
 	}
 
 	ret = ptrace(PTRACE_SETREGSET, pid, NT_X86_SHSTK, &iov_cet);
 	if (ret) {
-		printf("[FAIL]\tSETREGSET NT_X86_SHSTK fail ret:%d, errno:%d\n",
+		printf("[FAIL]\tSETREGSET NT_X86_SHSTK fail ret:%ld, errno:%d\n",
 		       ret, errno);
 		result = 1;
 	} else if (user_ssp == 0) {
-		printf("[FAIL]\tcet_ssp:%d is 0\n", user_ssp);
+		printf("[FAIL]\tcet_ssp:%ld is 0\n", user_ssp);
 		result = 1;
 	} else {
-		printf("[PASS]\tSET CET REG ret:%d, err:%d, ssp:%lx\n",
+		printf("[PASS]\tSET CET REG ret:%ld, err:%d, ssp:%lx\n",
 		       ret, errno, user_ssp);
 	}
 
 	user_ssp = -1;
 	ret = ptrace(PTRACE_SETREGSET, pid, NT_X86_SHSTK, &iov_cet);
 	if (ret) {
-		printf("[PASS]\tSET ssp -1 failed(expected) ret:%d, errno:%d\n",
+		printf("[PASS]\tSET ssp -1 failed(expected) ret:%ld, errno:%d\n",
 		       ret, errno);
 	} else {
-		printf("[FAIL]\tSET ssp -1 ret:%d, err:%d, ssp:%lx\n",
+		printf("[FAIL]\tSET ssp -1 ret:%ld, err:%d, ssp:%lx\n",
 		       ret, errno, user_ssp);
 		result = 1;
 	}
 
 	ret = ptrace(PTRACE_GETREGSET, pid, NT_X86_XSTATE, &iov);
 	if (ret) {
-		printf("[FAIL]\tGET xstate failed ret:%d\n", ret);
+		printf("[FAIL]\tGET xstate failed ret:%ld\n", ret);
 		result = 1;
 	} else {
-		printf("[PASS]\tGET xstate successfully ret:%d\n", ret);
+		printf("[PASS]\tGET xstate successfully ret:%ld\n", ret);
 	}
 
 detach:
