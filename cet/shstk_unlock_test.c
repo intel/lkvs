@@ -57,7 +57,7 @@
 /*
  * For use in inline enablement of shadow stack.
  *
- * The program can't return from the point where shadow stack get's enabled
+ * The program cannot return from the point where the shadow stack is enabled
  * because there will be no address on the shadow stack. So it can't use
  * syscall() for enablement, since it is a function.
  *
@@ -106,6 +106,7 @@ long unlock_shstk(pid_t pid)
 	struct iovec iov_cet = { .iov_base = &user_ssp, .iov_len = sizeof(user_ssp) };
 
 	if (ptrace(PTRACE_SEIZE, pid, 0, 0)) {
+		free(xstate);
 		printf("[FAIL]\tCan't attach to %d", pid);
 		return -1;
 	}
@@ -176,6 +177,7 @@ long unlock_shstk(pid_t pid)
 	}
 
 detach:
+	free(xstate);
 	if (ptrace(PTRACE_DETACH, pid, NULL, 0)) {
 		printf("Unable to detach %d", pid);
 		result = 1;
