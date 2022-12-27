@@ -18,15 +18,15 @@ int seek_pck_w_lib(enum pt_packet_type pt_type, __u64 *buf_ev, long bufsize)
 {
 	struct pt_packet_decoder *decoder;
 	struct pt_config config;
-	__u64 offset;
+	uint64_t offset;
 	int r_val = -1;
 	int errcode;
 	struct pt_packet packet;
 
 	memset(&config, 0, sizeof(config));
 	pt_config_init(&config);
-	config.begin = buf_ev;
-	config.end = buf_ev + bufsize;
+	config.begin = (uint8_t *)buf_ev;
+	config.end = (uint8_t *)(buf_ev + bufsize);
 
 	decoder = pt_pkt_alloc_decoder(&config);
 	if (!decoder) {
@@ -36,16 +36,16 @@ int seek_pck_w_lib(enum pt_packet_type pt_type, __u64 *buf_ev, long bufsize)
 	}
 	errcode = pt_pkt_sync_set(decoder, 0ull);
 	if (errcode < 0) {
-		printf("sync error", 0ull, errcode);
+		printf("sync error, %lld, errcode=%d", 0ull, errcode);
 		r_val = -1;
 		return r_val;
 	}
 
 	for (;;) {
-		printf("offset = %d\n", offset);
+		printf("offset = %ld\n", offset);
 		errcode = pt_pkt_get_offset(decoder, &offset);
 		if (errcode < 0) {
-			printf("error getting offset %llu %d\r\n", offset, errcode);
+			printf("error getting offset %lu %d\r\n", offset, errcode);
 				r_val = -1;
 				return r_val;
 		}
@@ -131,7 +131,7 @@ __u64 **create_map(int fde, long bufsize, int sn_fu_sm, int *fdi)
 
 	/* user page size */
 	if (buf_ev[0] != MAP_FAILED && sn_fu_sm != 2) {
-		pc = buf_ev[0];
+		pc = (struct perf_event_mmap_page *)buf_ev[0];
 		pc->aux_offset = p_buf_size;
 		pc->aux_size = bufsize;
 		buf_ev[1] = mmap(NULL, bufsize, pro_to, MAP_SHARED, fde, p_buf_size);
