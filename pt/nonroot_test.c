@@ -68,7 +68,7 @@ int non_pri_test(int mode)
 	printf("buf_size = %ld\n", buf_size);
 	pmp = (struct perf_event_mmap_page *)buf_m[0];
 	head = (*(volatile __u64 *)&pmp->aux_head);
-	printf("head = %ld\n", head);
+	printf("head = %lld\n", head);
 	if (head == 0) {
 		FAIL = 1;
 		printf("No trace generated!\n");

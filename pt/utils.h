@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-only
+/* SPDX-License-Identifier: GPL-2.0-only */
 // Copyright (c) 2022 Intel Corporation.
 
 #ifndef _UTILS_H_
@@ -9,6 +9,8 @@
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 #include "intel-pt.h"
 
 #define PAGESIZE 4096
