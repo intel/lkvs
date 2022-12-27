@@ -58,9 +58,9 @@ int disable_branch_check(void)
 	ioctl(fde, PERF_EVENT_IOC_DISABLE);
 
 	printf("buf_size = %ld\n", buf_size);
-	pmp = buf_m[0];
+	pmp = (struct perf_event_mmap_page *)buf_m[0];
 	head = (*(volatile __u64 *)&pmp->aux_head);
-	printf("head = %ld\n", head);
+	printf("head = %lld\n", head);
 
 	c_type = ppt_fup;
 	if (seek_pck_w_lib(c_type, buf_m[1], head) == 0) {
