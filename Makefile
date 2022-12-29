@@ -3,13 +3,17 @@
 
 SUBDIRS = $(shell ls -d */)
 all:
-	for dir in $(SUBDIRS) ; do \
-		make -C  $$dir ; \
+	for dir in $(SUBDIRS) ; do			\
+		if [ -f "$$dir/Makefile" ]; then	\
+			make -C $$dir || exit 2;	\
+		fi					\
 	done
 
 clean:
-	for dir in $(SUBDIRS) ; do \
-		make -C  $$dir clean ; \
+	for dir in $(SUBDIRS) ; do 			\
+		if [ -f "$$dir/Makefile" ]; then	\
+			make -C  $$dir clean || exit 2;	\
+		fi					\
 	done
 
 docker_image:
