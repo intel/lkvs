@@ -1,0 +1,19 @@
+# This file collects RAPL cases which can run against intel_rapl driver
+# on Intel® Architecture-based client platforms.
+
+intel_rapl_test.sh -t check_sysfs
+intel_rapl_test.sh -t check_pkg_domain
+intel_rapl_test.sh -t check_pp0_domain
+intel_rapl_test.sh -t check_pp1_domain
+intel_rapl_test.sh -t check_pkg_domain_msr
+intel_rapl_test.sh -t check_pkg_power_limit_msr
+intel_rapl_test.sh -t check_pkg_energy_status
+intel_rapl_test.sh -t check_pkg_energy_status_with_workload
+intel_rapl_test.sh -t check_pkg_power_limit_75
+intel_rapl_test.sh -t check_pkg_power_limit_50
+intel_rapl_test.sh -t check_pp0_energy_status
+intel_rapl_test.sh -t check_pp0_energy_status_with_workload
+intel_rapl_test.sh -t check_pp1_energy_status
+intel_rapl_test.sh -t sysfs_perf_name_compare
+intel_rapl_test.sh -t sysfs_perf_energy_compare_workload_client
+intel_rapl_test.sh -t sysfs_turbostat_energy_compare_workload_client
