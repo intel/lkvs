@@ -1,0 +1,6 @@
+cet_app
+*.ko
+*.o
+cet_ioctl.mod.c
+modules.order
+Module.symvers
