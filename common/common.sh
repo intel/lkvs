@@ -359,7 +359,7 @@ dmesg_pattern_check() {
 # Record last timestamp in dmesg and store the value in variable
 # LAST_DMESG_TIMESTAMP. The value is refered in function extract_case_dmesg.
 last_dmesg_timestamp() {
-  LAST_DMESG_TIMESTAMP=$(dmesg | tail -n1 | awk '{print $1}' | tr -d "[]")
+  LAST_DMESG_TIMESTAMP=$(dmesg | tail -n1 | awk -F "]" '{print $1}' | tr -d "[]")
   test_print_trc "recorded dmesg timestamp: $LAST_DMESG_TIMESTAMP"
   export LAST_DMESG_TIMESTAMP
 }
