@@ -3,7 +3,7 @@ ifeq ($(KERNELRELEASE),)
 
 	KERNEL_SOURCE := /usr/src/kernels/$(shell uname -r)
 	PWD := $(shell pwd)
-default: module cet_app
+default: cet_app module
 
 module:
 	$(MAKE) -C $(KERNEL_SOURCE) SUBDIRS=$(PWD) modules
