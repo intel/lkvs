@@ -24,9 +24,29 @@ git clone https://github.com/intel/lkvs.git
 cd lkvs
 make
 ```
+Note. Usually, it needs various dependencies if you're trying to compile the whole project locally.
+Each sub-project should detail its particular way, if any. There are some known dependency issues.
+
+### Known dependency issue locally
+* Intel PT
+Cases of Intel PT need a 3rd part library libipt.
+```
+export GIT_SSL_NO_VERIFY=true
+git clone http://github.com/intel/libipt.git
+cd libipt && cmake . && make install
+```
+
+* CET
+Cases of CET need 32-bit architect support:
+```
+dpkg --add-architecture i386
+dpkg --print-foreign-architectures
+apt-get update
+apt-get install gcc-11 make libelf1 gcc-multilib g++-multilib
+```
 
 ## Alternativly compile the whole project with Docker
-
+** This is the recommended way **
 ```
 make docker_image
 make docker_make
