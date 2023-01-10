@@ -1,0 +1,28 @@
+#!/bin/bash
+# This is a fake uname.
+#
+# It cheats the Makefile to locate ubuntu linux-header-5.15
+# but not the one one the host.
+
+while getopts ":armpios" arg; do
+  case $arg in
+    a)
+      echo "Linux lkvs 5.15.0-52-generic #58-Ubuntu SMP Thu Oct 13 08:03:55 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux"
+      ;;
+    r)
+      echo "5.15.0-52-generic"
+      ;;
+    m|p|i)
+      echo "x86_64"
+      ;;
+    o)
+      echo "GNU/Linux"
+      ;;
+    s)
+      echo "Linux"
+      ;;
+    ?)
+      uname -$OPTARG
+      ;;
+  esac
+done
