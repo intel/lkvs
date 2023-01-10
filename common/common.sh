@@ -410,15 +410,20 @@ bin_output_dmesg() {
   local bin_name=$1
   local parm=$2
   local dmesg_file=""
+  local bin_file=""
 
   BIN_OUTPUT=""
   BIN_RET=""
   BIN_DMESG=""
   last_dmesg_timestamp
-  test_print_trc "$bin_name $parm"
-  [[ -e "$bin_name" ]] || block_test "No $bin_name in lkvs, do you compile it?"
-  BIN_OUTPUT=$($bin_name $parm 2>/dev/null)
+  bin_file=$(which "$bin_name" 2>/dev/null)
+  [[ -n "$bin_file" ]] || block_test "No $bin_name in lkvs, have you compiled it?"
+  test_print_trc "$bin_file $parm"
+  BIN_OUTPUT=$("$bin_file" "$parm" 2>/dev/null)
   BIN_RET=$?
   dmesg_file=$(extract_case_dmesg -f)
-  BIN_DMESG=$(cat $dmesg_file)
+  BIN_DMESG=$(cat "$dmesg_file")
+  export BIN_OUTPUT
+  export BIN_RET
+  export BIN_DMESG
 }
