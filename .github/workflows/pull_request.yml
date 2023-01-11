@@ -29,3 +29,24 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           ./.github/scripts/pr_check "origin/${{ github.base_ref }}" "${{ github.sha }}"
+  BuildCheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Environment
+        run: |
+          sudo apt remove docker docker-engine docker.io containerd runc -y
+          sudo apt install ca-certificates curl gnupg lsb-release -y
+          sudo mkdir -p /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt update
+          sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Build Docker Image
+        run: sudo docker build -f ./Dockerfile.build -t builder .
+      - name: Build Project
+        run: sudo docker run -v `pwd`:/src builder make
