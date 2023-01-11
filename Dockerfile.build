@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (c) 2022 Intel Corporation.
+
+FROM ubuntu:22.04
+
+ARG PROXY
+ENV http_proxy=$PROXY
+ENV https_proxy=$PROXY
+
+COPY common/uname /usr/local/sbin/
+
+RUN dpkg --add-architecture i386
+RUN dpkg --print-foreign-architectures
+RUN \
+	apt-get update && \
+	apt-get install gcc-11 make libelf1 gcc-multilib g++-multilib git cmake linux-headers-`uname -r` -y --no-install-recommends && \
+	apt-get clean && \
+	rm -rf /var/lib/apt/lists/*
+
+RUN export GIT_SSL_NO_VERIFY=true && rm -rf libipt && git clone http://github.com/intel/libipt.git && \
+	cd libipt && cmake . && make install
+
+RUN mkdir -p /src
+WORKDIR /src
+
+CMD ["sh"]
