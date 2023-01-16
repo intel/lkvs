@@ -45,6 +45,26 @@ apt-get update
 apt-get install gcc-11 make libelf1 gcc-multilib g++-multilib
 ```
 
+Make the driver for cet_driver:
+```
+Install the devel and headers package for target kernel and boot up
+with target kernel.
+For CentOS and so on rpm package related OS:
+rpm -ivh --force kernel-TARGET_VERSION.rpm
+rpm -ivh --force kernel-devel-TARGET_VERSION.rpm
+rpm -ivh --force kernel-headers-TARGET_VERSION.rpm
+
+For Ubuntu and so on deb package related OS:
+dpkg -i linux-xxx-image_TARGET_VERSION.deb
+dpkg -i linux-xxx-headers_TARGET_VERSION.deb
+dpkg -i linux-xxx-dev_TARGET_VERSION.deb
+dpkg -i linux-xxx-tools_TARGET_VERSION.deb
+
+Boot up with target kernel version.
+cd cet_driver
+make
+```
+
 ## Alternativly compile the whole project with Docker
 ** This is the recommended way **
 ```
