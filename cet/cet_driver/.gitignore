@@ -1,0 +1,7 @@
+*.cmd
+*.ko
+*.o
+.tmp_versions
+cet_ioctl.mod.c
+modules.order
+Module.symvers

@@ -3,7 +3,16 @@
 # Copyright (c) 2022 Intel Corporation
 # @Desc  Test script to verify Intel CET functionality
 
-cd "$(dirname $0)" 2>/dev/null; source ../.env
+cd "$(dirname "$0")" 2>/dev/null && source ../.env
+
+readonly NULL="null"
+readonly CONTAIN="contain"
+
+TEST_MOD="cet_ioctl"
+TEST_MOD_KO="${TEST_MOD}.ko"
+KO_FILE="./cet_driver/${TEST_MOD_KO}"
+
+export teardown_handler="cet_teardown"
 
 usage() {
   cat <<__EOF
@@ -16,25 +25,85 @@ usage() {
 __EOF
 }
 
-cet_dmesg_check() {
-  local bin_name=$1
-  local bin_parm=$2
-  local verify_cp=""
+# Reserve for taerdown, present no change for cpu test
+cet_teardown() {
+  check_mod=$(lsmod | grep "$TEST_MOD")
+  [[ -z "$check_mod" ]] || {
+    test_print_trc "rmmod $TEST_MOD"
+    rmmod "$KO_FILE"
+  }
+}
 
-  bin_output_dmesg "$BIN_NAME" "$PARM"
-  verify_cp=$(echo "$BIN_DMESG" | grep -i "$KEYWORD")
-  if [[ -z "$verify_cp" ]]; then
-    die "No $KEYWORD found in dmesg:$BIN_DMESG when executed $BIN_NAME $PARM"
+load_cet_driver() {
+  local ker_ver=""
+  local check_mod=""
+
+  pat=$(pwd)
+  echo "pat:$pat"
+  [[ -e "$KO_FILE" ]] || block_test "No $TEST_MOD_KO exist, please make it first"
+  mod_info=$(modinfo "$KO_FILE")
+  ker_ver=$(uname -r)
+  if [[ "$mod_info" == *"$ker_ver"* ]]; then
+    test_print_trc "$TEST_MOD_KO matched with current kernel version:$ker_ver"
   else
-    test_print_trc "$KEYWORD found in dmesg:$BIN_DMESG, pass."
+    block_test "$TEST_MOD_KO didn't match kernel ver:$ker_ver; modinfo:$mod_info"
+  fi
+  check_mod=$(lsmod | grep "$TEST_MOD")
+  if [[ -z "$check_mod" ]]; then
+    test_print_trc "No $TEST_MOD loaded, will load $TEST_MOD"
+    do_cmd "insmod $KO_FILE"
+  else
+    test_print_trc "$TEST_MOD is already loaded."
   fi
 }
 
+cet_dmesg_check() {
+  local bin_name=$1
+  local bin_parm=$2
+  local key=$3
+  local key_parm=$4
+  local verify_key=""
+
+  bin_output_dmesg "$bin_name" "$bin_parm"
+  verify_key=$(echo "$BIN_DMESG" | grep -i "$key")
+  case $key_parm in
+    "$CONTAIN")
+      if [[ -z "$verify_key" ]]; then
+        die "No $key found in dmesg:$BIN_DMESG when executed $bin_name $bin_parm, fail."
+      else
+        test_print_trc "$key found in dmesg:$BIN_DMESG, pass."
+      fi
+      ;;
+    "$NULL")
+      if [[ -z "$verify_key" ]]; then
+        test_print_trc "No $key in dmesg:$BIN_DMESG when test $bin_name $bin_parm, pass."
+      else
+        die "$key found in dmesg when test $bin_name $bin_parm:$BIN_DMESG, fail."
+      fi
+      ;;
+    *)
+      block_test "Invalid key_parm:$key_parm"
+      ;;
+  esac
+}
+
 cet_tests() {
+  bin_file=""
+
+  # Absolute path of BIN_NAME
+  bin_file=$(which "$BIN_NAME")
+  test_print_trc "Test bin:$bin_file $PARM, $TYPE:check dmesg $KEYWORD"
   case $TYPE in
     cp_test)
-      test_print_trc "Test bin:$BIN_NAME $PARM, $TYPE:check dmesg $KEYWORD"
-      cet_dmesg_check "$BIN_NAME" "$PARM"
+      cet_dmesg_check "$bin_file" "$PARM" "$KEYWORD" "$CONTAIN"
+      ;;
+    kmod_ibt_illegal)
+      load_cet_driver
+      cet_dmesg_check "$bin_file" "$PARM" "$KEYWORD" "$CONTAIN"
+      ;;
+    kmod_ibt_legal)
+      load_cet_driver
+      cet_dmesg_check "$bin_file" "$PARM" "$KEYWORD" "$NULL"
       ;;
     *)
       usage
@@ -69,3 +138,4 @@ while getopts :t:n:p:k:h arg; do
 done
 
 cet_tests
+exec_teardown
