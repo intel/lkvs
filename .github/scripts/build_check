@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-2.0-only
+
+set -oe pipefail
+
+wpattern=" warning: "
+logfile="build.log"
+
+docker run -v "$(pwd)":/src builder make | tee "$logfile"
+
+if grep "$wpattern" "$logfile"; then
+  echo "==========================================="
+  echo "There are build warning(s), fix required!"
+  echo "==========================================="
+  false
+fi
