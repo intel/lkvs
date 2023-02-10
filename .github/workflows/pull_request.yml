@@ -49,4 +49,4 @@ jobs:
       - name: Build Docker Image
         run: sudo docker build -f ./Dockerfile.build -t builder .
       - name: Build Project
-        run: sudo docker run -v `pwd`:/src builder make
+        run: sudo ./.github/scripts/build_check
