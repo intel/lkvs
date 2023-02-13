@@ -86,7 +86,7 @@ pkg_interrupts() {
   lines_number=$(cat "$THERMAL_PATH"/thermal_zone*/type | wc -l)
   lines=$(("$lines_number" - 1))
   for ((i = 0; i <= lines; i++)); do
-    pkg_thermal=$(grep x86_pkg_temp "$THERMAL_PATH"/thermal_zone$i/type 2>&1)
+    pkg_thermal=$(grep x86_pkg_temp "$THERMAL_PATH"/thermal_zone"$i"/type 2>&1)
     if [[ -n "$pkg_thermal" ]]; then
       test_print_trc "Thermal_zone_number with type of x86_pkg_temp: $i"
       break
@@ -108,7 +108,7 @@ pkg_interrupts() {
     stress_pid=$!
     [[ -n "$stress_pid" ]] || block_test "stress is not launched."
     sleep 10
-    temp_cur=$(cat "$THERMAL_PATH/thermal_zone$i/temp" 2>&1)
+    temp_cur=$(cat "$THERMAL_PATH"/thermal_zone"$i"/temp 2>&1)
     test_print_trc "temp_cur: $temp_cur"
     [[ $temp_cur -gt $temp_high ]] && break
     time_init=$(("$time_init" + 1))
