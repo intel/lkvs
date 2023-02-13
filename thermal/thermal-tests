@@ -1,0 +1,5 @@
+# This file collects thermal throttling and interrupts for x86_pkg_temp
+# thermal zone which is supported on Intel® Architecture-based platforms.
+
+thermal_test.sh -t check_thermal_throttling
+thermal_test.sh -t check_pkg_interrupts
