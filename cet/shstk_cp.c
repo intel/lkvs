@@ -27,8 +27,9 @@
 #define ARCH_CET_ENABLE		0x5001
 #define ARCH_CET_DISABLE	0x5002
 #define ARCH_CET_UNLOCK		0x5004
-#define CET_SHSTK		(1ULL <<  0)
-#define CET_WRSS		(1ULL <<  1)
+/* ARCH_SHSTK_ features bits */
+#define ARCH_SHSTK_SHSTK		(1ULL <<  0)
+#define ARCH_SHSTK_WRSS			(1ULL <<  1)
 /* It's from arch/x86/entry/syscalls/syscall_64.tbl file. */
 #define __NR_map_shadow_stack	451
 
@@ -97,20 +98,20 @@ int main(void)
 	int ret = 0;
 	unsigned long ssp;
 
-	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_SHSTK)) {
+	if (ARCH_PRCTL(ARCH_CET_ENABLE, ARCH_SHSTK_SHSTK)) {
 		printf("[SKIP]\tCould not enable Shadow stack.\n");
 		return 1;
 	}
 	printf("[PASS]\tEnable SHSTK successfully\n");
 
-	if (ARCH_PRCTL(ARCH_CET_DISABLE, CET_SHSTK)) {
+	if (ARCH_PRCTL(ARCH_CET_DISABLE, ARCH_SHSTK_SHSTK)) {
 		ret = 1;
 		printf("[FAIL]\tDisabling shadow stack failed\n");
 	} else {
 		printf("[PASS]\tDisabling shadow stack successfully\n");
 	}
 
-	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_SHSTK)) {
+	if (ARCH_PRCTL(ARCH_CET_ENABLE, ARCH_SHSTK_SHSTK)) {
 		printf("[SKIP]\tCould not re-enable Shadow stack.\n");
 		return 1;
 	}

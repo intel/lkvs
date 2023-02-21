@@ -36,8 +36,9 @@
 #define ARCH_SHSTK_LOCK		0x5003
 #define ARCH_SHSTK_UNLOCK	0x5004
 #define ARCH_SHSTK_STATUS	0x5005
-#define CET_SHSTK		(1ULL <<  0)
-#define CET_WRSS		(1ULL <<  1)
+/* ARCH_SHSTK_ features bits */
+#define ARCH_SHSTK_SHSTK		(1ULL <<  0)
+#define ARCH_SHSTK_WRSS			(1ULL <<  1)
 /* It's from arch/x86/entry/syscalls/syscall_64.tbl file. */
 #define __NR_map_shadow_stack	451
 /* It's from include/uapi/linux/elf.h. */
@@ -123,7 +124,7 @@ long unlock_shstk(pid_t pid)
 		goto detach;
 	}
 
-	if (ptrace(PTRACE_ARCH_PRCTL, pid, CET_SHSTK, ARCH_SHSTK_UNLOCK)) {
+	if (ptrace(PTRACE_ARCH_PRCTL, pid, ARCH_SHSTK_SHSTK, ARCH_SHSTK_UNLOCK)) {
 		printf("[FAIL]\tCan't unlock CET for %d task", pid);
 		result = 1;
 		goto detach;
@@ -201,7 +202,7 @@ int main(void)
 	unsigned long *ssp, *bp, i, loop_num = 1000000;
 	long ret = 0, result = 0;
 
-	if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, CET_SHSTK)) {
+	if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, ARCH_SHSTK_SHSTK)) {
 		printf("[FAIL]\tParent process could not enable SHSTK!\n");
 		return 1;
 	}
@@ -245,7 +246,7 @@ int main(void)
 		printf("[INFO]\tChild:%d, ssp:%p, bp,%p, *bp:%lx, *(bp+1):%lx\n",
 		       getpid(), ssp, bp, *bp, *(bp + 1));
 
-		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, CET_SHSTK)) {
+		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK)) {
 			printf("[FAIL]\tDisabling shadow stack failed\n");
 			result = 1;
 		} else {
@@ -266,7 +267,7 @@ int main(void)
 			result = 1;
 		}
 
-		if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, CET_SHSTK)) {
+		if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, ARCH_SHSTK_SHSTK)) {
 			printf("[FAIL]\tCould not re-enable Shadow stack.\n");
 			result = 1;
 		} else {
@@ -287,7 +288,7 @@ int main(void)
 			result = 1;
 		}
 
-		if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, CET_WRSS)) {
+		if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, ARCH_SHSTK_WRSS)) {
 			printf("[FAIL]\tCould not enable WRSS in child pid.\n");
 			result = 1;
 		} else {
@@ -322,7 +323,7 @@ int main(void)
 			result = 1;
 		}
 
-		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, CET_SHSTK)) {
+		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK)) {
 			printf("[FAIL]\tChild process could not disable shstk.\n");
 			result = 1;
 		} else {
@@ -354,7 +355,7 @@ int main(void)
 			}
 		}
 		/* Disable SHSTK in parent process to avoid segfault issue. */
-		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, CET_SHSTK)) {
+		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK)) {
 			printf("[FAIL]\tParent process disable shadow stack failed.\n");
 			result = 1;
 		} else {

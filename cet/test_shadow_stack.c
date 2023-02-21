@@ -37,18 +37,18 @@
 #include <pthread.h>
 #include <sys/ioctl.h>
 #include <linux/userfaultfd.h>
+#include <setjmp.h>
 
 #define SS_SIZE 0x200000
 
 /* It's from arch/x86/include/uapi/asm/mman.h file. */
 #define SHADOW_STACK_SET_TOKEN	(1ULL << 0)
 /* It's from arch/x86/include/uapi/asm/prctl.h file. */
-#define ARCH_CET_ENABLE		0x5001
-#define ARCH_CET_DISABLE	0x5002
-#define ARCH_CET_LOCK		0x5003
-#define ARCH_CET_UNLOCK		0x5004
-#define CET_SHSTK		(1ULL <<  0)
-#define CET_WRSS		(1ULL <<  1)
+#define ARCH_SHSTK_ENABLE	0x5001
+#define ARCH_SHSTK_DISABLE	0x5002
+/* ARCH_SHSTK_ features bits */
+#define ARCH_SHSTK_SHSTK		(1ULL <<  0)
+#define ARCH_SHSTK_WRSS			(1ULL <<  1)
 /* It's from arch/x86/entry/syscalls/syscall_64.tbl file. */
 #define __NR_map_shadow_stack	451
 
@@ -77,7 +77,7 @@ static inline unsigned long __attribute__((always_inline)) get_ssp(void)
 /*
  * For use in inline enablement of shadow stack.
  *
- * The program can't return from the point where shadow stack get's enabled
+ * The program can't return from the point where shadow stack gets enabled
  * because there will be no address on the shadow stack. So it can't use
  * syscall() for enablement, since it is a function.
  *
@@ -127,10 +127,10 @@ void try_shstk(unsigned long new_ssp)
 	unsigned long ssp;
 
 	printf("[INFO]\tnew_ssp = %lx, *new_ssp = %lx\n",
-		new_ssp, *((unsigned long *)new_ssp));
+	       new_ssp, *((unsigned long *)new_ssp));
 
 	ssp = get_ssp();
-	printf("[INFO]\tchanging ssp from %lx to %lx, old *ssp:%lx\n", ssp, new_ssp, *(unsigned long *)ssp);
+	printf("[INFO]\tchanging ssp from %lx to %lx\n", ssp, new_ssp);
 
 	asm volatile("rstorssp (%0)\n":: "r" (new_ssp));
 	asm volatile("saveprevssp");
@@ -240,7 +240,7 @@ int fd;
 
 void reset_test_shstk(void *addr)
 {
-	if (shstk_ptr != NULL)
+	if (shstk_ptr)
 		free_shstk(shstk_ptr);
 	shstk_ptr = create_shstk(addr);
 }
@@ -399,7 +399,7 @@ int test_mprotect(void)
 
 	segv_triggered = false;
 
-	/* mprotect a shaodw stack as read only */
+	/* mprotect a shadow stack as read only */
 	reset_test_shstk(0);
 	if (mprotect(shstk_ptr, SS_SIZE, PROT_READ) < 0) {
 		printf("[FAIL]\tmprotect(PROT_READ) failed\n");
@@ -412,13 +412,22 @@ int test_mprotect(void)
 		return 1;
 	}
 
+	/*
+	 * The shadow stack was reset above to resolve the fault, make the new one
+	 * read-only.
+	 */
+	if (mprotect(shstk_ptr, SS_SIZE, PROT_READ) < 0) {
+		printf("[FAIL]\tmprotect(PROT_READ) failed\n");
+		return 1;
+	}
+
 	/* then back to writable */
 	if (mprotect(shstk_ptr, SS_SIZE, PROT_WRITE | PROT_READ) < 0) {
 		printf("[FAIL]\tmprotect(PROT_WRITE) failed\n");
 		return 1;
 	}
 
-	/* then pivot to it and succeed */
+	/* then wrss to it and succeed */
 	if (test_shstk_access(shstk_ptr)) {
 		printf("[FAIL]\tShadow stack access to mprotect() writable memory failed\n");
 		return 1;
@@ -514,32 +523,112 @@ err:
 	return 1;
 }
 
+/*
+ * Too complicated to pull it out of the 32 bit header, but also get the
+ * 64 bit one needed above. Just define a copy here.
+ */
+#define __NR_compat_sigaction 67
+
+/*
+ * Call 32 bit signal handler to get 32 bit signals ABI. Make sure
+ * to push the registers that will get clobbered.
+ */
+int sigaction32(int signum, const struct sigaction *restrict act,
+		struct sigaction *restrict oldact)
+{
+	register long syscall_reg asm("eax") = __NR_compat_sigaction;
+	register long signum_reg asm("ebx") = signum;
+	register long act_reg asm("ecx") = (long)act;
+	register long oldact_reg asm("edx") = (long)oldact;
+	int ret = 0;
+
+	asm volatile ("int $0x80;"
+		      : "=a"(ret), "=m"(oldact)
+		      : "r"(syscall_reg), "r"(signum_reg), "r"(act_reg),
+			"r"(oldact_reg)
+		      : "r8", "r9", "r10", "r11"
+		     );
+
+	return ret;
+}
+
+sigjmp_buf jmp_buffer;
+
+void segv_gp_handler(int signum, siginfo_t *si, void *uc)
+{
+	segv_triggered = true;
+
+	/*
+	 * To work with old glibc, this can't rely on siglongjmp working with
+	 * shadow stack enabled, so disable shadow stack before siglongjmp().
+	 */
+	ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK);
+	siglongjmp(jmp_buffer, -1);
+}
+
+/*
+ * Transition to 32 bit mode and check that a #GP triggers a segfault.
+ */
+int test_32bit(void)
+{
+	struct sigaction sa;
+	struct sigaction *sa32;
+
+	/* Create sigaction in 32 bit address range */
+	sa32 = mmap(0, 4096, PROT_READ | PROT_WRITE,
+		    MAP_32BIT | MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+	sa32->sa_flags = SA_SIGINFO;
+
+	sa.sa_sigaction = segv_gp_handler;
+	if (sigaction(SIGSEGV, &sa, NULL))
+		return 1;
+	sa.sa_flags = SA_SIGINFO;
+
+	segv_triggered = false;
+
+	/* Make sure segv_triggered is set before triggering the #GP */
+	asm volatile("" : : : "memory");
+
+	/*
+	 * Set handler to somewhere in 32 bit address space
+	 */
+	sa32->sa_handler = (void *)sa32;
+	if (sigaction32(SIGUSR1, sa32, NULL))
+		return 1;
+
+	if (!sigsetjmp(jmp_buffer, 1))
+		raise(SIGUSR1);
+
+	if (segv_triggered)
+		printf("[OK]\t32 bit test\n");
+
+	return !segv_triggered;
+}
+
 int main(int argc, char *argv[])
 {
 	int ret = 0;
 
-	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_SHSTK)) {
+	if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, ARCH_SHSTK_SHSTK)) {
 		printf("[SKIP]\tCould not enable Shadow stack\n");
 		return 1;
 	}
 
-	if (ARCH_PRCTL(ARCH_CET_DISABLE, CET_SHSTK)) {
+	if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK)) {
 		ret = 1;
 		printf("[FAIL]\tDisabling shadow stack failed\n");
 	}
 
-	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_SHSTK)) {
+	if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, ARCH_SHSTK_SHSTK)) {
 		printf("[SKIP]\tCould not re-enable Shadow stack\n");
 		return 1;
 	}
 
-	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_WRSS)) {
+	if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, ARCH_SHSTK_WRSS)) {
 		printf("[SKIP]\tCould not enable WRSS\n");
 		ret = 1;
 		goto out;
 	}
-
-
 
 	/* Should have succeeded if here, but this is a test, so double check. */
 	if (!get_ssp()) {
@@ -568,24 +657,34 @@ int main(int argc, char *argv[])
 	if (test_gup()) {
 		ret = 1;
 		printf("[FAIL]\tShadow shadow stack gup\n");
+		goto out;
 	}
 
 	if (test_mprotect()) {
 		ret = 1;
 		printf("[FAIL]\tShadow shadow mprotect test\n");
+		goto out;
 	}
 
 	if (test_userfaultfd()) {
 		ret = 1;
 		printf("[FAIL]\tUserfaultfd test\n");
+		goto out;
 	}
+
+	if (test_32bit()) {
+		ret = 1;
+		printf("[FAIL]\t32 bit test\n");
+	}
+
+	return ret;
 
 out:
 	/*
 	 * Disable shadow stack before the function returns, or there will be a
 	 * shadow stack violation.
 	 */
-	if (ARCH_PRCTL(ARCH_CET_DISABLE, CET_SHSTK)) {
+	if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK)) {
 		ret = 1;
 		printf("[FAIL]\tDisabling shadow stack failed\n");
 	}

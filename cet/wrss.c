@@ -4,7 +4,7 @@
 /*
  * wrss.c: enable writable shadow stack and write value into shadow stack.
  *
- * 1. Enable writable shadow stack via syscall "ARCH_CET_ENABLE and CET_WRSS"
+ * 1. Enable writable shadow stack via syscall "ARCH_CET_ENABLE and ARCH_SHSTK_WRSS"
  * 2. Write one incorrect value into shadow stack
  * 3. The expected SISEGV should be received after ret instruction
  */
@@ -30,8 +30,9 @@
 /* It's from arch/x86/include/uapi/asm/prctl.h file. */
 #define ARCH_CET_ENABLE		0x5001
 #define ARCH_CET_DISABLE	0x5002
-#define CET_SHSTK		(1ULL <<  0)
-#define CET_WRSS		(1ULL <<  1)
+/* ARCH_SHSTK_ features bits */
+#define ARCH_SHSTK_SHSTK		(1ULL <<  0)
+#define ARCH_SHSTK_WRSS			(1ULL <<  1)
 /* It's from arch/x86/entry/syscalls/syscall_64.tbl file. */
 #define __NR_map_shadow_stack	451
 
@@ -131,9 +132,9 @@ static void *sigill_receive_expected(int signum, siginfo_t *info,
 
 	/*
 	 * arch_prctl libc has same result as ARCH_PRCTL(),
-	 * ret = syscall(SYS_arch_prctl, ARCH_CET_ENABLE, CET_WRSS);
+	 * ret = syscall(SYS_arch_prctl, ARCH_CET_ENABLE, ARCH_SHSTK_WRSS);
 	 */
-	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_WRSS)) {
+	if (ARCH_PRCTL(ARCH_CET_ENABLE, ARCH_SHSTK_WRSS)) {
 		printf("[SKIP]\tCould not enable WRSS.\n");
 		ret = 1;
 		exit(ret);
@@ -158,7 +159,7 @@ int main(int argc, char *argv[])
 {
 	unsigned long *current_shstk;
 
-	if (ARCH_PRCTL(ARCH_CET_ENABLE, CET_SHSTK)) {
+	if (ARCH_PRCTL(ARCH_CET_ENABLE, ARCH_SHSTK_SHSTK)) {
 		printf("[SKIP]\tCould not enable Shadow stack.\n");
 		return 1;
 	}
