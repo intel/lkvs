@@ -36,7 +36,7 @@ Test SHSTK violation by arch_prctl syscall way in non-SHSTK binary with below
 points:
 1. Enable shadow stack by ARCH_CET_ENABLE syscall
 2. Disable shadow stack by ARCH_CET_DISABLE syscall
-3. Enable SHSTK writeable by CET_WRSS syscall
+3. Enable SHSTK writeable by ARCH_SHSTK_WRSS syscall
 4. Allocate the shstk buffer by map_shadow_stack syscall
 5. Do the SHSTK violation by wrss the wrong shstk value, and recevie the
    expected signal SIGSEGV
@@ -61,7 +61,7 @@ This tool's purpose is testing SHSTK related instructions:
 ./wrss
 This tool will test wrss into shadow stack by wrss(q for 64bit) instruction in
 SHSTK enabled binary:
-1. Enable writable shadow stack via system call "ARCH_CET_ENABLE and CET_WRSS"
+1. Enable writable shadow stack via system call "ARCH_CET_ENABLE and ARCH_SHSTK_WRSS"
 2. Write one incorrect value into shadow stack
 3. The expected SISEGV should be received after ret instruction
 
