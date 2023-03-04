@@ -46,6 +46,8 @@
 #define NT_X86_XSTATE		0x202
 #define CPUID_LEAF_XSTATE	0xd
 
+static long err_num;
+
 /* err() exits. */
 #define fatal_error(msg, ...)	err(1, "[FAIL]\t" msg, ##__VA_ARGS__)
 
@@ -92,7 +94,7 @@ static void write_shstk(unsigned long *addr, unsigned long val)
 long unlock_shstk(pid_t pid)
 {
 	int status;
-	long ret = 0, result = 0;
+	long ret = 0;
 	uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0, xstate_size, cet_offset;
 	uint64_t *xstate, user_ssp = 0, feature = 0;
 
@@ -114,19 +116,19 @@ long unlock_shstk(pid_t pid)
 
 	if (ptrace(PTRACE_INTERRUPT, pid, 0, 0)) {
 		printf("[FAIL]\tCan't interrupt the %d task", pid);
-		result = 1;
+		err_num++;
 		goto detach;
 	}
 
 	if (wait4(pid, &status, __WALL, NULL) != pid) {
 		printf("[FAIL]\twaitpid(%d) failed", pid);
-		result = 1;
+		err_num++;
 		goto detach;
 	}
 
 	if (ptrace(PTRACE_ARCH_PRCTL, pid, ARCH_SHSTK_SHSTK, ARCH_SHSTK_UNLOCK)) {
 		printf("[FAIL]\tCan't unlock CET for %d task", pid);
-		result = 1;
+		err_num++;
 		goto detach;
 	} else {
 		printf("[PASS]\tUnlock CET successfully for pid:%d\n", pid);
@@ -136,10 +138,10 @@ long unlock_shstk(pid_t pid)
 	if (ret) {
 		printf("[FAIL]\tGETREGSET NT_X86_SHSTK fail ret:%ld, errno:%d\n",
 		       ret, errno);
-		result = 1;
+		err_num++;
 	} else if (user_ssp == 0) {
 		printf("[FAIL]\tcet_ssp:%ld is 0\n", user_ssp);
-		result = 1;
+		err_num++;
 	} else {
 		printf("[PASS]\tGET CET REG ret:%ld, err:%d, ssp:%lx\n",
 		       ret, errno, user_ssp);
@@ -149,10 +151,10 @@ long unlock_shstk(pid_t pid)
 	if (ret) {
 		printf("[FAIL]\tSETREGSET NT_X86_SHSTK fail ret:%ld, errno:%d\n",
 		       ret, errno);
-		result = 1;
+		err_num++;
 	} else if (user_ssp == 0) {
 		printf("[FAIL]\tcet_ssp:%ld is 0\n", user_ssp);
-		result = 1;
+		err_num++;
 	} else {
 		printf("[PASS]\tSET CET REG ret:%ld, err:%d, ssp:%lx\n",
 		       ret, errno, user_ssp);
@@ -166,13 +168,13 @@ long unlock_shstk(pid_t pid)
 	} else {
 		printf("[FAIL]\tSET ssp -1 ret:%ld, err:%d, ssp:%lx\n",
 		       ret, errno, user_ssp);
-		result = 1;
+		err_num++;
 	}
 
 	ret = ptrace(PTRACE_GETREGSET, pid, NT_X86_XSTATE, &iov);
 	if (ret) {
 		printf("[FAIL]\tGET xstate failed ret:%ld\n", ret);
-		result = 1;
+		err_num++;
 	} else {
 		printf("[PASS]\tGET xstate successfully ret:%ld\n", ret);
 	}
@@ -181,10 +183,10 @@ detach:
 	free(xstate);
 	if (ptrace(PTRACE_DETACH, pid, NULL, 0)) {
 		printf("Unable to detach %d", pid);
-		result = 1;
+		err_num++;
 	}
 
-	return result;
+	return err_num;
 }
 
 void check_ssp(void)
@@ -204,6 +206,7 @@ int main(void)
 
 	if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, ARCH_SHSTK_SHSTK)) {
 		printf("[FAIL]\tParent process could not enable SHSTK!\n");
+		err_num++;
 		return 1;
 	}
 	printf("[PASS]\tParent process enable SHSTK.\n");
@@ -212,6 +215,7 @@ int main(void)
 	ssp = (unsigned long *)rdssp();
 	if (!ssp) {
 		printf("[FAIL]\tShadow stack disabled.\n");
+		err_num++;
 		return 1;
 	}
 	printf("[PASS]\tParent pid:%d, ssp:%p\n", getpid(), ssp);
@@ -227,7 +231,8 @@ int main(void)
 	if (child < 0) {
 		/* Fork syscall failed. */
 		printf("[FAIL]\tfork failed\n");
-		return 2;
+		err_num++;
+		return err_num;
 	} else if (child == 0) {
 		unsigned long feature = 0, *ssp_verify;
 
@@ -236,7 +241,8 @@ int main(void)
 		ssp = (unsigned long *)rdssp();
 		if (!ssp) {
 			printf("[FAIL]\tSHSTK is disabled in child process\n");
-			return 1;
+			err_num++;
+			return err_num;
 		}
 		printf("[PASS]\tSHSTK is enabled in child process\n");
 
@@ -248,7 +254,7 @@ int main(void)
 
 		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK)) {
 			printf("[FAIL]\tDisabling shadow stack failed\n");
-			result = 1;
+			err_num++;
 		} else {
 			printf("[PASS]\tDisabling shadow stack successfully\n");
 		}
@@ -257,19 +263,19 @@ int main(void)
 		if (ret) {
 			printf("[FAIL]\tSHSTK_STATUS nok, feature:%lx, ret:%ld\n",
 			       feature, ret);
-			result = 1;
+			err_num++;
 		} else if (feature == 0) {
 			printf("[PASS]\tSHSTK_STATUS ok, feature:%lx is 0, ret:%ld\n",
 			       feature, ret);
 		} else {
 			printf("[FAIL]\tSHSTK_STATUS ok, feature:%lx isn't 1, ret:%ld\n",
 			       feature, ret);
-			result = 1;
+			err_num++;
 		}
 
 		if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, ARCH_SHSTK_SHSTK)) {
 			printf("[FAIL]\tCould not re-enable Shadow stack.\n");
-			result = 1;
+			err_num++;
 		} else {
 			printf("[PASS]\tChild process re-enable ssp\n");
 		}
@@ -278,19 +284,19 @@ int main(void)
 		if (ret) {
 			printf("[FAIL]\tSHSTK_STATUS nok, feature:%lx, ret:%ld\n",
 			       feature, ret);
-			result = 1;
+			err_num++;
 		} else if ((feature & 1) == 1) {
 			printf("[PASS]\tSHSTK_STATUS ok, feature:%lx 1st bit is 1, ret:%ld\n",
 			       feature, ret);
 		} else {
 			printf("[FAIL]\tSHSTK_STATUS ok, feature:%lx isn't 1, ret:%ld\n",
 			       feature, ret);
-			result = 1;
+			err_num++;
 		}
 
 		if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, ARCH_SHSTK_WRSS)) {
 			printf("[FAIL]\tCould not enable WRSS in child pid.\n");
-			result = 1;
+			err_num++;
 		} else {
 			printf("[PASS]\tChild process enabled wrss\n");
 		}
@@ -299,14 +305,14 @@ int main(void)
 		if (ret) {
 			printf("[FAIL]\tSHSTK_STATUS nok, feature:%lx, ret:%ld\n",
 			       feature, ret);
-			result = 1;
+			err_num++;
 		} else if (((feature >> 1) & 1) == 1) {
 			printf("[PASS]\tSHSTK_STATUS ok, feature:%lx 2nd bit is 1, ret:%ld\n",
 			       feature, ret);
 		} else {
 			printf("[FAIL]\tSHSTK_STATUS ok, feature:%lx 2nd bit isn't 1, ret:%ld\n",
 			       feature, ret);
-			result = 1;
+			err_num++;
 		}
 
 		ssp_verify = (unsigned long *)rdssp();
@@ -320,12 +326,12 @@ int main(void)
 		} else {
 			printf("[INFO]\tssp addr:%p isn't same as ssp_verify:%p\n",
 			       ssp, ssp_verify);
-			result = 1;
+			err_num++;
 		}
 
 		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK)) {
 			printf("[FAIL]\tChild process could not disable shstk.\n");
-			result = 1;
+			err_num++;
 		} else {
 			printf("[PASS]\tChild process disable shstk successfully.\n");
 		}
@@ -342,26 +348,26 @@ int main(void)
 	}
 
 	if (child > 0) {
-		result = unlock_shstk(child);
+		err_num = unlock_shstk(child);
 		if (waitpid(child, &status, 0) != child || !WIFEXITED(status)) {
 			printf("Child exit with error status:%d\n", status);
-			result = 1;
+			err_num++;
 		} else {
 			/* Parent process fetch the child process's result. */
 			close(fd[1]);
 			if (!read(fd[0], &result, sizeof(result))) {
-				result = 1;
+				err_num++;
 				fatal_error("read fd failed");
 			}
 		}
 		/* Disable SHSTK in parent process to avoid segfault issue. */
 		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK)) {
 			printf("[FAIL]\tParent process disable shadow stack failed.\n");
-			result = 1;
+			err_num++;
 		} else {
 			printf("[PASS]\tParent process disable shadow stack successfully.\n");
 		}
 	}
 
-	return result;
+	return err_num;
 }
