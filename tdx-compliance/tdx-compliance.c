@@ -55,7 +55,7 @@ static struct dentry *f_tdx_tests, *d_tdx;
 #define OPMASK_SINGLE		0x8000
 
 #define CPUID_DUMP_PATTERN	\
-	"eax(%016x) ebx(%016x) ecx(%016x) edx(%016x)\n"
+	"eax(%08x) ebx(%08x) ecx(%08x) edx(%08x)\n"
 
 static char *result_str(int ret)
 {
@@ -387,6 +387,7 @@ tdx_tests_proc_write(struct file *file,
 	       stat_total - stat_pass - stat_fail);
 
 	kfree(str_input);
+	operation = 0;
 	return count;
 }
 
