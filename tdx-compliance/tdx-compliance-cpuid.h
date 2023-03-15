@@ -100,7 +100,7 @@ struct test_cpuid *fetch_cpuid_test(int leaf, int subleaf)
 void initial_cpuid(void)
 {
 	/* CPUID(0x0) */
-	EXP_CPUID_BYTE(0x0, 0, eax, 0x00000023);	//"MaxIndex"
+	EXP_CPUID_BYTE(0x0, 0, eax, 0x00000021);	//"MaxIndex"
 	EXP_CPUID_BYTE(0x0, 0, ebx, 0x756e6547);	//"Genu"
 	EXP_CPUID_BYTE(0x0, 0, ecx, 0x6c65746e);	//"ntel"
 	EXP_CPUID_BYTE(0x0, 0, edx, 0x49656e69);	//"ineI"
@@ -285,7 +285,7 @@ void initial_cpuid(void)
 	EXP_CPUID_RES_BITS(0x4, 4, edx, 3, 31);		//Reserved
 
 	/* CPUID(0x7, 0x0).EAX */
-	EXP_CPUID_BYTE(0x7, 0, eax, 2);			//Max Sub-Leaves
+	EXP_CPUID_BYTE(0x7, 0, eax, 1);			//Max Sub-Leaves
 
 	/* CPUID(0x7, 0x0).EBX */
 	EXP_CPUID_BIT(0x7, 0x0, ebx, 0, 1);		//FSGSBASE
@@ -328,7 +328,6 @@ void initial_cpuid(void)
 	EXP_CPUID_BIT(0x7, 0x0, edx, 21, 0);		//Reserved
 	EXP_CPUID_BIT(0x7, 0x0, edx, 26, 1);		//IBRS
 	EXP_CPUID_BIT(0x7, 0x0, edx, 27, 1);		//STIBP
-	EXP_CPUID_BIT(0x7, 0x0, edx, 28, 1);		//L1D_FLUSH. IA32_FLUSH_CMD support.
 	EXP_CPUID_BIT(0x7, 0x0, edx, 29, 1);		//IA32_ARCH_CAPABILITIES Support
 	EXP_CPUID_BIT(0x7, 0x0, edx, 30, 1);		//IA32_CORE_CAPABILITIES Present
 	EXP_CPUID_BIT(0x7, 0x0, edx, 31, 1);		//SSBD(Speculative Store Bypass Disable)
@@ -361,11 +360,10 @@ void initial_cpuid(void)
 	EXP_CPUID_RES_BITS(0x7, 0x2, ecx, 0, 31);	//Reserved
 
 	/* CPUID(0x7, 0x2).EDX */
-	EXP_CPUID_BIT(0x7, 0x2, edx, 0, 1);		//PSFD
-	EXP_CPUID_BIT(0x7, 0x2, edx, 1, 1);		//IPRED_CTRL
-	EXP_CPUID_BIT(0x7, 0x2, edx, 2, 1);		//RRSBA_CTRL
-	EXP_CPUID_BIT(0x7, 0x2, edx, 4, 1);		//DDPD
-	EXP_CPUID_RES_BITS(0x7, 0x2, edx, 6, 31);	//Reserved
+	EXP_CPUID_RES_BITS(0x7, 0x2, eax, 0, 31);	//Reserved
+	EXP_CPUID_RES_BITS(0x7, 0x2, ebx, 0, 31);	//Reserved
+	EXP_CPUID_RES_BITS(0x7, 0x2, ecx, 0, 31);	//Reserved
+	EXP_CPUID_RES_BITS(0x7, 0x2, edx, 0, 31);	//Reserved
 
 	/* CPUID(0x8) */
 	EXP_CPUID_RES_BITS(0x8, 0x0, eax, 0, 31);	//Reserved
