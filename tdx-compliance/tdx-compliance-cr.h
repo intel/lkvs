@@ -84,7 +84,7 @@ static int pre_cond_cr4_cet(struct test_cr *c)
 	run_cpuid(&cpuid_cet);
 
 	/* CPUID(0x7,0x0).edx[20] */
-	if ((cpuid_cet.regs.edx.val & _BITUL(20)) != 0)
+	if ((cpuid_cet.regs.edx.val & _BITUL(20)) == 0)
 		c->excp.expect = X86_TRAP_GP;
 	return 0;
 }
@@ -151,7 +151,7 @@ static int pre_cond_cr4_uint(struct test_cr *c)
 
 #define DEF_XCH_CR4(_mask, _excp, _precond)		\
 {							\
-	.name = "CR4_XCH" #_mask,			\
+	.name = "CR4_XCH_" #_mask,			\
 	.reg.mask = _mask,				\
 	.excp.expect = _excp,				\
 	.run_cr_set = set_cr4_exchange_bit,		\
@@ -224,11 +224,11 @@ struct test_cr cr_list[] = {
 	 * TD modification of CR4 bit CET(23) is prevented,
 	 * depending on TD's XFAM.
 	 */
-	DEF_XCH_CR4(X86_CR4_CET, X86_TRAP_GP, pre_cond_cr4_cet),
+	DEF_XCH_CR4(X86_CR4_CET, NO_EXCP, pre_cond_cr4_cet),
 
 	/*
 	 * TD modification of CR4 bit UINT(25) is prevented,
 	 * depending on TD's XFAM
 	 */
-	DEF_XCH_CR4(X86_CR4_UINT, X86_TRAP_GP, pre_cond_cr4_uint),
+	DEF_XCH_CR4(X86_CR4_UINT, NO_EXCP, pre_cond_cr4_uint),
 };
