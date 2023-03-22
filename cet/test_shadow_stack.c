@@ -50,7 +50,9 @@
 #define ARCH_SHSTK_SHSTK		(1ULL <<  0)
 #define ARCH_SHSTK_WRSS			(1ULL <<  1)
 /* It's from arch/x86/entry/syscalls/syscall_64.tbl file. */
-#define __NR_map_shadow_stack	451
+#ifndef __NR_map_shadow_stack
+#define __NR_map_shadow_stack 451
+#endif
 
 #if (__GNUC__ < 8) || (__GNUC__ == 8 && __GNUC_MINOR__ < 5)
 int main(int argc, char *argv[])
