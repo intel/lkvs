@@ -19,7 +19,9 @@
 /* It's from arch/x86/include/uapi/asm/mman.h file. */
 #define SHADOW_STACK_SET_TOKEN	0x1
 /* It's from arch/x86/entry/syscalls/syscall_64.tbl file. */
-#define __NR_map_shadow_stack	451
+#ifndef __NR_map_shadow_stack
+#define __NR_map_shadow_stack 451
+#endif
 
 #define PASS		0
 #define FAIL		1
