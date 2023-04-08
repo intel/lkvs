@@ -270,7 +270,7 @@ int main(void)
 			printf("[PASS]\tSHSTK_STATUS ok, feature:%lx is 0, ret:%ld\n",
 			       feature, ret);
 		} else {
-			printf("[FAIL]\tSHSTK_STATUS ok, feature:%lx isn't 1, ret:%ld\n",
+			printf("[FAIL]\tSHSTK_STATUS ok, feature:%lx isn't 0, ret:%ld\n",
 			       feature, ret);
 			err_num++;
 		}
