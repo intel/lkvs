@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include <linux/debugfs.h>
 #include <linux/module.h>
+#include <linux/slab.h>
 
 #include "asm/trapnr.h"
 
