@@ -1,6 +1,26 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #ifndef TDX_COMPLIANCE_H
 #define TDX_COMPLIANCE_H
+
+/*
+ * The following macro definitions are backported from the kernel upstream.
+ * This is because TDX compliance requires compatibility with older kernels,
+ * such as v5.19. All of these definitions can be removed in the future when
+ * TDX no longer considers kernel v5.19 or earlier versions.
+ */
+#define X86_CR4_CET_BIT			23 /* enable Control-flow Enforcement Technology */
+#define X86_CR4_CET			_BITUL(X86_CR4_CET_BIT)
+#define MSR_IA32_VMX_PROCBASED_CTLS3	0x00000492
+#define MSR_IA32_U_CET			0x000006a0 /* user mode cet */
+#define MSR_IA32_S_CET			0x000006a2 /* kernel mode cet */
+#define MSR_IA32_PL0_SSP		0x000006a4 /* ring-0 shadow stack pointer */
+#define MSR_IA32_PL1_SSP		0x000006a5 /* ring-1 shadow stack pointer */
+#define MSR_IA32_PL2_SSP		0x000006a6 /* ring-2 shadow stack pointer */
+#define MSR_IA32_PL3_SSP		0x000006a7 /* ring-3 shadow stack pointer */
+#define MSR_IA32_INT_SSP_TAB		0x000006a8 /* exception shadow stack table */
+#define MSR_IA32_INT_SSP_TAB		0x000006a8
+/****** END of Backport ******/
+
 struct cpuid_reg {
 	u32 val;
 	u32 expect;
