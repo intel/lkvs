@@ -3,9 +3,11 @@
 
 SUBDIRS = $(shell ls -d */)
 all:
-	for dir in $(SUBDIRS) ; do			\
+	@for dir in $(SUBDIRS) ; do			\
 		if [ -f "$$dir/Makefile" ]; then	\
-			make -C $$dir || exit 2;	\
+			cd $$dir &&			\
+			make	&&			\
+			cd .. || exit 2;		\
 		fi					\
 	done
 
@@ -24,3 +26,15 @@ docker_make:
 
 docker_clean:
 	docker run -it --rm -v $(PWD):/src --name ubuntu_2204_lkvs ubuntu:22.04 make clean
+
+
+build:
+	@echo "Building $(word 2, $(MAKECMDGOALS))"
+	@cd $(word 2, $(MAKECMDGOALS)) && make
+	@cd ..
+
+docker-build:
+	@echo "Building $* in docker!"
+	docker run -it --rm -v $(PWD):/src --name ubuntu_2204_lkvs ubuntu:22.04 bash -c "make build $(word 2, $(MAKECMDGOALS))"
+
+.PHONY: build docker-build
