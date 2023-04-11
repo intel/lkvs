@@ -6,7 +6,7 @@ set -oe pipefail
 wpattern=" warning: "
 logfile="build.log"
 
-docker run -v "$(pwd)":/src builder make | tee "$logfile"
+docker run -v "$(pwd)":/src builder make test | tee "$logfile"
 
 if grep "$wpattern" "$logfile"; then
   echo "==========================================="

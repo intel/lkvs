@@ -7,15 +7,18 @@ ARG PROXY
 ENV http_proxy=$PROXY
 ENV https_proxy=$PROXY
 
-COPY common/uname /usr/local/sbin/
+COPY common/uname /usr/local/
 
 RUN dpkg --add-architecture i386
 RUN dpkg --print-foreign-architectures
 RUN \
 	apt-get update && \
-	apt-get install gcc-11 make libelf1 gcc-multilib g++-multilib git cmake linux-headers-`uname -r` -y --no-install-recommends && \
+	apt-get install gcc-11 make libelf1 gcc-multilib g++-multilib git cmake -y --no-install-recommends && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
+
+#RUN apt-get install linux-headers-`uname -r` -y
+RUN apt-get update && apt-get install linux-headers-5.15.0-52-generic -y
 
 RUN export GIT_SSL_NO_VERIFY=true && rm -rf libipt && git clone http://github.com/intel/libipt.git && \
 	cd libipt && cmake . && make install
