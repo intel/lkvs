@@ -449,11 +449,31 @@ char zero[4096];
 static void *uffd_thread(void *arg)
 {
 	struct uffdio_copy req;
-	int uffd = *(int *)arg;
+	int uffd = *(int *)arg, ret = 0;
 	struct uffd_msg msg;
 
-	if (read(uffd, &msg, sizeof(msg)) <= 0)
-		return (void *)1;
+	/* Debug code to reproduce issue. */
+	/*
+	 * ret = read(uffd, &msg, sizeof(msg));
+	 * printf("ret:%d, errno:%d(equal to EAGAIN:11 will stuck)\n",
+	 *        ret, errno);
+	 * if (ret <=0)
+	 * 	return (void *)1;
+	 */
+
+	while (1) {
+		ret = read(uffd, &msg, sizeof(msg));
+		if (ret <= 0) {
+			if (errno == EAGAIN) {
+				printf("ret:%d, errno:EAGAIN(%d), stuck here if return (void *)1!\n",
+				       ret, errno);
+				continue;
+			}
+			return (void *)1;
+		} else {
+			break;
+		}
+	}
 
 	req.dst = msg.arg.pagefault.address;
 	req.src = (__u64)zero;
