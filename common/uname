@@ -7,10 +7,10 @@
 while getopts ":armpios" arg; do
   case $arg in
     a)
-      echo "Linux lkvs 5.15.0-52-generic #58-Ubuntu SMP Thu Oct 13 08:03:55 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux"
+      echo "Linux lkvs 5.19.0-41-generic #58-Ubuntu SMP Thu Oct 13 08:03:55 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux"
       ;;
     r)
-      echo "5.15.0-52-generic"
+      echo "5.19.0-41-generic"
       ;;
     m|p|i)
       echo "x86_64"
