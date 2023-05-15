@@ -18,7 +18,7 @@ RUN \
 	rm -rf /var/lib/apt/lists/*
 
 #RUN apt-get install linux-headers-`uname -r` -y
-RUN apt-get update && apt-get install linux-headers-5.15.0-52-generic -y
+RUN apt-get update && apt-get install linux-headers-generic linux-headers-5.19.0-41-generic -y
 
 RUN export GIT_SSL_NO_VERIFY=true && rm -rf libipt && git clone http://github.com/intel/libipt.git && \
 	cd libipt && cmake . && make install
