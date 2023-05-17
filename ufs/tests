@@ -1,0 +1,12 @@
+# This file collects basic cases which can run against 
+# TPMI UFS (Uncore Frequency Scaling) driver
+# on Intel® GRANITERAPIDS and further server platforms.
+
+tpmi_ufs.sh -t check_ufs_unbind_bind
+tpmi_ufs.sh -t check_ufs_device
+tpmi_ufs.sh -t check_ufs_sysfs_attr
+tpmi_ufs.sh -t check_ufs_init_min_max_value
+tpmi_ufs.sh -t check_ufs_min_equals_to_max
+tpmi_ufs.sh -t check_ufs_max_equals_to_min
+tpmi_ufs.sh -t check_ufs_current_dynamic
+tpmi_ufs.sh -t check_per_pkg_min_max_change
