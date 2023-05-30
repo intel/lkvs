@@ -220,8 +220,7 @@ static int check_results_cpuid(struct test_cpuid *t)
 int check_results_cr(struct test_cr *t)
 {
 	t->reg.val &= t->reg.mask;
-	t->reg.mask *= t->reg.expect;
-	if (t->reg.val == t->reg.mask &&
+	if (t->reg.val == (t->reg.mask * t->reg.expect) &&
 	    t->excp.expect == t->excp.val)
 		return 1;
 
