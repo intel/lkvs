@@ -4,6 +4,9 @@
 
 source .env
 
+START_TIME=""
+SUMMRY_LOG=""
+
 usage() {
   cat << _EOF
 Usage: ${0##*/} [-f CMDFILES] [-c CMDLINE] [-o LOGFILE]
@@ -32,6 +35,7 @@ runtest() {
   local duration
   local code
   local result
+  local case_result=""
 
   if [[ -n "$logfile" ]]; then
     echo "<<<test start - '$cmdline'>>" | tee -a "$logfile"
@@ -63,16 +67,16 @@ runtest() {
 
   case $code in
     0)
-      result="pass"
+      result="PASS"
       ;;
     2)
-      result="block"
+      result="BLOCK"
       ;;
     32)
-      result="na"
+      result="NA"
       ;;
     *)
-      result="fail"
+      result="FAIL"
       ;;
   esac
 
@@ -81,6 +85,9 @@ runtest() {
   else
     echo -e "<<<test end, result: $result, duration: ${duration}s>>\n"
   fi
+  case_result=""
+  case_result=$(printf "%-76s%-11s%-12s%-8s" "$cmdline" "$result" "$code" "${duration}s")
+  echo "$case_result" >> "$SUMMRY_LOG"
 }
 
 runcmdfile() {
@@ -138,6 +145,15 @@ if [[ -z "$CMDFILES" ]] && [[ -z "$CMDLINE" ]]; then
   err "no test to run!"
 fi
 
+START_TIME="$(date +%Y-%m-%d_%H-%M-%S)"
+SUMMRY_LOG="/tmp/lkvs_${START_TIME}_summary.log"
+echo "Test Start Time: $START_TIME" > "$SUMMRY_LOG"
+{
+  echo "--------------------------------------------------------"
+  echo "Testcase                                                                    Result     Exit Value  DURATION"
+  echo "--------                                                                    ------     ----------  --------"
+} >> "$SUMMRY_LOG"
+
 for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
   if [[ ! -f "$cmdfile" ]]; then
     echo "WARNING: $cmdfile not found!"
@@ -149,3 +165,9 @@ done
 if [[ -n "$CMDLINE" ]]; then
   runtest "$CMDLINE" "$LOGFILE"
 fi
+
+# Add the following print for the end of the case summary.
+echo "--------------------------------------------------------" >> "$SUMMRY_LOG"
+
+[[ -z "$LOGFILE" ]] || cat "$SUMMRY_LOG" >> "$LOGFILE"
+cat "$SUMMRY_LOG"
