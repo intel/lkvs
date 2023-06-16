@@ -10,5 +10,5 @@ shstk_unlock_test
 test_shadow_stack
 wrss
 # Kernel space IBT tests
-./cet_tests.sh -t kmod_ibt_illegal -n cet_app -p "b1" -k "Missing ENDBR"
-./cet_tests.sh -t kmod_ibt_legal -n cet_app -p "b2" -k "Missing ENDBR"
+cet_tests.sh -t kmod_ibt_illegal -n cet_app -p "b1" -k "Missing ENDBR"
+cet_tests.sh -t kmod_ibt_legal -n cet_app -p "b2" -k "Missing ENDBR"
