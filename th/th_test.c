@@ -28,7 +28,6 @@
  * Date:         12/11/2018
  */
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
@@ -51,7 +50,7 @@ struct intel_th_channel {
 	uint32_t	FLAG_TS;
 	uint32_t	MERR;
 	uint32_t	__unused;
-} __attribute__((packed));
+} __packed;
 
 static int set_policy(int fd, const char *policy)
 {
@@ -60,9 +59,10 @@ static int set_policy(int fd, const char *policy)
 	int ret = 0;
 
 	id = calloc(1, size);
-	if (!id)
+	if (!id) {
+		fprintf(stderr, "Case is failed for open device failed %m!\n");
 		return 1;
-
+	}
 	id->size = size;
 	id->width = 64;
 	memcpy(id->id, policy, sizeof(id->id));
@@ -70,7 +70,6 @@ static int set_policy(int fd, const char *policy)
 	ret = ioctl(fd, STP_POLICY_ID_SET, id);
 	fprintf(stderr, "ioctl result : %d\n", ret);
 	free(id);
-
 	return ret;
 }
 
@@ -82,9 +81,10 @@ static int get_policy(int fd, const char *policy)
 	int ret = 0;
 
 	id = calloc(1, size);
-	if (!id)
+	if (!id) {
+		fprintf(stderr, "Case is failed for open device failed %m!\n");
 		return 1;
-
+	}
 	id->size = size;
 	id->width = 64;
 	memcpy(id->id, policy, sizeof(id->id));
@@ -92,66 +92,74 @@ static int get_policy(int fd, const char *policy)
 	ret = ioctl(fd, STP_POLICY_ID_GET, id);
 	fprintf(stderr, "ioctl result : %d\n", ret);
 	free(id);
-
 	return ret;
 }
 
-int set_policy_test() {
+int set_policy_test(void)
+{
 	char *dev = "/dev/0-sth";
 	char *policy_name = "th_test";
 	int fd = -1, ret;
+
 	fprintf(stdout, "start to open device %s\n", dev);
 	fd = open(dev, O_RDWR | O_SYNC);
-	if (fd < 0)
+	if (fd < 0) {
+		fprintf(stderr, "Case is failed for open device failed %m!\n");
 		return 1;
+	}
 	fprintf(stdout, "start to set_policy %s\n", policy_name);
 	ret = set_policy(fd, policy_name);
 	close(fd);
 	return ret;
 }
 
-int get_policy_test() {
+int get_policy_test(void)
+{
 	char *dev = "/dev/0-sth";
 	char *policy_name = "th_test";
 	int fd = -1, ret;
+
 	fprintf(stdout, "start to open device %s\n", dev);
 	fd = open(dev, O_RDWR | O_SYNC);
-	if (fd < 0)
+	if (fd < 0) {
+		fprintf(stderr, "Case is failed for open device failed %m!\n");
 		return 1;
+	}
 	fprintf(stdout, "start to set_policy %s\n", policy_name);
 	ret = get_policy(fd, policy_name);
 	close(fd);
 	return ret;
 }
 
-int mmap_test() {
+int mmap_test(void)
+{
 	char *dev = "/dev/0-sth";
 	char *str = "vvvvvvvvvv";
 	struct intel_th_channel *base, *c;
 	int fd = -1, ret, temp;
 	char *policy_name = "th_test";
+
 	fprintf(stdout, "start to open device %s\n", dev);
 	fd = open(dev, O_RDWR | O_SYNC);
 	if (fd < 0) {
-		fprintf(stderr, "open code failed %m.\n");
+		fprintf(stderr, "Case is failed for open code failed %m.\n");
 		return 1;
 	}
 	ret = set_policy(fd, policy_name);
 	if (ret < 0) {
-		fprintf(stderr, "open code failed %m.\n");
+		fprintf(stderr, "Case is failed for open code failed %m.\n");
 		close(fd);
 		return 1;
 	}
 	base = mmap(NULL, 4096, PROT_WRITE, MAP_SHARED, fd, 0);
 	if (base == MAP_FAILED) {
-		fprintf(stderr, "mmap failed %m.\n");
+		fprintf(stderr, "Case is failed for mmap failed %m.\n");
 		close(fd);
 		return 1;
 	}
 	c = base;
-	for (temp=0; temp < strlen(str); temp++) {
+	for (temp = 0; temp < strlen(str); temp++)
 		*(uint8_t *)&c[0].Dn = str[temp];
-	}
 	munmap(base, 4096);
 	close(fd);
 	return 0;
@@ -161,25 +169,27 @@ int mmap_test() {
  * will set policy/get policy/trace into memory
  *
  */
-int main(int argc,char *argv[]) {
-
+int main(int argc, char *argv[])
+{
 	int result = 2;
 	int cmd = 0;
-	if (argc==2) cmd = atoi(argv[1]);
+
+	if (argc == 2)
+		cmd = atoi(argv[1]);
 	switch (cmd) {
-		case 1:
-			result=set_policy_test();
-			break;
-		case 2:
-			result=get_policy_test();
-			break;
-		case 3:
-			result=mmap_test();
-			break;
-		default:
-			printf("Command is not correct!\n");
-			break;
+	case 1:
+		result = set_policy_test();
+		break;
+	case 2:
+		result = get_policy_test();
+		break;
+	case 3:
+		result = mmap_test();
+		break;
+	default:
+		printf("Command is not correct!\n");
+		break;
 	}
-	printf("CASE result = %d \n", result);
+	printf("CASE result = %d\n", result);
 	return result;
 }
