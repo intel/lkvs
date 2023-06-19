@@ -14,6 +14,7 @@ intel_rapl_test.sh -t check_pkg_power_limit_75
 intel_rapl_test.sh -t check_pkg_power_limit_50
 intel_rapl_test.sh -t check_dram_energy_status
 intel_rapl_test.sh -t check_dram_energy_status_with_workload
+intel_rapl_test.sh -t check_rapl_control_after_power_limit_change
 intel_rapl_test.sh -t sysfs_perf_name_compare
 intel_rapl_test.sh -t sysfs_perf_energy_compare_workload_server
 intel_rapl_test.sh -t sysfs_turbostat_energy_compare_workload_server
