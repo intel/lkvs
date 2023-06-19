@@ -11,8 +11,7 @@ source ../.env
 
 RAPL_SYSFS_PATH="/sys/class/powercap"
 CPU_SYSFS="/sys/devices/system/cpu"
-NUM_CPU_PACKAGES=$(ls $RAPL_SYSFS_PATH | grep -Eo "intel-rapl:[0-9]$" |
-  awk -F: '{print $NF}' | sort -n | tail -n1)
+NUM_CPU_PACKAGES=$(lscpu | grep "Socket(s)" | awk '{print $2}')
 
 RAPL_TIME_UNIT=0   #Micro-second (us)
 RAPL_ENERGY_UNIT=0 #Micro-Joules (uJ)
@@ -498,7 +497,7 @@ build_cpu_topology() {
 is_server_platform() {
   local rc
 
-  grep "package-1" $RAPL_SYSFS_PATH/intel-rapl:*/name 2>&1
+  grep "dram" $RAPL_SYSFS_PATH/intel-rapl:*/name 2>&1
   rc=$?
 
   [[ $rc -eq 0 ]] && {
@@ -698,7 +697,7 @@ rapl_power_check() {
     fi
 
     if is_server_platform; then
-      for ((pkg = 0; pkg <= NUM_CPU_PACKAGES; pkg++)); do
+      for ((pkg = 0; pkg < NUM_CPU_PACKAGES; pkg++)); do
         sleep 20
         get_power_consumed_server "turbostat" "$pkg" "$domain" "$MEASURE_INTERVAL"
         [[ -n "$CUR_POWER" ]] || die "Fail to get current power(before)."
@@ -780,8 +779,13 @@ rapl_power_check() {
           do_cmd "turbostat --quiet --show Package,Core,PkgWatt -o tc.log sleep 1"
           test_print_trc "Server turbostat log:"
           cat tc.log
-          power_limit_after="$(awk '{print $3}' tc.log | sed '/^\s*$/d' |
-            sed -n ''"$sp"',1p')"
+          if [[ $NUM_CPU_PACKAGES -eq 1 ]]; then
+            power_limit_after="$(awk '{print $2}' tc.log | sed '/^\s*$/d' |
+              sed -n ''"$sp"',1p')"
+          else
+            power_limit_after="$(awk '{print $3}' tc.log | sed '/^\s*$/d' |
+              sed -n ''"$sp"',1p')"
+          fi
           test_print_trc "Server power limit after: $power_limit_after"
           [[ -n "$power_limit_after" ]] ||
             die "Fail to get current power from server turbostat"
@@ -821,6 +825,35 @@ rapl_power_check() {
   else
     die "Test type is empty! Please specific energy or power tests!"
   fi
+}
+
+# Function to check any error after power limit change and rapl control enable
+enable_rapl_control() {
+  domain_num=$(ls /sys/class/powercap/ | grep -c intel-rapl:)
+  [[ -n "$domain_num" ]] || block_test "intel-rapl sysfs is not available."
+
+  for ((i = 1; i <= domain_num; i++)); do
+    domain_name=$(ls /sys/class/powercap/ | grep intel-rapl: | sed -n "$i,1p")
+    # Change each domain's power limit setting then enable the RAPL control
+
+    default_power_limit=$(cat /sys/class/powercap/"$domain_name"/constraint_0_max_power_uw)
+    if [[ "$default_power_limit" -eq 0 ]]; then
+      continue
+    else
+      test_power_limit=$(("$default_power_limit" - 2000000))
+      test_print_trc "Test power limit is: $test_power_limit uw"
+    fi
+    do_cmd "echo $test_power_limit > /sys/class/powercap/$domain_name/constraint_0_power_limit_uw"
+    do_cmd "echo 1 > /sys/class/powercap/$domain_name/enabled"
+    enabled_knob=$(cat /sys/class/powercap/"$domain_name"/enabled)
+    # Recover the default constraint_0_power_limit_uw setting
+    do_cmd "echo $default_power_limit > /sys/class/powercap/$domain_name/constraint_0_power_limit_uw"
+    if [[ "$enabled_knob" -eq 1 ]]; then
+      test_print_trc "Enabling RAPL control for $domain_name is PASS after power limit change."
+    else
+      die "Enabling RAPL control for $domain_name is Fail after power limit change"
+    fi
+  done
 }
 
 # Function to compare supported domain names among sysfs, perf and turbostat tool
@@ -878,7 +911,7 @@ sysfs names: $sysfs_names, perf names: $perf_names, turbostat_name: $turbostat_n
   done
 }
 
-# Function to check supported domain energy joules between sysfs and perf tool 
+# Function to check supported domain energy joules between sysfs and perf tool
 # when workload is running
 rapl_perf_energy_compare() {
   local driver_name=$1
@@ -1039,7 +1072,7 @@ beyond 20% of sysfs energy joules gap: $energy_delta_j"
   done
 }
 
-# Function to check supported domain energy joules between sysfs and turbostat tool 
+# Function to check supported domain energy joules between sysfs and turbostat tool
 # when workload is running
 rapl_turbostat_energy_compare() {
   local driver_name=$1
@@ -1271,6 +1304,9 @@ intel_rapl_test() {
   check_pp1_energy_status)
     CHECK_ENERGY=1
     rapl_power_check uncore
+    ;;
+  check_rapl_control_after_power_limit_change)
+    enable_rapl_control
     ;;
   sysfs_perf_name_compare)
     rapl_perf_name_compare intel-rapl
