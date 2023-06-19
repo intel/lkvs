@@ -5,7 +5,7 @@
 # @Desc     Test script to verify Intel CPU Core Cstate functionality
 # @History  Created Nov 01 2022 - Created
 
-cd "$(dirname "$0")" 2> /dev/null || exit 1
+cd "$(dirname "$0")" 2>/dev/null || exit 1
 source ../.env
 
 CPU_SYSFS_PATH="/sys/devices/system/cpu"
@@ -269,6 +269,75 @@ $pc_y residency: $pc_y_res; $pc_n residency: $pc_n_res"
   fi
 }
 
+# perf tool listed cstate is based on kernel MSRs, turbostat tool listed
+# cstate is based on user space MSRs, these two outputs should be aligned
+# also client and server platforms support different core and pkg cstates.
+perf_cstate_list() {
+  #Perf tool is required to run this case
+  perf list 1>/dev/null 2>&1 || block_test "perf tool is required to run this cstate case"
+
+  tc_out=$(turbostat -q --show idle sleep 1 2>&1)
+  [[ -n "$tc_out" ]] || block_test "Did not get turbostat log"
+  test_print_trc "turbostat tool output: $tc_out"
+  tc_out_cstate_list=$(echo "$tc_out" | grep -E "^POLL")
+
+  perf_cstates=$(perf list | grep cstate)
+  [[ -n "$perf_cstates" ]] || block_test "Did not get cstate events by perf list"
+  test_print_trc "perf list shows cstate events: $perf_cstates"
+  perf_core_cstate_num=$(perf list | grep -c cstate_core)
+  for ((i = 1; i <= perf_core_cstate_num; i++)); do
+    perf_core_cstate=$(perf list | grep cstate_core | sed -n "$i, 1p")
+    if [[ $perf_core_cstate =~ c1 ]] && [[ $tc_out_cstate_list =~ CPU%c1 ]]; then
+      test_print_trc "$perf_core_cstate is supported and aligned with turbostat"
+    elif [[ $perf_core_cstate =~ c6 ]] && [[ $tc_out_cstate_list =~ CPU%c6 ]]; then
+      test_print_trc "$perf_core_cstate is supported and aligned with turbostat"
+    elif [[ $perf_core_cstate =~ c7 ]] && [[ $tc_out_cstate_list =~ CPU%c7 ]]; then
+      test_print_trc "$perf_core_cstate is supported and aligned with turbostat"
+    else
+      die "perf list shows unexpected core_cstate event."
+    fi
+  done
+
+  perf_pkg_cstate_num=$(perf list | grep -c cstate_pkg)
+  for ((i = 1; i <= perf_pkg_cstate_num; i++)); do
+    perf_pkg_cstate=$(perf list | grep cstate_pkg | sed -n "$i, 1p")
+    if [[ $perf_pkg_cstate =~ c2 ]] && [[ $tc_out_cstate_list =~ Pkg%pc2 ]]; then
+      test_print_trc "$perf_pkg_cstate is supported and aligned with turbostat"
+    elif [[ $perf_pkg_cstate =~ c3 ]] && [[ $tc_out_cstate_list =~ Pkg%pc3 ]]; then
+      test_print_trc "$perf_pkg_cstate is supported and aligned with turbostat"
+    elif [[ $perf_pkg_cstate =~ c6 ]] && [[ $tc_out_cstate_list =~ Pkg%pc6 ]]; then
+      test_print_trc "$perf_pkg_cstate is supported and aligned with turbostat"
+    elif [[ $perf_pkg_cstate =~ c7 ]] && [[ $tc_out_cstate_list =~ Pkg%pc7 ]]; then
+      test_print_trc "$perf_pkg_cstate is supported and aligned with turbostat"
+    elif [[ $perf_pkg_cstate =~ c8 ]] && [[ $tc_out_cstate_list =~ Pkg%pc8 ]]; then
+      test_print_trc "$perf_pkg_cstate is supported and aligned with turbostat"
+    elif [[ $perf_pkg_cstate =~ c9 ]] && [[ $tc_out_cstate_list =~ Pkg%pc9 ]]; then
+      test_print_trc "$perf_pkg_cstate is supported and aligned with turbostat"
+    elif [[ $perf_pkg_cstate =~ c10 ]] && [[ $tc_out_cstate_list =~ Pk%pc10 ]]; then
+      test_print_trc "$perf_pkg_cstate is supported and aligned with turbostat"
+    else
+      die "perf list shows unexpected pkg_cstate event."
+    fi
+  done
+}
+
+override_residency_latency() {
+  local idle_debugfs="/sys/kernel/debug/intel_idle"
+  test_print_trc "Will override state3 with new target residency:100 us,new exit latency value\
+to 30 us:"
+  [[ -e "$idle_debugfs"/control ]] || block_test "Intel idle debugfs file does not exist"
+  do_cmd "echo 3:100:30 > $idle_debugfs/control"
+
+  test_print_trc "Switch to the default intel idle driver"
+  do_cmd "echo > $idle_debugfs/control"
+
+  test_print_trc "Change two changes together"
+  do_cmd "echo 1:0:10 3:100:30 > $idle_debugfs/control"
+
+  test_print_trc "Switch to the default intel idle driver"
+  do_cmd "echo > $idle_debugfs/control"
+}
+
 while getopts :t:H arg; do
   case $arg in
   t)
@@ -307,6 +376,12 @@ core_cstate_test() {
     ;;
   verify_client_pkg8_by_disabling_cc10)
     disable_cc_check_pc C10 Pkg%pc8 Pk%pc10
+    ;;
+  verify_cstate_list_by_perf)
+    perf_cstate_list
+    ;;
+  verify_residency_latency_override)
+    override_residency_latency
     ;;
   verify_server_core_cstate6_residency)
     test_cpu_core_c6_residency_intel_idle

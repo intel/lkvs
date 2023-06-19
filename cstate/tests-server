@@ -4,3 +4,4 @@
 powermgr_cstate_tests.sh -t verify_cstate_name
 powermgr_cstate_tests.sh -t verify_server_all_cores_cstate6
 powermgr_cstate_tests.sh -t verify_server_core_cstate6_residency
+powermgr_cstate_tests.sh -t verify_residency_latency_override
