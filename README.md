@@ -37,28 +37,41 @@ cd libipt && cmake . && make install
 ```
 
 * CET
-Cases of CET need 32-bit architect support:
+CET tests have 32-bit compatible tests, which need install 32-bit architect support. But the 32-bit architect support is not a mandetory for CET tests.
+
+#### Install 32-bit architect
+##### Ubuntu OS
 ```
 dpkg --add-architecture i386
 dpkg --print-foreign-architectures
 apt-get update
 apt-get install gcc-11 make libelf1 gcc-multilib g++-multilib
 ```
+##### Other OSs
+Do not support 32-bit architect on other distributions.
 
-Make the driver for cet_driver:
-```
-Install the devel and headers package for target kernel and boot up
-with target kernel.
-For CentOS and so on rpm package related OS:
-rpm -ivh --force kernel-TARGET_VERSION.rpm
-rpm -ivh --force kernel-devel-TARGET_VERSION.rpm
-rpm -ivh --force kernel-headers-TARGET_VERSION.rpm
-
+#### Make the driver for cet_driver:
+##### Ubuntu OS
 For Ubuntu and so on deb package related OS:
+```
 dpkg -i linux-xxx-image_TARGET_VERSION.deb
 dpkg -i linux-xxx-headers_TARGET_VERSION.deb
 dpkg -i linux-xxx-dev_TARGET_VERSION.deb
 dpkg -i linux-xxx-tools_TARGET_VERSION.deb
+
+Boot up with target kernel version.
+cd cet_driver
+make
+```
+
+##### CentOS/OpenEuler/Anolis
+For CentOS and so on rpm package related OS:
+Install the devel and headers package for target kernel and boot up
+with target kernel.
+```
+rpm -ivh --force kernel-TARGET_VERSION.rpm
+rpm -ivh --force kernel-devel-TARGET_VERSION.rpm
+rpm -ivh --force kernel-headers-TARGET_VERSION.rpm
 
 Boot up with target kernel version.
 cd cet_driver
