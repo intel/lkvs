@@ -6,6 +6,10 @@ source .env
 
 START_TIME=""
 SUMMRY_LOG=""
+TESTS_CLIENT="tests-client"
+TESTS_SERVER="tests-server"
+TEST_FILES=""
+SUB_FOLDERS=""
 
 usage() {
   cat << _EOF
@@ -17,6 +21,8 @@ Usage: ${0##*/} [-f CMDFILES] [-c CMDLINE] [-o LOGFILE]
 Examples:
   ./runtests -f cet/tests
   ./runtests -f cet/tests -o cet_tests.log
+  ./runtests -f tests-client  // exeucte tests-client/tests for all subfolders
+  ./runtests -f tests-server  // exeucte tests-server/tests for all subfolders
   ./runtests -c ./cet/quick_test -o cet_quick_test.log
 _EOF
 }
@@ -110,6 +116,48 @@ runcmdfile() {
   done < "$cmdfile"
 }
 
+prepare_files_list() {
+  local test_file_type=$1
+  local sub_folder=""
+
+  for sub_folder in $SUB_FOLDERS; do
+    # Remov the / in the end
+    sub_folder="${sub_folder%/}"
+    [[ "$sub_folder" == "common" ]] && continue
+
+    if [[ -e "${sub_folder}/${test_file_type}" ]]; then
+      if [[ -z "$TEST_FILES" ]]; then
+        TEST_FILES="${sub_folder}/${test_file_type}"
+      else
+        TEST_FILES="${TEST_FILES},${sub_folder}/${test_file_type}"
+      fi
+    elif [[ -e "${sub_folder}/tests" ]]; then
+      if [[ -z "$TEST_FILES" ]]; then
+        TEST_FILES="${sub_folder}/tests"
+      else
+        TEST_FILES="${TEST_FILES},${sub_folder}/tests"
+      fi
+    else
+      echo "WARNING: No $test_file_type or tests file under $sub_folder folder."
+    fi
+  done
+}
+
+test_all() {
+  local test_file_type=$1
+
+  # Don't quote */, otherwise it could not list all folders.
+  SUB_FOLDERS=$(ls -1 -d */)
+
+  prepare_files_list "$test_file_type"
+  CMDFILES="$TEST_FILES"
+  if [[ -z "$LOGFILE" ]]; then
+    echo "Test files: $CMDFILES"
+  else
+    echo "Test files: $CMDFILES" | tee "$LOGFILE"
+  fi
+}
+
 : LOGFILE=""
 : CMDFILES=""
 : CMDLINE=""
@@ -121,6 +169,8 @@ while getopts ":o:f:c:h" opt; do
       ;;
     f)
       CMDFILES=$OPTARG
+      [[ "$CMDFILES" == "$TESTS_CLIENT" ]] && test_all "$TESTS_CLIENT"
+      [[ "$CMDFILES" == "$TESTS_SERVER" ]] && test_all "$TESTS_SERVER"
       ;;
     c)
       CMDLINE=$OPTARG
