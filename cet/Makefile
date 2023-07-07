@@ -31,7 +31,7 @@ endif
 all: $(BIN)
 
 shstk_alloc: shstk_alloc.c
-	gcc $(CETFLAGS) $^ -o $@
+	gcc $(NOCETFLAGS) $^ -o $@
 
 test_shadow_stack: test_shadow_stack.c
 	gcc -pthread $(NOCETFLAGS) $^ -o $@
