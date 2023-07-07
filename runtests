@@ -93,6 +93,7 @@ runcmdfile() {
   local cmdfile=$1
   local logfile=$2
   local subfolder=""
+  local file_type=""
 
   if [[ "$cmdfile" == *"/"* ]]; then
     subfolder=${cmdfile%/*}
@@ -158,6 +159,18 @@ for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
     echo "WARNING: $cmdfile not found!"
     continue
   fi
+
+  [[ $(which file) ]] && {
+    file_type=""
+    file_type=$(file "$cmdfile")
+    [[ "$file_type" == *"text"* ]] || {
+      echo "WARNING: -f $cmdfile is not a text type file, it's real type:|$file_type|"
+      echo "Please choose the correct tests file."
+      usage
+      continue
+    }
+  }
+
   runcmdfile "$cmdfile" "$LOGFILE"
 done
 
