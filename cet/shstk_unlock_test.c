@@ -129,11 +129,19 @@ long unlock_shstk(pid_t pid)
 	}
 
 	if (ptrace(PTRACE_ARCH_PRCTL, pid, ARCH_SHSTK_SHSTK, ARCH_SHSTK_UNLOCK)) {
-		printf("[FAIL]\tCan't unlock CET for %d task", pid);
+		printf("[FAIL]\tCan't unlock user SHSTK for child pid:%d", pid);
 		err_num++;
 		goto detach;
 	} else {
-		printf("[PASS]\tUnlock CET successfully for pid:%d\n", pid);
+		printf("[PASS]\tUnlock SHSTK for child pid:%d\n", pid);
+	}
+
+	if (ptrace(PTRACE_ARCH_PRCTL, pid, ARCH_SHSTK_WRSS, ARCH_SHSTK_UNLOCK)) {
+		printf("[FAIL]\tCan't unlock WRSS for child pid:%d", pid);
+		err_num++;
+		goto detach;
+	} else {
+		printf("[PASS]\tUnlock WRSS for child pid:%d\n", pid);
 	}
 
 	ret = ptrace(PTRACE_GETREGSET, pid, NT_X86_SHSTK, &iov_cet);
@@ -279,7 +287,7 @@ int main(void)
 			printf("[FAIL]\tCould not re-enable Shadow stack.\n");
 			err_num++;
 		} else {
-			printf("[PASS]\tChild process re-enable ssp\n");
+			printf("[PASS]\tChild process re-enable SHSTK\n");
 		}
 
 		ret = ARCH_PRCTL(ARCH_SHSTK_STATUS, &feature);
