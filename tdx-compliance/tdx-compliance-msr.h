@@ -78,8 +78,7 @@
 #define RESERVED_0X1981 0x1981
 
 /* pre-conditions */
-static void pre_perfmon(struct test_msr *c)
-{
+static int get_perfmon(void) {
 	/* PERFMON: CPUID(0xa).* */
 	struct test_cpuid cpt = DEF_CPUID_TEST(0xa, 0);
 
@@ -87,6 +86,14 @@ static void pre_perfmon(struct test_msr *c)
 
 	if (cpt.regs.eax.val == 0 && cpt.regs.ebx.val == 0 &&
 	    cpt.regs.ecx.val == 0 && cpt.regs.edx.val == 0)
+		return 0;
+
+	return 1;
+}
+
+static void pre_perfmon(struct test_msr *c)
+{
+	if (!get_perfmon())
 		c->excp.expect = X86_TRAP_GP;
 }
 
@@ -223,6 +230,58 @@ static void pre_tsx(struct test_msr *c)
 	}
 }
 
+static void pre_fixedctr(struct test_msr *c)
+{
+	struct test_cpuid cpt = DEF_CPUID_TEST(0xa, 0x0);
+
+	run_cpuid(&cpt);
+
+	if (!get_perfmon() || (cpt.regs.edx.val & 0x1f) == 0)
+		c->excp.expect = X86_TRAP_GP;
+}
+
+static void pre_09a0(struct test_msr *c)
+{
+	struct test_cpuid cpt1 = DEF_CPUID_TEST(0x7, 0x1);
+	struct test_cpuid cpt2 = DEF_CPUID_TEST(0x23, 0x0);
+	struct test_cpuid cpt3 = DEF_CPUID_TEST(0x23, 0x2);
+	run_cpuid(&cpt1);
+	run_cpuid(&cpt2);
+	run_cpuid(&cpt3);
+
+	if (!get_perfmon() || !((cpt1.regs.eax.val & _BITUL(8)) != 0 &&
+	    (cpt2.regs.eax.val & _BITUL(2)) != 0 && cpt3.regs.ebx.val == 1))
+		c->excp.expect = X86_TRAP_GP;
+}
+
+static void pre_09c0(struct test_msr *c)
+{
+	struct test_cpuid cpt1 = DEF_CPUID_TEST(0x7, 0x1);
+	struct test_cpuid cpt2 = DEF_CPUID_TEST(0x23, 0x0);
+	struct test_cpuid cpt3 = DEF_CPUID_TEST(0x23, 0x2);
+	run_cpuid(&cpt1);
+	run_cpuid(&cpt2);
+	run_cpuid(&cpt3);
+
+	if (!get_perfmon() || !((cpt1.regs.eax.val & _BITUL(8)) != 0 &&
+	    (cpt2.regs.eax.val & _BITUL(2)) != 0 && cpt3.regs.ebx.val == 2))
+		c->excp.expect = X86_TRAP_GP;
+}
+
+static void pre_09e0_09f0(struct test_msr *c)
+{
+	struct test_cpuid cpt1 = DEF_CPUID_TEST(0x7, 0x1);
+	struct test_cpuid cpt2 = DEF_CPUID_TEST(0x23, 0x0);
+	struct test_cpuid cpt3 = DEF_CPUID_TEST(0x23, 0x2);
+	run_cpuid(&cpt1);
+	run_cpuid(&cpt2);
+	run_cpuid(&cpt3);
+
+	if (!get_perfmon() || !((cpt1.regs.eax.val & _BITUL(8)) != 0 &&
+	    (cpt2.regs.eax.val & _BITUL(2)) != 0 && cpt3.regs.eax.val == 1))
+		c->excp.expect = X86_TRAP_GP;
+}
+
 struct test_msr msr_cases[] = {
 	DEF_READ_MSR(MSR_IA32_TSC, NO_EXCP, NO_PRE_COND),
 	DEF_WRITE_MSR(MSR_IA32_TSC, X86_TRAP_VE, NO_PRE_COND),
@@ -283,8 +342,8 @@ struct test_msr msr_cases[] = {
 	DEF_WRITE_MSR(MSR_SLAM_ENABLE, X86_TRAP_GP, NO_PRE_COND),
 	DEF_READ_MSR(MSR_IA32_CR_PAT, NO_EXCP, NO_PRE_COND),
 	DEF_WRITE_MSR(MSR_IA32_CR_PAT, NO_EXCP, NO_PRE_COND),
-	DEF_READ_MSR_SIZE(MSR_CORE_PERF_FIXED_CTR0, NO_EXCP, pre_perfmon, 0x8),
-	DEF_WRITE_MSR_SIZE(MSR_CORE_PERF_FIXED_CTR0, NO_EXCP, pre_perfmon, 0x8),
+	DEF_READ_MSR_SIZE(MSR_CORE_PERF_FIXED_CTR0, NO_EXCP, pre_fixedctr, 0x8),
+	DEF_WRITE_MSR_SIZE(MSR_CORE_PERF_FIXED_CTR0, NO_EXCP, pre_fixedctr, 0x8),
 	DEF_READ_MSR(MSR_PERF_METRICS, NO_EXCP, pre_perfmon),
 	DEF_WRITE_MSR(MSR_PERF_METRICS, NO_EXCP, pre_perfmon),
 
@@ -500,12 +559,12 @@ struct test_msr msr_cases[] = {
 	DEF_READ_MSR(RESERVED_0X1981, X86_TRAP_GP, NO_PRE_COND),
 	DEF_WRITE_MSR(RESERVED_0X1981, X86_TRAP_GP, NO_PRE_COND),
 
-	DEF_READ_MSR_SIZE(RESERVED_0X09A0, NO_EXCP, pre_perfmon, 0x4),
-	DEF_WRITE_MSR_SIZE(RESERVED_0X09A0, NO_EXCP, pre_perfmon, 0x4),
-	DEF_READ_MSR_SIZE(RESERVED_0X09C0, NO_EXCP, pre_perfmon, 0x4),
-	DEF_WRITE_MSR_SIZE(RESERVED_0X09C0, NO_EXCP, pre_perfmon, 0x4),
-	DEF_READ_MSR_SIZE(RESERVED_0X09E0, NO_EXCP, pre_perfmon, 0x8),
-	DEF_WRITE_MSR_SIZE(RESERVED_0X09E0, NO_EXCP, pre_perfmon, 0x8),
-	DEF_READ_MSR_SIZE(RESERVED_0X09F0, NO_EXCP, pre_perfmon, 0x8),
-	DEF_WRITE_MSR_SIZE(RESERVED_0X09F0, NO_EXCP, pre_perfmon, 0x8),
+	DEF_READ_MSR_SIZE(RESERVED_0X09A0, NO_EXCP, pre_09a0, 0x4),
+	DEF_WRITE_MSR_SIZE(RESERVED_0X09A0, NO_EXCP, pre_09a0, 0x4),
+	DEF_READ_MSR_SIZE(RESERVED_0X09C0, NO_EXCP, pre_09c0, 0x4),
+	DEF_WRITE_MSR_SIZE(RESERVED_0X09C0, NO_EXCP, pre_09c0, 0x4),
+	DEF_READ_MSR_SIZE(RESERVED_0X09E0, NO_EXCP, pre_09e0_09f0, 0x8),
+	DEF_WRITE_MSR_SIZE(RESERVED_0X09E0, NO_EXCP, pre_09e0_09f0, 0x8),
+	DEF_READ_MSR_SIZE(RESERVED_0X09F0, NO_EXCP, pre_09e0_09f0, 0x8),
+	DEF_WRITE_MSR_SIZE(RESERVED_0X09F0, NO_EXCP, pre_09e0_09f0, 0x8),
 };
