@@ -9,93 +9,40 @@
 }
 
 #define EXP_CPUID_BIT(_leaf, _subleaf, _reg, _bit_nr, _val) do {	\
-	struct test_cpuid *t = fetch_cpuid_test(_leaf, _subleaf);	\
-	struct cpuid_reg *reg = &t->regs._reg;				\
+	struct test_cpuid *t;						\
 	int bnr = _bit_nr;						\
-	reg->mask |= BIT(bnr);						\
-	reg->expect |= BIT(bnr) * (_val);				\
+	t = kzalloc(sizeof(struct test_cpuid), GFP_KERNEL);		\
+	t->name = "CPUID_" #_leaf "_" #_subleaf ,			\
+	t->leaf = _leaf;						\
+	t->subleaf = _subleaf;						\
+	t->regs._reg.mask = BIT(bnr);					\
+	t->regs._reg.expect = BIT(bnr) * (_val);			\
+	list_add(&t->list, &cpuid_list);				\
 } while (0)
 
 #define EXP_CPUID_BYTE(_leaf, _subleaf, _reg, _val) do {		\
-	struct test_cpuid *t = fetch_cpuid_test(_leaf, _subleaf);	\
-	struct cpuid_reg *reg = &t->regs._reg;				\
-	reg->mask = 0xffffffff;						\
-	reg->expect = (_val);						\
+	struct test_cpuid *t;						\
+	t = kzalloc(sizeof(struct test_cpuid), GFP_KERNEL);		\
+	t->name = "CPUID_" #_leaf "_" #_subleaf,			\
+	t->leaf = _leaf;						\
+	t->subleaf = _subleaf;						\
+	t->regs._reg.mask = 0xffffffff;				\
+	t->regs._reg.expect = (_val);					\
+	list_add(&t->list, &cpuid_list);				\
 } while (0)
 
 #define EXP_CPUID_RES_BITS(_leaf, _subleaf, _reg, _bit_s, _bit_e) do {	\
-	int i;								\
-	struct test_cpuid *t = fetch_cpuid_test(_leaf, _subleaf);	\
+	int i = 0;							\
+	struct test_cpuid *t;						\
+	t = kzalloc(sizeof(struct test_cpuid), GFP_KERNEL);		\
+	t->name = "CPUID_" #_leaf "_" #_subleaf,			\
+	t->leaf = _leaf;						\
+	t->subleaf = _subleaf;						\
 	for (i = _bit_s; i <= (_bit_e); i++) {				\
 		t->regs._reg.mask |= BIT(i);				\
 	}								\
+	list_add(&t->list, &cpuid_list);				\
 } while (0)
-
-struct test_cpuid cpuid_cases[] = {
-	DEF_CPUID_TEST(0x0, 0),
-	DEF_CPUID_TEST(0x1, 0),
-	DEF_CPUID_TEST(0x3, 0),
-	DEF_CPUID_TEST(0x4, 0),
-	DEF_CPUID_TEST(0x4, 1),
-	DEF_CPUID_TEST(0x4, 2),
-	DEF_CPUID_TEST(0x4, 3),
-	DEF_CPUID_TEST(0x4, 4),
-	DEF_CPUID_TEST(0x7, 0),
-	DEF_CPUID_TEST(0x7, 1),
-	DEF_CPUID_TEST(0x7, 2),
-	DEF_CPUID_TEST(0x8, 0),
-	DEF_CPUID_TEST(0xa, 0),
-	DEF_CPUID_TEST(0xd, 0),
-	DEF_CPUID_TEST(0xd, 1),
-	DEF_CPUID_TEST(0xd, 2),
-	DEF_CPUID_TEST(0xd, 3),
-	DEF_CPUID_TEST(0xd, 4),
-	DEF_CPUID_TEST(0xd, 5),
-	DEF_CPUID_TEST(0xd, 6),
-	DEF_CPUID_TEST(0xd, 7),
-	DEF_CPUID_TEST(0xd, 8),
-	DEF_CPUID_TEST(0xd, 9),
-	DEF_CPUID_TEST(0xd, 0xa),
-	DEF_CPUID_TEST(0xd, 0xb),
-	DEF_CPUID_TEST(0xd, 0xc),
-	DEF_CPUID_TEST(0xd, 0xd),
-	DEF_CPUID_TEST(0xd, 0xe),
-	DEF_CPUID_TEST(0xd, 0xf),
-	DEF_CPUID_TEST(0xd, 0x10),
-	DEF_CPUID_TEST(0xd, 0x11),
-	DEF_CPUID_TEST(0xd, 0x12),
-	DEF_CPUID_TEST(0xe, 0),
-	DEF_CPUID_TEST(0x11, 0),
-	DEF_CPUID_TEST(0x12, 0),
-	DEF_CPUID_TEST(0x13, 0),
-	DEF_CPUID_TEST(0x15, 0),
-	DEF_CPUID_TEST(0x19, 0),
-	DEF_CPUID_TEST(0x20, 0),
-	DEF_CPUID_TEST(0x21, 0),
-	DEF_CPUID_TEST(0x22, 0),
-	DEF_CPUID_TEST(0x23, 0),
-	DEF_CPUID_TEST(0x23, 1),
-	DEF_CPUID_TEST(0x23, 2),
-	DEF_CPUID_TEST(0x23, 3),
-	DEF_CPUID_TEST(0x80000000, 0),
-	DEF_CPUID_TEST(0x80000001, 0),
-	DEF_CPUID_TEST(0x80000007, 0),
-	DEF_CPUID_TEST(0x80000008, 0),
-	{}
-};
-
-struct test_cpuid *fetch_cpuid_test(int leaf, int subleaf)
-{
-	struct test_cpuid *t = cpuid_cases;
-
-	while (t->name) {
-		if (t->leaf == leaf && t->subleaf == subleaf)
-			break;
-		t += 1;
-	}
-
-	return t;
-}
 
 void initial_cpuid(void)
 {

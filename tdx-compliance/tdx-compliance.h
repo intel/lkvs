@@ -40,6 +40,7 @@ struct test_cpuid {
 	u32 subleaf;
 	int ret;
 	struct cpuid_regs_ext regs;
+	struct list_head list;
 };
 
 struct cr_reg {
@@ -90,4 +91,5 @@ static int write_msr_native(struct test_msr *c);
 static int read_msr_native(struct test_msr *c);
 
 u64 cur_cr4, cur_cr0;
+extern struct list_head cpuid_list;
 #endif
