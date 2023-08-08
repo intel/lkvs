@@ -2,6 +2,7 @@
 #include <linux/debugfs.h>
 #include <linux/module.h>
 #include <linux/slab.h>
+#include <linux/list.h>
 
 #include "asm/trapnr.h"
 
@@ -31,6 +32,7 @@ int stat_total, stat_pass, stat_fail, cnt_log;
 int operation;
 char *buf_ret, *str_input;
 static struct dentry *f_tdx_tests, *d_tdx;
+LIST_HEAD(cpuid_list);
 
 #define SIZE_BUF		(PAGE_SIZE << 3)
 #define pr_buf(fmt, ...)				\
@@ -231,14 +233,12 @@ int check_results_cr(struct test_cr *t)
 
 static int run_all_cpuid(void)
 {
-	struct test_cpuid *t = cpuid_cases;
-	int i = 0;
+	struct test_cpuid *t;
 
 	pr_tdx_tests("Testing CPUID...\n");
-	for (i = 0; i < ARRAY_SIZE(cpuid_cases) - 1; i++, t++) {
+	list_for_each_entry(t, &cpuid_list, list) {
 		if (operation & 0x8000 && strcmp(str_input, t->name) != 0)
 			continue;
-
 		run_cpuid(t);
 
 		t->ret = check_results_cpuid(t);
@@ -426,6 +426,12 @@ static int __init tdx_tests_init(void)
 
 static void __exit tdx_tests_exit(void)
 {
+	struct test_cpuid *t, *tmp;
+
+	list_for_each_entry_safe(t, tmp, &cpuid_list, list) {
+		list_del(&t->list);
+		kfree(t);
+	}
 	kfree(buf_ret);
 	debugfs_remove_recursive(d_tdx);
 }
