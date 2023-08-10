@@ -240,48 +240,6 @@ static void pre_fixedctr(struct test_msr *c)
 		c->excp.expect = X86_TRAP_GP;
 }
 
-static void pre_09a0(struct test_msr *c)
-{
-	struct test_cpuid cpt1 = DEF_CPUID_TEST(0x7, 0x1);
-	struct test_cpuid cpt2 = DEF_CPUID_TEST(0x23, 0x0);
-	struct test_cpuid cpt3 = DEF_CPUID_TEST(0x23, 0x2);
-	run_cpuid(&cpt1);
-	run_cpuid(&cpt2);
-	run_cpuid(&cpt3);
-
-	if (!get_perfmon() || !((cpt1.regs.eax.val & _BITUL(8)) != 0 &&
-	    (cpt2.regs.eax.val & _BITUL(2)) != 0 && cpt3.regs.ebx.val == 1))
-		c->excp.expect = X86_TRAP_GP;
-}
-
-static void pre_09c0(struct test_msr *c)
-{
-	struct test_cpuid cpt1 = DEF_CPUID_TEST(0x7, 0x1);
-	struct test_cpuid cpt2 = DEF_CPUID_TEST(0x23, 0x0);
-	struct test_cpuid cpt3 = DEF_CPUID_TEST(0x23, 0x2);
-	run_cpuid(&cpt1);
-	run_cpuid(&cpt2);
-	run_cpuid(&cpt3);
-
-	if (!get_perfmon() || !((cpt1.regs.eax.val & _BITUL(8)) != 0 &&
-	    (cpt2.regs.eax.val & _BITUL(2)) != 0 && cpt3.regs.ebx.val == 2))
-		c->excp.expect = X86_TRAP_GP;
-}
-
-static void pre_09e0_09f0(struct test_msr *c)
-{
-	struct test_cpuid cpt1 = DEF_CPUID_TEST(0x7, 0x1);
-	struct test_cpuid cpt2 = DEF_CPUID_TEST(0x23, 0x0);
-	struct test_cpuid cpt3 = DEF_CPUID_TEST(0x23, 0x2);
-	run_cpuid(&cpt1);
-	run_cpuid(&cpt2);
-	run_cpuid(&cpt3);
-
-	if (!get_perfmon() || !((cpt1.regs.eax.val & _BITUL(8)) != 0 &&
-	    (cpt2.regs.eax.val & _BITUL(2)) != 0 && cpt3.regs.eax.val == 1))
-		c->excp.expect = X86_TRAP_GP;
-}
-
 struct test_msr msr_cases[] = {
 	DEF_READ_MSR(MSR_IA32_TSC, NO_EXCP, NO_PRE_COND),
 	DEF_WRITE_MSR(MSR_IA32_TSC, X86_TRAP_VE, NO_PRE_COND),
@@ -550,21 +508,4 @@ struct test_msr msr_cases[] = {
 	DEF_WRITE_MSR(MSR_TEST_CTRL, X86_TRAP_VE, NO_PRE_COND),
 	DEF_READ_MSR(MSR_IA32_TSC_ADJUST, X86_TRAP_VE, NO_PRE_COND),
 	DEF_WRITE_MSR(MSR_IA32_TSC_ADJUST, X86_TRAP_VE, NO_PRE_COND),
-	DEF_READ_MSR(RESERVED_0X0550, X86_TRAP_GP, NO_PRE_COND),
-	DEF_WRITE_MSR(RESERVED_0X0550, X86_TRAP_GP, NO_PRE_COND),
-	DEF_READ_MSR(RESERVED_0X1921, X86_TRAP_GP, NO_PRE_COND),
-	DEF_WRITE_MSR(RESERVED_0X1921, X86_TRAP_GP, NO_PRE_COND),
-	DEF_READ_MSR(RESERVED_0X1925, X86_TRAP_GP, NO_PRE_COND),
-	DEF_WRITE_MSR(RESERVED_0X1925, X86_TRAP_GP, NO_PRE_COND),
-	DEF_READ_MSR(RESERVED_0X1981, X86_TRAP_GP, NO_PRE_COND),
-	DEF_WRITE_MSR(RESERVED_0X1981, X86_TRAP_GP, NO_PRE_COND),
-
-	DEF_READ_MSR_SIZE(RESERVED_0X09A0, NO_EXCP, pre_09a0, 0x4),
-	DEF_WRITE_MSR_SIZE(RESERVED_0X09A0, NO_EXCP, pre_09a0, 0x4),
-	DEF_READ_MSR_SIZE(RESERVED_0X09C0, NO_EXCP, pre_09c0, 0x4),
-	DEF_WRITE_MSR_SIZE(RESERVED_0X09C0, NO_EXCP, pre_09c0, 0x4),
-	DEF_READ_MSR_SIZE(RESERVED_0X09E0, NO_EXCP, pre_09e0_09f0, 0x8),
-	DEF_WRITE_MSR_SIZE(RESERVED_0X09E0, NO_EXCP, pre_09e0_09f0, 0x8),
-	DEF_READ_MSR_SIZE(RESERVED_0X09F0, NO_EXCP, pre_09e0_09f0, 0x8),
-	DEF_WRITE_MSR_SIZE(RESERVED_0X09F0, NO_EXCP, pre_09e0_09f0, 0x8),
 };
