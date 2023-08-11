@@ -21,6 +21,9 @@
 #define MSR_IA32_INT_SSP_TAB		0x000006a8
 /****** END of Backport ******/
 
+#define VER1_0 1
+#define VER1_5 2
+
 struct cpuid_reg {
 	u32 val;
 	u32 expect;
@@ -39,6 +42,7 @@ struct test_cpuid {
 	u32 leaf;
 	u32 subleaf;
 	int ret;
+	int version;
 	struct cpuid_regs_ext regs;
 	struct list_head list;
 };
