@@ -80,6 +80,7 @@ struct test_msr {
 	int size;
 	int ret;
 	struct excp excp;
+	int version;
 
 	int (*run_msr_rw)(struct test_msr *p_test_msr);
 	void (*pre_condition)(struct test_msr *p_test_msr);
