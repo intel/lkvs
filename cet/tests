@@ -1,14 +1,26 @@
 # This file collects the CET(Control-flow Enforcement Technology) tests on
 # Intel® Architecture-based platforms.
 
-# User space SHSTK tests
+# User space SHSTK tests without SHSTK Glibc supported
 cet_tests.sh -t cp_test -n shstk_cp -k "control protection"
-quick_test
 shstk_alloc
-shstk_huge_page
 shstk_unlock_test
 test_shadow_stack
 wrss
+# User space SHSTK tests with SHSTK Glibc supported
+quick_test
+shstk_huge_page
+cet_tests.sh -t cp_test -n glibc_shstk_test -k "control protection" -p s2
+cet_tests.sh -t cp_test -n glibc_shstk_test -k "control protection" -p sl1
+cet_tests.sh -t cp_test -n glibc_shstk_test -k "control protection" -p sr
+cet_tests.sh -t cp_test -n glibc_shstk_test -k "control protection" -p sn
+cet_tests.sh -t cp_test -n glibc_shstk_test -k "control protection" -p buf1
+cet_tests.sh -t cp_test -n glibc_shstk_test -k "control protection" -p snc
+cet_tests.sh -t cp_test -n glibc_shstk_test -k "control protection" -p sc
+cet_tests.sh -t no_cp -n glibc_shstk_test -k "control protection" -p s1
+cet_tests.sh -t no_cp -n glibc_shstk_test -k "control protection" -p s3
+cet_tests.sh -t no_cp -n glibc_shstk_test -k "control protection" -p buf2
+cet_tests.sh -t cet_ssp -n glibc_shstk_test -p ssp
 # Kernel space IBT tests
 cet_tests.sh -t kmod_ibt_illegal -n cet_app -p "b1" -k "Missing ENDBR"
 cet_tests.sh -t kmod_ibt_legal -n cet_app -p "b2" -k "Missing ENDBR"
