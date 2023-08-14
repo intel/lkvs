@@ -57,6 +57,60 @@ load_cet_driver() {
   fi
 }
 
+cet_shstk_check() {
+  local bin_name=$1
+  local bin_parm=$2
+  local name=$3
+  local ssp=""
+  local bp_add=""
+  local sp=""
+  local obj_log="/tmp/${bin_name}.txt"
+
+  bin=$(which "$bin_name")
+  if [[ -e "$bin" ]]; then
+    test_print_trc "Find bin:$bin"
+  else
+    die "bin:$bin does not exist"
+  fi
+
+  bin_output_dmesg "$bin" "$bin_parm"
+  sleep 1
+  case $name in
+    cet_ssp)
+      ssp=$(echo "$BIN_OUTPUT" \
+            | grep "ssp" \
+            | tail -1 \
+            | awk -F "*ssp=0x" '{print $2}' \
+            | cut -d ' ' -f 1)
+      bp_add=$(echo "$BIN_OUTPUT" \
+              | grep "ssp" \
+              | tail -1 \
+              | awk -F ":0x" '{print $2}' \
+              | cut -d ' ' -f 1)
+      [[ -n "$ssp" ]] || na_test "platform not support cet ssp check"
+      do_cmd "objdump -d $bin > $obj_log"
+      sp=$(grep -A1  "<shadow_stack_check>$" "$obj_log" \
+            | tail -n 1 \
+            | awk '{print $1}' \
+            | cut -d ':' -f 1)
+      if [[ "$ssp" == *"$sp"* ]]; then
+        test_print_trc "sp:$sp is same as ssp:$ssp, pass"
+      else
+        test_print_wrg "sp:$sp is not same as ssp:$ssp"
+        test_print_trc "clear linux compiler changed sp"
+      fi
+      if [[ "$bp_add" == "$ssp" ]] ; then
+        test_print_trc "bp+1:$bp_add is same as ssp:$ssp, pass"
+      else
+        die "bp+1:$bp_add is not same as ssp:$ssp"
+      fi
+    ;;
+    *)
+      block_test "Invalid name:$name in cet_shstk_check"
+    ;;
+  esac
+}
+
 cet_dmesg_check() {
   local bin_name=$1
   local bin_parm=$2
@@ -65,6 +119,7 @@ cet_dmesg_check() {
   local verify_key=""
 
   bin_output_dmesg "$bin_name" "$bin_parm"
+  sleep 1
   verify_key=$(echo "$BIN_DMESG" | grep -i "$key")
   case $key_parm in
     "$CONTAIN")
@@ -104,6 +159,12 @@ cet_tests() {
     kmod_ibt_legal)
       load_cet_driver
       cet_dmesg_check "$bin_file" "$PARM" "$KEYWORD" "$NULL"
+      ;;
+    no_cp)
+      cet_dmesg_check "$bin_file" "$PARM" "$KEYWORD" "$NULL"
+      ;;
+    cet_ssp)
+      cet_shstk_check "$bin_file" "$PARM" "$TYPE"
       ;;
     *)
       usage
