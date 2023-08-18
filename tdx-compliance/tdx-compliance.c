@@ -76,6 +76,17 @@ static char *result_str(int ret)
 	return "UNKNOWN";
 }
 
+char *get_version(int version) {
+	if (version == 1)
+		return "_1.0";
+	else if (version == 2)
+		return "_1.5";
+	else if (version == 3)
+		return "_generic";
+	else
+		return "none";
+}
+
 static int check_results_msr(struct test_msr *t)
 {
 		if (t->excp.expect == t->excp.val)
@@ -186,6 +197,7 @@ static int run_all_msr(void)
 		t->ret = check_results_msr(t);
 		t->ret == 1 ? stat_pass++ : stat_fail++;
 
+		version_name = get_version(t->version);
 		pr_buf("%d: %s%s:\t %s\n", ++stat_total, t->name, version_name,
 		       result_str(t->ret));
 	}
@@ -208,6 +220,7 @@ static int check_results_cpuid(struct test_cpuid *t)
 	 * Show the detail that resutls in the failure,
 	 * CPUID here focus on the fixed bit, not actual cpuid val.
 	 */
+	version_name = get_version(t->version);
 	pr_buf("CPUID: %s%s\n", t->name, version_name);
 	pr_buf("CPUID	 :" CPUID_DUMP_PATTERN,
 	       (t->regs.eax.val & t->regs.eax.mask), (t->regs.ebx.val & t->regs.ebx.mask),
@@ -255,6 +268,7 @@ static int run_all_cpuid(void)
 		else if (t->ret == -1)
 			stat_fail++;
 
+		version_name = get_version(t->version);
 		pr_buf("%d: %s%s:\t %s\n", ++stat_total, t->name, version_name, result_str(t->ret));
 	}
 	return 0;
@@ -365,15 +379,12 @@ tdx_tests_proc_write(struct file *file,
 	if (*(str_input + strlen(str_input) - 1) == '\n')
 		*(str_input + strlen(str_input) - 1) = '\0';
 
-	if (strstr(str_input, "1.0")) {
-		spec_version |= VER1_0;
-		version_name = "v1.0";
-	}
-	else if (strstr(str_input, "1.5")) {
-		spec_version |= VER1_5;
-		version_name = "v1.5";
-	}
-
+	if (strstr(str_input, "1.0"))
+		spec_version = VER1_0;
+	else if (strstr(str_input, "1.5"))
+		spec_version = VER1_5;
+	else
+		spec_version = (VER1_0 | VER1_5);
 
 	if (strstr(str_input, "cpuid"))
 		operation |= OPMASK_CPUID;
