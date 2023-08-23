@@ -109,7 +109,7 @@ void try_shstk(unsigned long new_ssp)
 	asm volatile("rstorssp (%0)\n":: "r" (new_ssp));
 	asm volatile("saveprevssp");
 	ssp1 = get_ssp();
-	printf("ssp is now %lx, *ssp:%lx\n", ssp1, *((unsigned long *)ssp1));
+	printf("ssp is now %lx\n", ssp1);
 
 	ssp0 -= 8;
 	asm volatile("rstorssp (%0)\n":: "r" (ssp0));
