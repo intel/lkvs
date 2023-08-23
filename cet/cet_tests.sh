@@ -64,7 +64,7 @@ cet_shstk_check() {
   local ssp=""
   local bp_add=""
   local sp=""
-  local obj_log="/tmp/${bin_name}.txt"
+  local obj_log="${bin_name}.txt"
 
   bin=$(which "$bin_name")
   if [[ -e "$bin" ]]; then
