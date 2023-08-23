@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2022 Intel Corporation.
-
 // SPDX-License-Identifier: GPL-2.0
 /*
  * shstk_alloc.c - allocate a new shadow stack buffer aligenment by instructions
@@ -109,7 +106,7 @@ void try_shstk(unsigned long new_ssp)
 	asm volatile("rstorssp (%0)\n":: "r" (new_ssp));
 	asm volatile("saveprevssp");
 	ssp1 = get_ssp();
-	printf("ssp is now %lx, *ssp:%lx\n", ssp1, *((unsigned long *)ssp1));
+	printf("ssp is now %lx\n", ssp1);
 
 	ssp0 -= 8;
 	asm volatile("rstorssp (%0)\n":: "r" (ssp0));
@@ -146,9 +143,9 @@ int main(int argc, char *argv[])
 	if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK)) {
 		printf("[FAIL]\tParent process disable shadow stack failed.\n");
 		return 1;
-	} else {
-		printf("[PASS]\tParent process disable shadow stack successfully.\n");
 	}
+	printf("[PASS]\tParent process disable shadow stack successfully.\n");
+
 	return 0;
 }
 #endif
