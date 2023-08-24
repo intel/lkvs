@@ -12,39 +12,39 @@
 	struct test_cpuid *t;						\
 	int bnr = _bit_nr;						\
 	t = kzalloc(sizeof(struct test_cpuid), GFP_KERNEL);		\
-	t->name = "CPUID(" #_leaf "," #_subleaf ")." #_reg "[" #_bit_nr "]_";\
+	t->name = "CPUID(" #_leaf "," #_subleaf ")." #_reg "[" #_bit_nr "]";\
 	t->version = _vsn;						\
 	t->leaf = _leaf;						\
 	t->subleaf = _subleaf;						\
 	t->regs._reg.mask = BIT(bnr);					\
 	t->regs._reg.expect = BIT(bnr) * (_val);			\
-	list_add(&t->list, &cpuid_list);				\
+	list_add_tail(&t->list, &cpuid_list);				\
 } while (0)
 
 #define EXP_CPUID_BYTE(_leaf, _subleaf, _reg, _val, _vsn) do {		\
 	struct test_cpuid *t;						\
 	t = kzalloc(sizeof(struct test_cpuid), GFP_KERNEL);		\
-	t->name = "CPUID(" #_leaf "," #_subleaf ")." #_reg "_";		\
+	t->name = "CPUID(" #_leaf "," #_subleaf ")." #_reg;		\
 	t->version = _vsn;						\
 	t->leaf = _leaf;						\
 	t->subleaf = _subleaf;						\
 	t->regs._reg.mask = 0xffffffff;					\
 	t->regs._reg.expect = (_val);					\
-	list_add(&t->list, &cpuid_list);				\
+	list_add_tail(&t->list, &cpuid_list);				\
 } while (0)
 
 #define EXP_CPUID_RES_BITS(_leaf, _subleaf, _reg, _bit_s, _bit_e, _vsn) do {	\
 	int i = 0;								\
 	struct test_cpuid *t;							\
 	t = kzalloc(sizeof(struct test_cpuid), GFP_KERNEL);			\
-	t->name = "CPUID(" #_leaf "," #_subleaf ")." #_reg "[" #_bit_e ":" #_bit_s "]_";\
+	t->name = "CPUID(" #_leaf "," #_subleaf ")." #_reg "[" #_bit_e ":" #_bit_s "]";\
 	t->version = _vsn;							\
 	t->leaf = _leaf;							\
 	t->subleaf = _subleaf;							\
 	for (i = _bit_s; i <= (_bit_e); i++) {					\
 		t->regs._reg.mask |= BIT(i);					\
 	}									\
-	list_add(&t->list, &cpuid_list);					\
+	list_add_tail(&t->list, &cpuid_list);					\
 } while (0)
 
 void initial_cpuid(void)

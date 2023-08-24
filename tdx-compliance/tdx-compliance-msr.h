@@ -6,7 +6,7 @@
 
 #define DEF_MSR(_name, _msr_num, _rw, _excp, _precond, _size, _vsn)	\
 {							\
-	.name = _name "_" #_rw "_",			\
+	.name = _name "_" #_rw,			\
 	.version = _vsn,				\
 	.msr.msr_num = _msr_num,			\
 	.run_msr_rw = _rw##_msr##_native,		\
