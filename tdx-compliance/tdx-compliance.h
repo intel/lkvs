@@ -60,6 +60,7 @@ struct excp {
 
 struct test_cr {
 	char *name;		/* The name of the case */
+	int version;
 	int ret;		/* The result of the test, 1 for pass */
 	struct cr_reg reg;
 	struct excp excp;	/* The test's predicted and actual trap number */
