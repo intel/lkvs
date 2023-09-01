@@ -358,7 +358,7 @@ static ssize_t
 tdx_tests_proc_read(struct file *file, char __user *buffer,
 		    size_t count, loff_t *ppos)
 {
-	return simple_read_from_buffer(buffer, count, ppos, buf_ret, SIZE_BUF);
+	return simple_read_from_buffer(buffer, count, ppos, buf_ret, cnt_log);
 }
 
 static ssize_t
