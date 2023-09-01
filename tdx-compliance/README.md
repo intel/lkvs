@@ -34,8 +34,11 @@ insmod tdx-compliance
 To run all kinds of compliance tests, simply enter the following command:
 
 ```bash
-echo all > /sys/kernel/debug/tdx/tdx-tests
+echo all [version]> /sys/kernel/debug/tdx/tdx-tests
 ```
+the compliance tests of all versions will be tested in default.
+
+If you want to test against a specific TDX-Module version, use `[version]` option, the currently selectable version is "1.0" or "1.5".
 
 To view the results and logs, use this command:
 ```bash
@@ -63,7 +66,7 @@ interface /sys/kernel/debug/tdx/tdx-tests.
 Usage:
 Run cpuid compliance tests:
 ```
-echo cpuid > /sys/kernel/debug/tdx/tdx-tests
+echo cpuid [version] > /sys/kernel/debug/tdx/tdx-tests
 ```
 
 * MSR
@@ -75,7 +78,7 @@ the behavior of the MSRs' read and write.
 Usage:
 Run MSR compliance tests:
 ```
-each msr > /sys/kernel/debug/tdx/tdx-tests
+each msr [version] > /sys/kernel/debug/tdx/tdx-tests
 ```
 
 * CR(Control Registers)
@@ -87,7 +90,7 @@ can be used to enable or disable the pagination mechanism, etc.
 
 Usage:
 ```
-echo cr > /sys/kernel/debug/tdx/tdx-tests
+echo cr [version] > /sys/kernel/debug/tdx/tdx-tests
 ```
 
 ## Contact:
