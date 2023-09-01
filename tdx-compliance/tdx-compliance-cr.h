@@ -36,6 +36,22 @@ static int pre_cond_cr0_combine(struct test_cr *c)
 	return 0;
 }
 
+static int pre_cond_cr4_perfmon(struct test_cr *c)
+{
+	struct test_cpuid cpuid_perf = DEF_CPUID_TEST(0xa, 0);
+
+	run_cpuid(&cpuid_perf);
+
+	/* CPUID(0xa,0x0).* */
+	if (cpuid_perf.regs.eax.val == 0 && cpuid_perf.regs.ebx.val == 0 &&
+	    cpuid_perf.regs.ecx.val == 0 && cpuid_perf.regs.edx.val == 0) {
+		c->excp.expect = X86_TRAP_GP;
+		return 0;
+	}
+
+	return -1;
+}
+
 static int pre_cond_cr4_kl(struct test_cr *c)
 {
 	struct test_cpuid cpuid_kl = DEF_CPUID_TEST(0x7, 0);
@@ -104,54 +120,60 @@ static int pre_cond_cr4_uint(struct test_cr *c)
 #define NO_EXCP 0
 #define NO_PRE_COND NULL
 
-#define DEF_GET_CR0(_mask, _expect, _excp, _precond)	\
+#define DEF_GET_CR0(_mask, _expect, _excp, _precond, _vsn)	\
 {							\
 	.name = "CR0_GET_" #_mask,			\
+	.version = _vsn,				\
 	.reg.expect = _expect,				\
 	.reg.mask = _mask,				\
 	.run_cr_get = get_cr0,				\
 	.pre_condition = _precond,			\
 }
 
-#define DEF_SET_CR0(_mask, _excp, _precond)		\
+#define DEF_SET_CR0(_mask, _excp, _precond, _vsn)		\
 {							\
 	.name = "CR0_SET_" #_mask,			\
+	.version = _vsn,				\
 	.reg.mask = _mask,				\
 	.excp.expect = _excp,				\
 	.run_cr_set = set_cr0_bit,			\
 	.pre_condition = _precond,			\
 }
 
-#define DEF_CLEAR_CR0(_mask, _excp, _precond)		\
+#define DEF_CLEAR_CR0(_mask, _excp, _precond, _vsn)		\
 {							\
 	.name = "CR0_SET_" #_mask,			\
+	.version = _vsn,				\
 	.reg.mask = _mask,				\
 	.excp.expect = _excp,				\
 	.run_cr_set = set_cr0_clear_bit,		\
 	.pre_condition = _precond,			\
 }
 
-#define DEF_GET_CR4(_mask, _expect, _excp, _precond)	\
+#define DEF_GET_CR4(_mask, _expect, _excp, _precond, _vsn)	\
 {							\
 	.name = "CR4_GET_" #_mask,			\
+	.version = _vsn,				\
 	.reg.expect = _expect,				\
 	.reg.mask = _mask,				\
 	.run_cr_get = get_cr4,				\
 	.pre_condition = _precond,			\
 }
 
-#define DEF_SET_CR4(_mask, _excp, _precond)		\
+#define DEF_SET_CR4(_mask, _excp, _precond, _vsn)		\
 {							\
 	.name = "CR4_SET_" #_mask,			\
+	.version = _vsn,				\
 	.reg.mask = _mask,				\
 	.excp.expect = _excp,				\
 	.run_cr_set = set_cr4_bit,			\
 	.pre_condition = _precond,			\
 }
 
-#define DEF_XCH_CR4(_mask, _excp, _precond)		\
+#define DEF_XCH_CR4(_mask, _excp, _precond, _vsn)		\
 {							\
 	.name = "CR4_XCH_" #_mask,			\
+	.version = _vsn,				\
 	.reg.mask = _mask,				\
 	.excp.expect = _excp,				\
 	.run_cr_set = set_cr4_exchange_bit,		\
@@ -174,61 +196,67 @@ struct test_cr cr_list[] = {
 	 *   bits PE(0) and NE(5) are always set to 1
 	 *   bits NW(29) and CD(30) are always cleared to 0
 	 */
-	DEF_GET_CR0(X86_CR0_CD, BIT_CLEAR, NO_EXCP, NO_PRE_COND),
-	DEF_GET_CR0(X86_CR0_NW, BIT_CLEAR, NO_EXCP, NO_PRE_COND),
-	DEF_GET_CR0(X86_CR0_PE, BIT_SET, NO_EXCP, NO_PRE_COND),
-	DEF_GET_CR0(X86_CR0_NE, BIT_SET, NO_EXCP, NO_PRE_COND),
+	DEF_GET_CR0(X86_CR0_CD, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_GET_CR0(X86_CR0_NW, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_GET_CR0(X86_CR0_PE, BIT_SET, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_GET_CR0(X86_CR0_NE, BIT_SET, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
 
-	DEF_GET_CR4(X86_CR4_SMXE, BIT_CLEAR, NO_EXCP, NO_PRE_COND),
-	DEF_GET_CR4(X86_CR4_VMXE, BIT_CLEAR, NO_EXCP, NO_PRE_COND),
-	DEF_GET_CR4(X86_CR4_MCE, BIT_SET, NO_EXCP, NO_PRE_COND),
+	DEF_GET_CR4(X86_CR4_SMXE, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_GET_CR4(X86_CR4_VMXE, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_GET_CR4(X86_CR4_MCE, BIT_SET, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
 
-	DEF_CLEAR_CR0(X86_CR0_PE, X86_TRAP_GP, NO_PRE_COND),
-	DEF_CLEAR_CR0(X86_CR0_NE, X86_TRAP_GP, NO_PRE_COND),
-	DEF_CLEAR_CR0(X86_CR0_PE | X86_CR0_PG, NO_EXCP, pre_cond_cr0_combine),
+	DEF_CLEAR_CR0(X86_CR0_PE, X86_TRAP_GP, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_CLEAR_CR0(X86_CR0_NE, X86_TRAP_GP, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_CLEAR_CR0(X86_CR0_PE | X86_CR0_PG, NO_EXCP, pre_cond_cr0_combine, VER1_0 | VER1_5),
 
-	DEF_SET_CR0(X86_CR0_NW, X86_TRAP_VE, NO_PRE_COND),
-	DEF_SET_CR0(X86_CR0_CD, X86_TRAP_VE, NO_PRE_COND),
+	DEF_SET_CR0(X86_CR0_NW, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_SET_CR0(X86_CR0_CD, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
 
 	/*
 	 * TD attempts to modify them results in a #VE,
 	 * bits VMXE(13) and SMXE(14) are fixed to 0.
 	 */
-	DEF_XCH_CR4(X86_CR4_VMXE | X86_CR4_SMXE, X86_TRAP_VE, NO_PRE_COND),
+	DEF_XCH_CR4(X86_CR4_VMXE | X86_CR4_SMXE, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
 
 	/*
-	 * TD attempts to modify them results in a #VE,
+	 * TD attempts to modify bit MCE(6) results in a #VE,
 	 * bits MCE(6) are fixed to 1.
 	 */
-	DEF_XCH_CR4(X86_CR4_MCE, X86_TRAP_VE, NO_PRE_COND),
+	DEF_XCH_CR4(X86_CR4_MCE, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
+
+	/*
+	 * TD attempts to set bit PCE(8) results in a #GP(0),
+	 * if the TD's ATTRIBUTES.PERFMON is 0.
+	 */
+	DEF_SET_CR4(X86_CR4_PCE, NO_EXCP, pre_cond_cr4_perfmon, VER1_0),
 
 	/*
 	 * TD attempts to set bit KL(19) results in a #GP(0),
 	 * if the TD's ATTRIBUTES.KL is 0.
 	 */
-	DEF_SET_CR4(X86_CR4_KL, NO_EXCP, pre_cond_cr4_kl),
+	DEF_SET_CR4(X86_CR4_KL, NO_EXCP, pre_cond_cr4_kl, VER1_0 | VER1_5),
 
 	/*
 	 * TD attempts to set bit PKS(24) results in a #GP(0),
 	 * if the TD's ATTRIBUTES.PKS is 0.
 	 */
-	DEF_SET_CR4(X86_CR4_PKS, NO_EXCP, pre_cond_cr4_pks),
+	DEF_SET_CR4(X86_CR4_PKS, NO_EXCP, pre_cond_cr4_pks, VER1_0 | VER1_5),
 
 	/*
 	 * TD modification of CR4 bit PKE(22) is prevented,
 	 * depending on TD's XFAM.
 	 */
-	DEF_XCH_CR4(X86_CR4_PKE, NO_EXCP, pre_cond_cr4_pke),
+	DEF_XCH_CR4(X86_CR4_PKE, NO_EXCP, pre_cond_cr4_pke, VER1_0 | VER1_5),
 
 	/*
 	 * TD modification of CR4 bit CET(23) is prevented,
 	 * depending on TD's XFAM.
 	 */
-	DEF_XCH_CR4(X86_CR4_CET, NO_EXCP, pre_cond_cr4_cet),
+	DEF_XCH_CR4(X86_CR4_CET, NO_EXCP, pre_cond_cr4_cet, VER1_0 | VER1_5),
 
 	/*
 	 * TD modification of CR4 bit UINT(25) is prevented,
 	 * depending on TD's XFAM
 	 */
-	DEF_XCH_CR4(X86_CR4_UINT, NO_EXCP, pre_cond_cr4_uint),
+	DEF_XCH_CR4(X86_CR4_UINT, NO_EXCP, pre_cond_cr4_uint, VER1_0 | VER1_5),
 };

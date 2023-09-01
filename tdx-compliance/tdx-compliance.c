@@ -330,6 +330,8 @@ static int run_all_cr(void)
 		if (operation & 0x8000 && strcmp(str_input, t->name) != 0)
 			continue;
 
+		if (!(spec_version & t->version)) continue;
+
 		if (t->run_cr_get)
 			t->reg.val = t->run_cr_get();
 
@@ -348,7 +350,8 @@ static int run_all_cr(void)
 		t->ret = check_results_cr(t);
 		t->ret == 1 ? stat_pass++ : stat_fail++;
 
-		pr_buf("%d: %s:\t %s\n", ++stat_total, t->name,
+		version_name = get_version(t->version);
+		pr_buf("%d: %s%s:\t %s\n", ++stat_total, t->name, version_name,
 		       result_str(t->ret));
 	}
 	return 0;
