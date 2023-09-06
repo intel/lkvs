@@ -20,7 +20,7 @@
 #define SHADOW_STACK_SET_TOKEN	0x1
 /* It's from arch/x86/entry/syscalls/syscall_64.tbl file. */
 #ifndef __NR_map_shadow_stack
-#define __NR_map_shadow_stack 451
+#define __NR_map_shadow_stack 453
 #endif
 
 #define PASS		0

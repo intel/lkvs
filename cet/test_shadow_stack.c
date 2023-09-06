@@ -38,21 +38,33 @@
 #include <sys/ioctl.h>
 #include <linux/userfaultfd.h>
 #include <setjmp.h>
+#include <sys/ptrace.h>
+#include <sys/signal.h>
+#include <linux/elf.h>
 
-#define SS_SIZE 0x200000
+/*
+ * Define the ABI defines if needed, so people can run the tests
+ * without building the headers.
+ */
+#ifndef __NR_map_shadow_stack
+#define __NR_map_shadow_stack	453
 
-/* It's from arch/x86/include/uapi/asm/mman.h file. */
 #define SHADOW_STACK_SET_TOKEN	(1ULL << 0)
-/* It's from arch/x86/include/uapi/asm/prctl.h file. */
+
 #define ARCH_SHSTK_ENABLE	0x5001
 #define ARCH_SHSTK_DISABLE	0x5002
-/* ARCH_SHSTK_ features bits */
-#define ARCH_SHSTK_SHSTK		(1ULL <<  0)
-#define ARCH_SHSTK_WRSS			(1ULL <<  1)
-/* It's from arch/x86/entry/syscalls/syscall_64.tbl file. */
-#ifndef __NR_map_shadow_stack
-#define __NR_map_shadow_stack 451
+#define ARCH_SHSTK_LOCK		0x5003
+#define ARCH_SHSTK_UNLOCK	0x5004
+#define ARCH_SHSTK_STATUS	0x5005
+
+#define ARCH_SHSTK_SHSTK	(1ULL <<  0)
+#define ARCH_SHSTK_WRSS		(1ULL <<  1)
+
+#define NT_X86_SHSTK	0x204
 #endif
+
+#define SS_SIZE 0x200000
+#define PAGE_SIZE 0x1000
 
 #if (__GNUC__ < 8) || (__GNUC__ == 8 && __GNUC_MINOR__ < 5)
 int main(int argc, char *argv[])
@@ -68,6 +80,7 @@ void write_shstk(unsigned long *addr, unsigned long val)
 		     : [addr] "r" (addr), [val] "r" (val));
 }
 
+/* It's a test code not kernel code and it can't use always_inline. */
 static inline unsigned long __attribute__((always_inline)) get_ssp(void)
 {
 	unsigned long ret = 0;
@@ -189,8 +202,10 @@ err:
 
 unsigned long saved_ssp;
 unsigned long saved_ssp_val;
+/* The volatile is necessary for the tests. */
 volatile bool segv_triggered;
 
+/* It's a test code not kernel code and it can't use noinline. */
 void __attribute__((noinline)) violate_ss(void)
 {
 	saved_ssp = get_ssp();
@@ -213,12 +228,12 @@ void segv_handler(int signum, siginfo_t *si, void *uc)
 
 int test_shstk_violation(void)
 {
-	struct sigaction sa;
+	struct sigaction sa = {};
 
 	sa.sa_sigaction = segv_handler;
+	sa.sa_flags = SA_SIGINFO;
 	if (sigaction(SIGSEGV, &sa, NULL))
 		return 1;
-	sa.sa_flags = SA_SIGINFO;
 
 	segv_triggered = false;
 
@@ -309,14 +324,14 @@ bool gup_read(void *ptr)
 
 int test_gup(void)
 {
-	struct sigaction sa;
+	struct sigaction sa = {};
 	int status;
 	pid_t pid;
 
 	sa.sa_sigaction = test_access_fix_handler;
+	sa.sa_flags = SA_SIGINFO;
 	if (sigaction(SIGSEGV, &sa, NULL))
 		return 1;
-	sa.sa_flags = SA_SIGINFO;
 
 	segv_triggered = false;
 
@@ -392,12 +407,12 @@ int test_gup(void)
 
 int test_mprotect(void)
 {
-	struct sigaction sa;
+	struct sigaction sa = {};
 
 	sa.sa_sigaction = test_access_fix_handler;
+	sa.sa_flags = SA_SIGINFO;
 	if (sigaction(SIGSEGV, &sa, NULL))
 		return 1;
-	sa.sa_flags = SA_SIGINFO;
 
 	segv_triggered = false;
 
@@ -449,30 +464,17 @@ char zero[4096];
 static void *uffd_thread(void *arg)
 {
 	struct uffdio_copy req;
-	int uffd = *(int *)arg, ret = 0;
+	int uffd = *(int *)arg;
 	struct uffd_msg msg;
-
-	/* Debug code to reproduce issue. */
-	/*
-	 * ret = read(uffd, &msg, sizeof(msg));
-	 * printf("ret:%d, errno:%d(equal to EAGAIN:11 will stuck)\n",
-	 *        ret, errno);
-	 * if (ret <=0)
-	 * 	return (void *)1;
-	 */
+	int ret;
 
 	while (1) {
 		ret = read(uffd, &msg, sizeof(msg));
-		if (ret <= 0) {
-			if (errno == EAGAIN) {
-				printf("ret:%d, errno:EAGAIN(%d), stuck here if return (void *)1!\n",
-				       ret, errno);
-				continue;
-			}
-			return (void *)1;
-		} else {
+		if (ret > 0)
 			break;
-		}
+		else if (errno == EAGAIN)
+			continue;
+		return (void *)1;
 	}
 
 	req.dst = msg.arg.pagefault.address;
@@ -490,15 +492,15 @@ int test_userfaultfd(void)
 {
 	struct uffdio_register uffdio_register;
 	struct uffdio_api uffdio_api;
-	struct sigaction sa;
+	struct sigaction sa = {};
 	pthread_t thread;
 	void *res;
 	int uffd;
 
 	sa.sa_sigaction = test_access_fix_handler;
+	sa.sa_flags = SA_SIGINFO;
 	if (sigaction(SIGSEGV, &sa, NULL))
 		return 1;
-	sa.sa_flags = SA_SIGINFO;
 
 	uffd = syscall(__NR_userfaultfd, O_CLOEXEC | O_NONBLOCK);
 	if (uffd < 0) {
@@ -543,6 +545,67 @@ err:
 	close(uffd);
 	signal(SIGSEGV, SIG_DFL);
 	return 1;
+}
+
+/* Simple linked list for keeping track of mappings in test_guard_gap() */
+struct node {
+	struct node *next;
+	void *mapping;
+};
+
+/*
+ * This tests whether mmap will place other mappings in a shadow stack's guard
+ * gap. The steps are:
+ *   1. Finds an empty place by mapping and unmapping something.
+ *   2. Map a shadow stack in the middle of the known empty area.
+ *   3. Map a bunch of PAGE_SIZE mappings. These will use the search down
+ *      direction, filling any gaps until it encounters the shadow stack's
+ *      guard gap.
+ *   4. When a mapping lands below the shadow stack from step 2, then all
+ *      of the above gaps are filled. The search down algorithm will have
+ *      looked at the shadow stack gaps.
+ *   5. See if it landed in the gap.
+ */
+int test_guard_gap(void)
+{
+	void *free_area, *shstk, *test_map = (void *)0xFFFFFFFFFFFFFFFF;
+	struct node *head = NULL, *cur;
+
+	free_area = mmap(0, SS_SIZE * 3, PROT_READ | PROT_WRITE,
+			 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	munmap(free_area, SS_SIZE * 3);
+
+	shstk = create_shstk(free_area + SS_SIZE);
+	if (shstk == MAP_FAILED)
+		return 1;
+
+	while (test_map > shstk) {
+		test_map = mmap(0, PAGE_SIZE, PROT_READ | PROT_WRITE,
+				MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+		if (test_map == MAP_FAILED)
+			return 1;
+		cur = malloc(sizeof(*cur));
+		cur->mapping = test_map;
+
+		cur->next = head;
+		head = cur;
+	}
+
+	while (head) {
+		cur = head;
+		head = cur->next;
+		munmap(cur->mapping, PAGE_SIZE);
+		free(cur);
+	}
+
+	free_shstk(shstk);
+
+	if (shstk - test_map - PAGE_SIZE != PAGE_SIZE)
+		return 1;
+
+	printf("[OK]\tGuard gap test\n");
+
+	return 0;
 }
 
 /*
@@ -593,7 +656,7 @@ void segv_gp_handler(int signum, siginfo_t *si, void *uc)
  */
 int test_32bit(void)
 {
-	struct sigaction sa;
+	struct sigaction sa = {};
 	struct sigaction *sa32;
 
 	/* Create sigaction in 32 bit address range */
@@ -602,9 +665,9 @@ int test_32bit(void)
 	sa32->sa_flags = SA_SIGINFO;
 
 	sa.sa_sigaction = segv_gp_handler;
+	sa.sa_flags = SA_SIGINFO;
 	if (sigaction(SIGSEGV, &sa, NULL))
 		return 1;
-	sa.sa_flags = SA_SIGINFO;
 
 	segv_triggered = false;
 
@@ -625,6 +688,109 @@ int test_32bit(void)
 		printf("[OK]\t32 bit test\n");
 
 	return !segv_triggered;
+}
+
+void segv_handler_ptrace(int signum, siginfo_t *si, void *uc)
+{
+	/* The SSP adjustment caused a segfault. */
+	exit(0);
+}
+
+int test_ptrace(void)
+{
+	unsigned long saved_ssp, ssp = 0;
+	struct sigaction sa = {};
+	struct iovec iov;
+	int status;
+	int pid;
+
+	iov.iov_base = &ssp;
+	iov.iov_len = sizeof(ssp);
+
+	pid = fork();
+	if (!pid) {
+		ssp = get_ssp();
+
+		sa.sa_sigaction = segv_handler_ptrace;
+		sa.sa_flags = SA_SIGINFO;
+		if (sigaction(SIGSEGV, &sa, NULL))
+			return 1;
+
+		ptrace(PTRACE_TRACEME, NULL, NULL, NULL);
+		/*
+		 * The parent will tweak the SSP and return from this function
+		 * will #CP.
+		 */
+		raise(SIGTRAP);
+
+		exit(1);
+	}
+
+	while (waitpid(pid, &status, 0) != -1 && WSTOPSIG(status) != SIGTRAP)
+		;
+
+	if (ptrace(PTRACE_GETREGSET, pid, NT_X86_SHSTK, &iov)) {
+		printf("[INFO]\tFailed to PTRACE_GETREGS\n");
+		goto out_kill;
+	}
+
+	if (!ssp) {
+		printf("[INFO]\tPtrace child SSP was 0\n");
+		goto out_kill;
+	}
+
+	saved_ssp = ssp;
+
+	iov.iov_len = 0;
+	if (!ptrace(PTRACE_SETREGSET, pid, NT_X86_SHSTK, &iov)) {
+		printf("[INFO]\tToo small size accepted via PTRACE_SETREGS\n");
+		goto out_kill;
+	}
+
+	iov.iov_len = sizeof(ssp) + 1;
+	if (!ptrace(PTRACE_SETREGSET, pid, NT_X86_SHSTK, &iov)) {
+		printf("[INFO]\tToo large size accepted via PTRACE_SETREGS\n");
+		goto out_kill;
+	}
+
+	ssp += 1;
+	if (!ptrace(PTRACE_SETREGSET, pid, NT_X86_SHSTK, &iov)) {
+		printf("[INFO]\tUnaligned SSP written via PTRACE_SETREGS\n");
+		goto out_kill;
+	}
+
+	ssp = 0xFFFFFFFFFFFF0000;
+	if (!ptrace(PTRACE_SETREGSET, pid, NT_X86_SHSTK, &iov)) {
+		printf("[INFO]\tKernel range SSP written via PTRACE_SETREGS\n");
+		goto out_kill;
+	}
+
+	/*
+	 * Tweak the SSP so the child with #CP when it resumes and returns
+	 * from raise()
+	 */
+	ssp = saved_ssp + 8;
+	iov.iov_len = sizeof(ssp);
+	if (ptrace(PTRACE_SETREGSET, pid, NT_X86_SHSTK, &iov)) {
+		printf("[INFO]\tFailed to PTRACE_SETREGS\n");
+		goto out_kill;
+	}
+
+	if (ptrace(PTRACE_DETACH, pid, NULL, NULL)) {
+		printf("[INFO]\tFailed to PTRACE_DETACH\n");
+		goto out_kill;
+	}
+
+	waitpid(pid, &status, 0);
+	if (WEXITSTATUS(status))
+		return 1;
+
+	printf("[OK]\tPtrace test\n");
+	return 0;
+
+out_kill:
+	kill(pid, SIGKILL);
+	return 1;
 }
 
 int main(int argc, char *argv[])
@@ -694,9 +860,21 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
+	if (test_guard_gap()) {
+		ret = 1;
+		printf("[FAIL]\tGuard gap test\n");
+		goto out;
+	}
+
+	if (test_ptrace()) {
+		ret = 1;
+		printf("[FAIL]\tptrace test\n");
+	}
+
 	if (test_32bit()) {
 		ret = 1;
 		printf("[FAIL]\t32 bit test\n");
+		goto out;
 	}
 
 	return ret;
