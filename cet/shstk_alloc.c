@@ -33,7 +33,7 @@
 
 #define SHADOW_STACK_SET_TOKEN	0x1
 #ifndef __NR_map_shadow_stack
-#define __NR_map_shadow_stack 451
+#define __NR_map_shadow_stack 453
 #endif
 
 size_t shstk_size = 0x200000;
