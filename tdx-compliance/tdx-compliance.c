@@ -31,8 +31,9 @@ MODULE_AUTHOR("Yi Sun");
 int stat_total, stat_pass, stat_fail, cnt_log;
 int operation;
 int spec_version;
-char *version_name;
-char *buf_ret, *str_input;
+char case_name[256];
+char version_name[32];
+char *buf_ret;
 static struct dentry *f_tdx_tests, *d_tdx;
 LIST_HEAD(cpuid_list);
 
@@ -76,15 +77,34 @@ static char *result_str(int ret)
 	return "UNKNOWN";
 }
 
-char *get_version(int version) {
-	if (version == 1)
-		return "_1.0";
-	else if (version == 2)
-		return "_1.5";
-	else if (version == 3)
-		return "_generic";
+void parse_version(void) 
+{
+	if (strstr(version_name, "1.0"))
+		spec_version = VER1_0;
+	else if (strstr(version_name, "1.5"))
+		spec_version = VER1_5;
 	else
-		return "none";
+		spec_version = (VER1_0 | VER1_5);
+}
+
+void parse_input(char* s) 
+{
+	memset(case_name, 0, sizeof(case_name));
+	memset(version_name, 0, sizeof(version_name));
+	char *space = strchr(s, ' ');
+	if (space != NULL) {
+		size_t length_case = space - s;
+		strncpy(case_name, s, length_case);
+		case_name[length_case] = '\0';
+
+		size_t length_ver = strlen(space+1);
+		strncpy(version_name, space+1, length_ver);
+	} else {
+		strcpy(case_name, s);
+		strcpy(version_name, "generic");
+	}
+
+	parse_version();
 }
 
 static int check_results_msr(struct test_msr *t)
@@ -184,7 +204,7 @@ static int run_all_msr(void)
 	pr_tdx_tests("Testing MSR...\n");
 
 	for (i = 0; i < ARRAY_SIZE(msr_cases); i++, t++) {
-		if (operation & 0x8000 && strcmp(str_input, t->name) != 0)
+		if (operation & 0x8000 && strcmp(case_name, t->name) != 0)
 			continue;
 
 		if (!(spec_version & t->version)) continue;
@@ -197,8 +217,7 @@ static int run_all_msr(void)
 		t->ret = check_results_msr(t);
 		t->ret == 1 ? stat_pass++ : stat_fail++;
 
-		version_name = get_version(t->version);
-		pr_buf("%d: %s%s:\t %s\n", ++stat_total, t->name, version_name,
+		pr_buf("%d: %s_%s:\t %s\n", ++stat_total, t->name, version_name,
 		       result_str(t->ret));
 	}
 	return 0;
@@ -220,8 +239,7 @@ static int check_results_cpuid(struct test_cpuid *t)
 	 * Show the detail that resutls in the failure,
 	 * CPUID here focus on the fixed bit, not actual cpuid val.
 	 */
-	version_name = get_version(t->version);
-	pr_buf("CPUID: %s%s\n", t->name, version_name);
+	pr_buf("CPUID: %s_%s\n", t->name, version_name);
 	pr_buf("CPUID	 :" CPUID_DUMP_PATTERN,
 	       (t->regs.eax.val & t->regs.eax.mask), (t->regs.ebx.val & t->regs.ebx.mask),
 	       (t->regs.ecx.val & t->regs.ecx.mask), (t->regs.edx.val & t->regs.edx.mask));
@@ -255,7 +273,7 @@ static int run_all_cpuid(void)
 	pr_tdx_tests("Testing CPUID...\n");
 	list_for_each_entry(t, &cpuid_list, list) {
 
-		if (operation & 0x8000 && strcmp(str_input, t->name) != 0)
+		if (operation & 0x8000 && strcmp(case_name, t->name) != 0)
 			continue;
 
 		if (!(spec_version & t->version)) continue;
@@ -268,8 +286,7 @@ static int run_all_cpuid(void)
 		else if (t->ret == -1)
 			stat_fail++;
 
-		version_name = get_version(t->version);
-		pr_buf("%d: %s%s:\t %s\n", ++stat_total, t->name, version_name, result_str(t->ret));
+		pr_buf("%d: %s_%s:\t %s\n", ++stat_total, t->name, version_name, result_str(t->ret));
 	}
 	return 0;
 }
@@ -327,7 +344,7 @@ static int run_all_cr(void)
 	pr_tdx_tests("Testing Control Register...\n");
 
 	for (i = 0; i < ARRAY_SIZE(cr_list); i++, t++) {
-		if (operation & 0x8000 && strcmp(str_input, t->name) != 0)
+		if (operation & 0x8000 && strcmp(case_name, t->name) != 0)
 			continue;
 
 		if (!(spec_version & t->version)) continue;
@@ -350,8 +367,7 @@ static int run_all_cr(void)
 		t->ret = check_results_cr(t);
 		t->ret == 1 ? stat_pass++ : stat_fail++;
 
-		version_name = get_version(t->version);
-		pr_buf("%d: %s%s:\t %s\n", ++stat_total, t->name, version_name,
+		pr_buf("%d: %s_%s:\t %s\n", ++stat_total, t->name, version_name,
 		       result_str(t->ret));
 	}
 	return 0;
@@ -369,6 +385,7 @@ tdx_tests_proc_write(struct file *file,
 		     const char __user *buffer,
 		     size_t count, loff_t *f_pos)
 {
+	char *str_input;
 	str_input = kzalloc((count + 1), GFP_KERNEL);
 
 	if (!str_input)
@@ -382,22 +399,17 @@ tdx_tests_proc_write(struct file *file,
 	if (*(str_input + strlen(str_input) - 1) == '\n')
 		*(str_input + strlen(str_input) - 1) = '\0';
 
-	if (strstr(str_input, "1.0"))
-		spec_version = VER1_0;
-	else if (strstr(str_input, "1.5"))
-		spec_version = VER1_5;
-	else
-		spec_version = (VER1_0 | VER1_5);
+	parse_input(str_input);
 
-	if (strstr(str_input, "cpuid"))
+	if (strstr(case_name, "cpuid"))
 		operation |= OPMASK_CPUID;
-	else if (strstr(str_input, "cr"))
+	else if (strstr(case_name, "cr"))
 		operation |= OPMASK_CR;
-	else if (strstr(str_input, "msr"))
+	else if (strstr(case_name, "msr"))
 		operation |= OPMASK_MSR;
-	else if (strstr(str_input, "all"))
+	else if (strstr(case_name, "all"))
 		operation |= OPMASK_CPUID | OPMASK_CR | OPMASK_MSR;
-	else if (str_input)
+	else
 		operation |= OPMASK_SINGLE | OPMASK_CPUID | OPMASK_CR | OPMASK_MSR;
 
 	cnt_log = 0;
