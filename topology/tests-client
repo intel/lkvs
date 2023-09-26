@@ -1,0 +1,7 @@
+# This file collects basic cases which verify CPU Topology
+# on Intel® Architecture-based client platforms.
+
+cpu_topology.sh -t verify_thread_per_core
+cpu_topology.sh -t verify_cores_per_socket
+cpu_topology.sh -t verify_socket_num
+cpu_topology.sh -t verify_level_type
