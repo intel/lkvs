@@ -93,7 +93,7 @@ runtest() {
   else
     echo -e "<<<test end, result: $result, duration: ${duration}s>>\n"
   fi
-  case_result=$(printf "%-76s%-11s%-12s%-8s" "$cmdline" "$result" "$code" "${duration}s")
+  case_result=$(printf "%-76s%-11s%-12s%-8s" "$cmdline" " $result" "$code" "${duration}s")
   echo "$case_result" >> "$SUMMRY_LOG"
 }
 
