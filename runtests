@@ -158,7 +158,8 @@ test_all() {
   fi
 }
 
-: LOGFILE=""
+# Default value
+: "${LOGFILE:="./lkvs.log"}"
 : CMDFILES=""
 : CMDLINE=""
 
