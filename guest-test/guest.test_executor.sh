@@ -84,7 +84,7 @@ cd $SCRIPT_DIR
 # select test_functions by $TEST_SCENARIO
 case "$TESTCASE" in
   TD_BOOT)
-    guest_test_prepare tdx_guest_boot_check.sh
+    guest_test_prepare tdx/tdx_guest_boot_check.sh
     guest_test_entry tdx_guest_boot_check.sh "-v $VCPU -s $SOCKETS -m $MEM" || \
     die "Failed on TD_BOOT test tdx_guest_boot_check.sh -v $VCPU -s $SOCKETS -m $MEM"
     if [[ $GCOV == "off" ]]; then
