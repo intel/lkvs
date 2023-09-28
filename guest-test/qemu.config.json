@@ -1,10 +1,10 @@
 {
     "common": {
-        "kernel_img": "/tdx/home/sdp/tdx/guest_kernel_github/tdx/arch/x86/boot/bzImage.guest-next.0105",
+        "kernel_img": "/boot/vmlinuz-xxx-yyy",
         "initrd_img": "/boot/initramfs-xxx-yyy",
-        "bios_img": "/tdx/home/sdp/tdx/hongyu/OVMF.edk2-stable202211.fd",
-        "qemu_img": "/tdx/home/sdp/tdx/host_qemu_github/qemu-tdx/build/qemu-system-x86_64.tdx-qemu-2023-3-13-v7.2-kvm-upstream-2023.03.10-v6.2-wa",
-        "guest_img": "/tdx/home/sdp/tdx/hongyu/emr-bkc-centos-stream-9-coreserver-host-6.2-13.3-43.image",
+        "bios_img": "/path/to/EDKII/OVMF.fd or other virtual BIOS",
+        "qemu_img": "/path/to/qemu-kvm with proper capabilty of VM test",
+        "guest_img": "/path/to/prepared/guest_os_image, in qcow2 or raw image format",
         "guest_img_format": "raw",
         "boot_pattern": "*Kernel*on*x86_64*",
         "guest_root_passwd": "123456",

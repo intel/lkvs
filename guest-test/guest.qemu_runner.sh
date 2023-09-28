@@ -76,7 +76,7 @@ cd "$(dirname "$0")" 2>/dev/null || exit 1
 source ../.env
 
 # get test scenario config for qemu_runner
-source $SCRIPT_DIR/test_params.py
+source "$SCRIPT_DIR"/test_params.py
 
 # do basic pre-check for TDX/TDXIO VM launching
 if [[ $VM_TYPE == "tdx" ]] || [[ $VM_TYPE == "tdxio" ]]; then
@@ -85,4 +85,4 @@ fi
 
 # launch VM by qemu via qemu_runner.py
 test_print_trc "qemu_runner start to launch $VM_TYPE VM"
-python3 $SCRIPT_DIR/qemu_runner.py
+python3 "$SCRIPT_DIR"/qemu_runner.py

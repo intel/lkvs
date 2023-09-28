@@ -24,14 +24,14 @@ guest_test_prepare() {
     rm -rf $GUEST_TEST_DIR
     mkdir $GUEST_TEST_DIR
 EOF
-  sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no common.sh root@localhost:$GUEST_TEST_DIR
-  sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no $1 root@localhost:$GUEST_TEST_DIR
+  sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no common.sh root@localhost:"$GUEST_TEST_DIR"
+  sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no "$1" root@localhost:"$GUEST_TEST_DIR"
   test_print_trc "Guest VM test script prepare complete"
 }
 
 # function based on sshpass to scp $1 source_code_dir and compile $2 test_binary in Guest VM
 guest_test_source_code() {
-  sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no -r $1 root@localhost:$GUEST_TEST_DIR
+  sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no -r "$1" root@localhost:"$GUEST_TEST_DIR"
   sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
     source $GUEST_TEST_DIR/common.sh
     cd $GUEST_TEST_DIR/$1
@@ -78,9 +78,9 @@ cd "$(dirname "$0")" 2>/dev/null || exit 1
 source ../.env
 
 # get test scenario config for test_executor
-source $SCRIPT_DIR/test_params.py
+source "$SCRIPT_DIR"/test_params.py
 
-cd $SCRIPT_DIR
+cd "$SCRIPT_DIR" || die "fail to switch to $SCRIPT_DIR"
 # select test_functions by $TEST_SCENARIO
 case "$TESTCASE" in
   TD_BOOT)

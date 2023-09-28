@@ -25,6 +25,10 @@ while getopts :v:s:m: arg; do
 		m)
 			MEM=$OPTARG
 			;;
+		*)
+			test_print_err "Must supply an argument to -$OPTARG."
+			exit 1
+			;;
 	esac
 done
 
@@ -49,12 +53,12 @@ test_print_trc "mem_td: $mem_td"
 
 # $MEM less than or equal to 4GB need special memory size check
 if [[ $MEM -le 4 ]]; then
-	if [[ $(( $MEM / $mem_td )) -lt 1 ]] || [[ $(( $MEM / $mem_td )) -gt 2 ]]; then
+	if [[ $(( MEM / mem_td )) -lt 1 ]] || [[ $(( MEM / mem_td )) -gt 2 ]]; then
 		die "Guest TD VM boot with memory: $mem_td GB (expected $MEM GB)"
 	fi
 # $MEM more than 4GB use general memory size check
 else
-	if [[ $(( $MEM / $mem_td )) -ne 1 ]]; then
+	if [[ $(( MEM / mem_td )) -ne 1 ]]; then
 		die "Guest TD VM boot with memory: $mem_td GB (expected $MEM GB)"
 	fi
 fi
