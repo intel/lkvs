@@ -1,0 +1,11 @@
+# This file collects Intel IFS(In Field SCAN) tests on
+# Intel® Architecture-based platforms.
+
+# ifs_0 scan test cases
+ifs_tests.sh -m 0 -p all -n load_ifs
+ifs_tests.sh -m 0 -p all -b 1 -n ifs_batch
+ifs_tests.sh -m 0 -p all -b 1 -n legacy_twice_run
+ifs_tests.sh -m 0 -p all -b 2 -n legacy_twice_run
+ifs_tests.sh -m 0 -p all -b 3 -n legacy_twice_run
+ifs_tests.sh -m 0 -p all -b 1 -n img_version
+ifs_tests.sh -m 0 -p all -b 1 -n reload_ifs

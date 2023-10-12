@@ -14,6 +14,7 @@ More details please refer to following.
   * [Intel_PT](pt/README.md)
   * [UMIP(User-Mode Instruction Prevention)](umip/README.md)
   * [xsave](xsave/README.md)
+  * [IFS(In Field Scan)](ifs/README.md)
 
 # Compile from sources
 
