@@ -211,7 +211,7 @@ while read -r line; do
 		if [[ $line == $BOOT_PATTERN ]]; then
 			test_print_trc "VM_TYPE: $VM_TYPE, VCPU: $VCPU, SOCKETS: $SOCKETS, MEM: $MEM, DEBUG: $DEBUG, PMU: $PMU, CMDLINE: $CMDLINE, TESTCASE: $TESTCASE, SECONDS: $SECONDS"
       EXEC_FLAG=0
-			./guest.test_executor.sh || break # break while read loop in case of TD VM test failure
+			if ! ./guest.test_executor.sh; then EXEC_FLAG=1 && break; fi # break while read loop in case of TD VM test failure
     # err_handlers string matching
     elif [[ $line == $ERR_STR1 ]]; then
       test_print_err "There is $ERR_STR1, test is not fully PASS"
@@ -306,11 +306,19 @@ fi
 # VM life-cycles management step 3
 # Kill the tdvm_$PORT process in case above ssh command close not accessible due to network or other issues
 if [ "$GCOV" == "off" ]; then
-  if [ ! "$(pgrep "${VM_TYPE}vm_$PORT")" ]; then
+  if [ ! "$(pgrep "${VM_TYPE}vm_$PORT")" ] && [ $EXEC_FLAG -eq 0 ]; then
     test_print_trc "$VM_TYPE VM test complete all correctly..."
-  else
+  else # [ ${VM_TYPE}vm_$PORT process is still up ] || [ $EXEC_FLAG -eq 1 ]
     pkill "${VM_TYPE}vm_$PORT"
     test_print_wrg "${VM_TYPE}vm_$PORT process is still up, kill it since test expected to end here"
     die "$VM_TYPE VM test fail, please check test log"
+  fi
+else # [ $GCOV == "on" ]
+  if [ $EXEC_FLAG -eq 0 ]; then
+    test_print_trc "$VM_TYPE VM test complete all correctly..."
+    test_print_trc "Please shutdown $VM_TYPE VM after gcov collect completed"
+  else
+    test_print_err "$VM_TYPE VM test fail, please check test log"
+    test_print_trc "Please shutdown $VM_TYPE VM after gcov collect or debug completed"
   fi
 fi
