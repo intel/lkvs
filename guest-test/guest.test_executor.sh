@@ -31,16 +31,21 @@ EOF
 
 # function based on sshpass to scp $1 source_code_dir and compile $2 test_binary in Guest VM
 guest_test_source_code() {
-  sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no -r "$1" root@localhost:"$GUEST_TEST_DIR"
+  sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
+    mkdir -p $GUEST_TEST_DIR/$1
+EOF
+  sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no -r "$1"/* root@localhost:"$GUEST_TEST_DIR/$1"
   sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
     source $GUEST_TEST_DIR/common.sh
-    cd $GUEST_TEST_DIR/$1
-    make || die "Failed to compile source code $1"
+    cd $GUEST_TEST_DIR || { die "Failed to cd to $GUEST_TEST_DIR; return 1; }
+    cd $1 || { die "Failed to cd to $1; return 1; }
+    make || { die "Failed to compile source code $1"; return 1; }
     if [ -f $2 ]; then
       chmod a+x $2
       cp $2 $GUEST_TEST_DIR
     else
       die "Can't find test binary $2"
+      return 1
     fi
 EOF
   test_print_trc "Guest VM test source code and binary prepare complete"
@@ -73,6 +78,18 @@ EOF
   test_print_trc "Guest VM closed properly after test"
 }
 
+guest_attest_test() {
+  selftest_item=$1
+  guest_test_prepare tdx/tdx_attest_check.sh
+  guest_test_source_code tdx/tdx_attest_test_suite tdx_guest_test || \
+  { die "Failed to prepare guest test source code for $selftest_item"; return 1; }
+  guest_test_entry tdx_attest_check.sh "-t $selftest_item" || \
+  { die "Failed on $TESTCASE tdx_attest_check.sh -t $selftest_item"; return 1; }
+  if [[ $GCOV == "off" ]]; then
+    guest_test_close
+  fi
+}
+
 ###################### Do Works ######################
 cd "$(dirname "$0")" 2>/dev/null || exit 1
 source ../.env
@@ -95,10 +112,26 @@ case "$TESTCASE" in
     guest_test_prepare guest_test.sh
     guest_test_source_code test_source_code_dir_example test_binary_example
     guest_test_entry guest_test.sh "-t $TESTCASE" || \
-    die "Failed on GUEST_TESTCASE_EXAMPLE guest_test.sh -t $TESTCASE"
+    die "Failed on $TESTCASE guest_test.sh -t $TESTCASE"
     if [[ $GCOV == "off" ]]; then
       guest_test_close
     fi
+    ;;
+  TD_ATTEST_VERIFY_REPORT)
+    guest_attest_test "global.verify_report" || \
+    die "Failed on $TESTCASE"
+    ;;
+  TD_ATTEST_VERITY_REPORTMAC)
+    guest_attest_test "global.verify_reportmac" || \
+    die "Failed on $TESTCASE"
+    ;;
+  TD_ATTEST_VERIFY_RTMR_EXTEND)
+    guest_attest_test "global.verify_rtmr_extend" || \
+    die "Failed on $TESTCASE"
+    ;;
+  TD_ATTEST_VERIFY_QUOTE)
+    guest_attest_test "global.verify_quote" || \
+    die "Failed on $TESTCASE"
     ;;
   :)
     test_print_err "Must specify the test scenario option by [-t]"
