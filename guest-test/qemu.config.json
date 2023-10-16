@@ -6,7 +6,7 @@
         "qemu_img": "/path/to/qemu-kvm with proper capabilty of VM test",
         "guest_img": "/path/to/prepared/guest_os_image, in qcow2 or raw image format",
         "guest_img_format": "raw",
-        "boot_pattern": "*Kernel*on*x86_64*",
+        "boot_pattern": "*Kernel*on*an*x86_64*",
         "guest_root_passwd": "123456",
         "vm_type": "tdx",
         "pmu": "off",
