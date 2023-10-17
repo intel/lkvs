@@ -37,8 +37,12 @@ EOF
   sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no -r "$1"/* root@localhost:"$GUEST_TEST_DIR/$1"
   sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
     source $GUEST_TEST_DIR/common.sh
-    cd $GUEST_TEST_DIR || { die "Failed to cd to $GUEST_TEST_DIR; return 1; }
-    cd $1 || { die "Failed to cd to $1; return 1; }
+    cd $GUEST_TEST_DIR
+    cd $1
+    dnf list installed gcc || dnf install -y gcc || \
+    { die "Failed to install gcc in guest os"; return 1; }
+    dnf list installed glibc-static || dnf install -y glibc-static || \
+    { die "Failed to install glibc-static in guest os"; return 1; }
     make || { die "Failed to compile source code $1"; return 1; }
     if [ -f $2 ]; then
       chmod a+x $2
@@ -48,7 +52,13 @@ EOF
       return 1
     fi
 EOF
+ERR_NUM=$?
+if [ $ERR_NUM -eq 0 ]; then
   test_print_trc "Guest VM test source code and binary prepare complete"
+  return 0
+else
+  return 1
+fi
 }
 
 # function based on sshpass to execute $1 test_script.sh and potential $2 script params in Guest VM
