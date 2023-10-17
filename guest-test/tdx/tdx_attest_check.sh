@@ -49,7 +49,7 @@ attest_result() {
         rm -rf attest.log
     fi
     ./tdx_guest_test | tee attest.log
-    results=$(cat attest.log | grep "not ok $selftest_num $selftest_item")
+    results=$(grep "not ok $selftest_num $selftest_item" attest.log)
     if [ -z "$results" ]; then
         test_print_trc "TD attestation - $selftest_item PASS."
     else
