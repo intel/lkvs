@@ -208,7 +208,7 @@ while read -r line; do
 	echo "[${VM_TYPE}_vm]: $line"
   # within $TIMEOUT but bypass the very first 2 seconds to avoid unexpected $BOOT_PATTERN match (from parameter handling logic)
 	if [[ $SECONDS -lt $TIMEOUT ]] && [[ $SECONDS -ge 2 ]]; then
-		if [[ $line == $BOOT_PATTERN ]]; then
+		if [[ $line == $BOOT_PATTERN ]] && [[ $EXEC_FLAG -ne 0 ]]; then
 			test_print_trc "VM_TYPE: $VM_TYPE, VCPU: $VCPU, SOCKETS: $SOCKETS, MEM: $MEM, DEBUG: $DEBUG, PMU: $PMU, CMDLINE: $CMDLINE, TESTCASE: $TESTCASE, SECONDS: $SECONDS"
       EXEC_FLAG=0
 			if ! ./guest.test_executor.sh; then EXEC_FLAG=1 && break; fi # break while read loop in case of TD VM test failure
@@ -233,18 +233,11 @@ while read -r line; do
 	elif [[ $SECONDS -ge $TIMEOUT ]]; then # break while read loop in case of TD VM boot timeout (no $BOOT_PATTERN found)
 		break
 	fi
-done < <(if [ "$GCOV" == "off" ]; then timeout "$TIMEOUT" ./guest.qemu_runner.sh; else ./guest.qemu_runner.sh; fi)
+done < <(if [ "$GCOV" == "off" ]; then timeout "$TIMEOUT" ./guest.qemu_runner.sh; \
+  else test_print_trc "${VM_TYPE}vm_$PORT keep alive for gcov data collection" && ./guest.qemu_runner.sh; fi)
 
 ## PART 3: err_handlers error management
 # unexpected error/bug/warning/call trace handling
-if [ $ERR_FLAG1 -ne 0 ]; then
-  die "$VM_TYPE VM test failed with $ERR_STR1, please check |ERROR| in test log for more info"
-fi
-
-if [ $ERR_FLAG2 -ne 0 ]; then
-  die "$VM_TYPE VM test failed with $ERR_STR2, please check |ERROR| in test log for more info"
-fi
-
 if [ $ERR_FLAG3 -ne 0 ]; then
   test_print_wrg "$VM_TYPE VM test hit $ERR_STR3, please check |WARNING| in test log for more info"
 fi
@@ -255,6 +248,15 @@ fi
 
 if [ $ERR_FLAG5 -ne 0 ]; then
   test_print_wrg "$VM_TYPE VM test hit $ERR_STR5, please check |WARNING| in test log for more info"
+fi
+
+# handle error/bug in the end to avoid missing above warning/call trace info
+if [ $ERR_FLAG1 -ne 0 ]; then
+  die "$VM_TYPE VM test failed with $ERR_STR1, please check |ERROR| in test log for more info"
+fi
+
+if [ $ERR_FLAG2 -ne 0 ]; then
+  die "$VM_TYPE VM test failed with $ERR_STR2, please check |ERROR| in test log for more info"
 fi
 # end of err_handlers error management
 
@@ -282,6 +284,7 @@ if ! guest_kernel_check; then
 		pkill "${VM_TYPE}vm_$PORT"
 		die "TEST TIMEOUT!!!!!!!!!!!!"
 	elif [ "$GCOV" == "off" ] && [ "$EXEC_FLAG" -eq 1 ]; then
+    pkill "${VM_TYPE}vm_$PORT"
 		die "$VM_TYPE VM test seems fail at beginning, please check test log"
 	fi
 # guest_kernel_kernel function zero return value shows TDVM is still accessible handling
@@ -320,5 +323,6 @@ else # [ $GCOV == "on" ]
   else
     test_print_err "$VM_TYPE VM test fail, please check test log"
     test_print_trc "Please shutdown $VM_TYPE VM after gcov collect or debug completed"
+    die "$VM_TYPE VM test fail, please check test log"
   fi
 fi
