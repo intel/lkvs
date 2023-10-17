@@ -35,11 +35,11 @@ turbostat sleep 1 1>/dev/null 2>&1 || block_test "Turbostat tool is required to 
 run RAPL cases, please get it from latest upstream kernel-tools."
 
 # stress tool is required to run RAPL cases
-stress --help 1>/dev/null 2>&1 || block_test "stress tool is\
+stress --help 1>/dev/null 2>&1 || block_test "stress tool is \
 required to run RAPL cases, please get it from latest upstream kernel-tools."
 
 # perf tool is required to run RAPL cases
-perf list 1>/dev/null 2>&1 || block_test "perf tool is\
+perf list 1>/dev/null 2>&1 || block_test "perf tool is \
 required to run RAPL cases, please get it from latest upstream kernel-tools."
 
 # Read value from MSR
@@ -1236,6 +1236,247 @@ beyond 20% of sysfs energy joules gap: $energy_delta_j"
   done
 }
 
+# Function to verify if 0x601 (PL4) will change after RAPL control enable and disable
+# Also PL1/PL2 power limit value change will not impact PL4
+# Meanwhile judge if RAPL control disable expected or not
+# PL1 is mapping constraint_0 (long term)
+# PL2 is mapping constraint_1 (short term)
+# PL4 is mapping constraint_2 (peak power)
+# Linux does not support PL3
+rapl_control_enable_disable_pl() {
+  local pl_id=$1
+
+  domain_num=$(ls /sys/class/powercap/ | grep -c intel-rapl:)
+  [[ -n "$domain_num" ]] || block_test "intel-rapl sysfs is not available."
+
+  for ((i = 1; i <= domain_num; i++)); do
+    domain_name=$(ls /sys/class/powercap/ | grep intel-rapl: | sed -n "$i,1p")
+    test_print_trc "------Testing domain name: $domain_name------"
+
+    # Read default PL4, PL1, PL2 value
+    pl4_default=$(rdmsr 0x601)
+    [[ -n "$pl4_default" ]] && test_print_trc "PL4 value before RAPL Control enable and disable: $pl4_default"
+
+    pl1_default=$(cat /sys/class/powercap/"$domain_name"/constraint_0_max_power_uw)
+    [[ -n "$pl1_default" ]] && test_print_trc "PL1 value before RAPL Control enable and disable: $pl1_default"
+
+    pl2_default=$(cat /sys/class/powercap/"$domain_name"/constraint_1_max_power_uw)
+    [[ -n "$pl2_default" ]] && test_print_trc "PL2 value before RAPL Control enable and disable: $pl2_default"
+
+    # Enable RAPL control
+    do_cmd "echo 1 > /sys/class/powercap/$domain_name/enabled"
+    enabled_knob=$(cat /sys/class/powercap/"$domain_name"/enabled)
+    if [[ "$enabled_knob" -eq 1 ]]; then
+      test_print_trc "Enabling RAPL control for $domain_name is PASS"
+    else
+      die "Enabling RAPL control for $domain_name is Fail"
+    fi
+
+    # Change each domain's $pl_id power limit setting then enable the RAPL control
+    default_power_limit=$(cat /sys/class/powercap/"$domain_name"/constraint_"$pl_id"_max_power_uw)
+    [[ -n "$default_power_limit" ]] && test_print_trc "Domain $domain_name's constraint_'$pl_id'_max_power_uw \
+default value is: $default_power_limit"
+    # Use package PL1 to judge SUT is client or Server
+    # Usually the largest PL1 for Client Desktop is 125 Watts, Client mobile PL1 will be 9/15/45/65 Watts etc.
+    pl1_edge=$(cat /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_0_max_power_uw)
+    [[ -n "$pl1_edge" ]] || block_test "Package PL1 power value is not available."
+    if [[ $pl1_edge -le 125000000 ]]; then
+      test_print_trc "The SUT should be client:"
+      if [[ "$default_power_limit" -eq 0 ]]; then
+        test_power_limit=$(("$default_power_limit" + 10000000))
+        test_print_trc "Test power limit is: $test_power_limit uw"
+      else
+        test_power_limit=$(("$default_power_limit" - 5000000))
+        [[ $test_power_limit -lt 0 ]] && test_power_limit=0
+        test_print_trc "Test power limit is: $test_power_limit uw"
+      fi
+    else
+      test_print_trc "The SUT should be server:"
+      if [[ "$default_power_limit" -eq 0 ]]; then
+        test_power_limit=$(("$default_power_limit" + 100000000))
+        test_print_trc "Test power limit is: $test_power_limit uw"
+      else
+        test_power_limit=$(("$default_power_limit" - 100000000))
+        [[ $test_power_limit -lt 0 ]] && test_power_limit=0
+        test_print_trc "Test power limit is: $test_power_limit uw"
+      fi
+    fi
+    [[ -d /sys/class/powercap/"$domain_name"/constraint_"$pl_id"_power_limit_uw ]] &&
+      echo "$test_power_limit" >/sys/class/powercap/"$domain_name"/constraint_"$pl_id"_power_limit_uw
+
+    # Recover the default constraint_$pl_id_power_limit_uw setting
+    [[ -d /sys/class/powercap/"$domain_name"/constraint_"$pl_id"_power_limit_uw ]] &&
+      echo "$default_power_limit" >/sys/class/powercap/"$domain_name"/constraint_"$pl_id"_power_limit_uw
+
+    # Disable RAPL control
+    do_cmd "echo 0 > /sys/class/powercap/$domain_name/enabled"
+    disabled_knob=$(cat /sys/class/powercap/"$domain_name"/enabled)
+
+    # Get Enable power limit value by reading 0x610 bit 15
+    enable_power_limit=$(rdmsr 0x610 -f 15:15)
+    test_print_trc "Enable RAPL Limit shows: $enable_power_limit"
+
+    # Check if RAPL control disable works as expected
+    if [[ $disabled_knob -eq 0 ]]; then
+      test_print_trc "RAPL Control is not expected to be set to 0."
+    elif [[ $enable_power_limit -eq 0 ]]; then
+      die "System allows to disable PL, while writing RAPL control disable fail."
+    else
+      # Trying to manually write 0x610 bit 15 to 0
+      # If it can't be set then you are OK as system is not allowing to disable PL1.
+      # But wrmsr can write bit 15 to 0 and enabled is still 1, then this is a bug
+      change_bit15=$(wrmsr 0x610 $(($(rdmsr -d 0x610) & ~(1 << 15))))
+      test_print_trc "Verify if 0x610 bit 15 can be set to 0: $change_bit15"
+      read_bit15=$(rdmsr 0x610 -f 15:15)
+      if [[ $read_bit15 -eq 0 ]]; then
+        die "0x610 bit 15 can change to 0, while RAPL control disable still 1."
+      else
+        test_print_trc "0x610 bit 15 cannot change to 0, so RAPL control enable shows 1 is expected."
+      fi
+    fi
+
+    # Check if PL4 value changed after RAPL control enable and disable
+    pl4_test=$(rdmsr 0x601)
+    test_print_trc "PL4 value after RAPL Control enable and disable: $pl4_test"
+    if [[ "$pl4_test" == "$pl4_default" ]]; then
+      test_print_trc "PL4 shows the same value as default after RAPL Control enable and disable"
+    else
+      die "PL4 value changed after RAPL Control enable and disable: $pl4_test"
+    fi
+
+    # Check if PL1 value changed after RAPL control enable and disable
+    pl1_recovered=$(cat /sys/class/powercap/"$domain_name"/constraint_0_max_power_uw)
+    if [[ -z "$pl1_default" ]]; then
+      test_print_trc "constraint_0_max_power_uw is not available for $domain_name"
+    elif [[ "$pl1_recovered" == "$pl1_default" ]]; then
+      test_print_trc "PL1 shows the same value as default after RAPL Control enable and disable"
+    else
+      die "PL1 value changed after RAPL Control enable and disable: $pl1_recovered"
+    fi
+
+    # Check if PL2 value changed after RAPL control enable and disable
+    pl2_recovered=$(cat /sys/class/powercap/"$domain_name"/constraint_1_max_power_uw)
+    if [[ -z "$pl2_default" ]]; then
+      test_print_trc "constraint_1_max_power_uw is not available for $domain_name"
+    elif [[ "$pl2_recovered" == "$pl2_default" ]]; then
+      test_print_trc "PL2 shows the same value as default after RAPL Control enable and disable"
+    else
+      die "PL2 value changed after RAPL Control enable and disable: $pl2_recovered"
+    fi
+
+    # Re-enable RAPL control
+    do_cmd "echo 1 > /sys/class/powercap/$domain_name/enabled"
+
+  done
+}
+
+# Function to change 0x601 (PL4) value and RAPL control enable and disable
+# Meanwhile judge if RAPL control disable expected or not
+rapl_control_enable_disable_pl4() {
+  local test_pl4=$1
+
+  domain_num=$(ls /sys/class/powercap/ | grep -c intel-rapl:)
+  [[ -n "$domain_num" ]] || block_test "intel-rapl sysfs is not available."
+
+  for ((i = 1; i <= domain_num; i++)); do
+    domain_name=$(ls /sys/class/powercap/ | grep intel-rapl: | sed -n "$i,1p")
+    test_print_trc "------Testing domain name: $domain_name------"
+    ori_pl4=$(rdmsr 0x601)
+
+    # Read default PL4, PL1, PL2 value
+    pl4_default=$(cat /sys/class/powercap/"$domain_name"/constraint_2_max_power_uw)
+    [[ -n "$pl4_default" ]] && test_print_trc "PL4 value before RAPL Control enable and disable: $pl4_default"
+
+    pl1_default=$(cat /sys/class/powercap/"$domain_name"/constraint_0_max_power_uw)
+    [[ -n "$pl1_default" ]] && test_print_trc "PL1 value before RAPL Control enable and disable: $pl1_default"
+
+    pl2_default=$(cat /sys/class/powercap/"$domain_name"/constraint_1_max_power_uw)
+    [[ -n "$pl2_default" ]] && test_print_trc "PL2 value before RAPL Control enable and disable: $pl2_default"
+
+    # Enable RAPL control
+    do_cmd "echo 1 > /sys/class/powercap/$domain_name/enabled"
+    enabled_knob=$(cat /sys/class/powercap/"$domain_name"/enabled)
+    if [[ "$enabled_knob" -eq 1 ]]; then
+      test_print_trc "Enabling RAPL control for $domain_name is PASS"
+    else
+      die "Enabling RAPL control for $domain_name is Fail"
+    fi
+
+    # Write a low value to 0x601 then enable the RAPL control
+    # Only cover on Client platform
+    # Low value will be written 0
+    # High value will be written
+    do_cmd "wrmsr 0x601 $test_pl4"
+
+    # Disable RAPL control
+    do_cmd "echo 0 > /sys/class/powercap/$domain_name/enabled"
+    disabled_knob=$(cat /sys/class/powercap/"$domain_name"/enabled)
+
+    # Get Enable power limit value by reading 0x610 bit 15
+    enable_power_limit=$(rdmsr 0x610 -f 15:15)
+    test_print_trc "Enable RAPL Limit shows: $enable_power_limit"
+
+    # Check if RAPL control disable works as expected
+    if [[ $disabled_knob -eq 0 ]]; then
+      test_print_trc "RAPL Control is not expected to be set to 0, so 1 is PASS."
+    elif [[ $enable_power_limit -eq 0 ]]; then
+      die "System allows to disable PL, while writing RAPL control disable fail."
+    else
+      # Trying to manually write 0x610 bit 15 to 0
+      # If it can't be set then you are OK as system is not allowing to disable PL1.
+      # But wrmsr can write bit 15 to 0 and enabled is still 1, then this is a bug
+      change_bit15=$(wrmsr 0x610 $(($(rdmsr -d 0x610) & ~(1 << 15))))
+      test_print_trc "Verify if 0x610 bit 15 can be set to 0: $change_bit15"
+      read_bit15=$(rdmsr 0x610 -f 15:15)
+      if [[ $read_bit15 -eq 0 ]]; then
+        die "0x610 bit 15 can change to 0, while RAPL control disable still 1."
+      else
+        test_print_trc "0x610 bit 15 cannot change to 0, so RAPL control enable shows 1 is expected."
+      fi
+    fi
+
+    # Check if PL4 value changed after RAPL control enable and disable
+    pl4_recovered=$(cat /sys/class/powercap/"$domain_name"/constraint_2_max_power_uw)
+    test_print_trc "PL4 value after RAPL Control enable and disable: $pl4_recovered"
+    if [[ -z "$pl4_recovered" ]]; then
+      test_print_trc "constraint_2_max_power_uw is not available for $domain_name"
+    elif [[ "$pl4_recovered" == "$pl4_default" ]]; then
+      test_print_trc "PL4 shows the same value as default after RAPL Control enable and disable"
+    else
+      die "PL4 value changed after RAPL Control enable and disable: $pl4_recovered"
+    fi
+
+    # Check if PL1 value changed after RAPL control enable and disable
+    pl1_recovered=$(cat /sys/class/powercap/"$domain_name"/constraint_0_max_power_uw)
+    if [[ -z "$pl1_default" ]]; then
+      test_print_trc "constraint_0_max_power_uw is not available for $domain_name"
+    elif [[ "$pl1_recovered" == "$pl1_default" ]]; then
+      test_print_trc "PL1 value after RAPL Control enable and disable:$pl1_recovered"
+      test_print_trc "PL1 shows the same value as default after RAPL Control enable and disable"
+    else
+      die "PL1 value changed after RAPL Control enable and disable: $pl1_recovered"
+    fi
+
+    # Check if PL2 value changed after RAPL control enable and disable
+    pl2_recovered=$(cat /sys/class/powercap/"$domain_name"/constraint_1_max_power_uw)
+    if [[ -z "$pl2_default" ]]; then
+      test_print_trc "constraint_1_max_power_uw is not available for $domain_name"
+    elif [[ "$pl2_recovered" == "$pl2_default" ]]; then
+      test_print_trc "PL2 value after RAPL Control enable and disable:$pl2_recovered"
+      test_print_trc "PL2 shows the same value as default after RAPL Control enable and disable"
+    else
+      die "PL2 value changed after RAPL Control enable and disable: $pl2_recovered"
+    fi
+
+    # Re-enable RAPL control
+    do_cmd "echo 1 > /sys/class/powercap/$domain_name/enabled"
+
+    # Re-cover the 0x601 original setting
+    do_cmd "wrmsr 0x601 $ori_pl4"
+
+  done
+}
+
 : "${CHECK_ENERGY:=0}"
 : "${CHECK_POWER_LOAD:=0}"
 : "${CHECK_POWER_LIMIT:=0}"
@@ -1322,6 +1563,21 @@ intel_rapl_test() {
     ;;
   sysfs_turbostat_energy_compare_workload_client)
     rapl_turbostat_energy_compare intel-rapl pkg uncore
+    ;;
+  rapl_control_enable_disable_pl1)
+    rapl_control_enable_disable_pl 0
+    ;;
+  rapl_control_enable_disable_pl2)
+    rapl_control_enable_disable_pl 1
+    ;;
+  rapl_control_enable_disable_pl4)
+    rapl_control_enable_disable_pl 2
+    ;;
+  rapl_control_pl4_low_value)
+    rapl_control_enable_disable_pl4 0
+    ;;
+  rapl_control_pl4_high_value)
+    rapl_control_enable_disable_pl4 0x500
     ;;
   esac
   return 0
