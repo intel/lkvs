@@ -47,6 +47,9 @@
 	list_add_tail(&t->list, &cpuid_list);					\
 } while (0)
 
+#ifdef AUTOGEN_CPUID
+extern void initial_cpuid(void);
+#else
 void initial_cpuid(void)
 {
 	/* CPUID(0x0) */
@@ -540,3 +543,4 @@ void initial_cpuid(void)
 	/* CPUID(0x80000008).EDX */
 	EXP_CPUID_RES_BITS(0x80000008, 0x0, edx, 0, 31, VER1_0);	//Reserved
 }
+#endif

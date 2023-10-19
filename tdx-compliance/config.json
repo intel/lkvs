@@ -1,0 +1,25 @@
+{
+    "cpuid":{
+        "csv_path": "hh1_0.csv",
+        "header_path": "cpuid_case.h",
+        "vdetail": ["Virtualization Details"],
+        "vtype": ["Bit or Field Virtualization Type", "Virtualization Type"],
+        "fname": "Field Name",
+        "bias": "1",
+        "version": "1.0"
+    },
+    "cr":{
+        "csv_path": "",
+        "header_path": "",
+        "vdetail": "",
+        "vtype": "",
+        "bias": "2"
+    },
+    "msr":{
+        "csv_path": "",
+        "header_path": "msr_case.h",
+        "vdetail": "",
+        "vtype": "",
+        "bias": "2"
+    }
+}
