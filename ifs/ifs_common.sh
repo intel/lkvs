@@ -402,7 +402,8 @@ get_depend_sibling_cpus() {
   cpu_num=$(grep -c processor /proc/cpuinfo)
 
   # Show all cpu list in one line, reason:echo could make them in 1 line!
-  ALL_CPUS=$(seq 0 $((cpu_num - 1)))
+  # Will use the ALL_CPUS to remove SIBLINGS cpu
+  ALL_CPUS=$(echo $(seq 0 $((cpu_num - 1))))
   ALL_CPUS=" $ALL_CPUS "
   echo "$ALL_CPUS" > $SIBLINGS
   # atom used "-" and server used "," to isolate
