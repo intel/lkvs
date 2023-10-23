@@ -27,15 +27,15 @@ from test_params import *
 ###################### Do Works ######################
 # launch legacy common vm based on vm_type config
 if vm_type == "legacy":
-    command = '{} {}'.format(qemu_img, vm_cfg)
-    sp.run(command, shell=True)
+  command = '{} {}'.format(qemu_img, vm_cfg)
+  sp.run(command, shell=True)
 
 # launch tdx vm based on vm_type config
 if vm_type == "tdx":
-    command = '{} {} {}'.format(qemu_img, vm_cfg, tdx_cfg)
-    sp.run(command, shell=True)
+  command = '{} {} {}'.format(qemu_img, vm_cfg, tdx_cfg)
+  sp.run(command, shell=True)
 
 # launch tdxio vm based on vm_type config
 if vm_type == "tdxio":
-    command = '{} {} {} {}'.format(qemu_img, vm_cfg, tdx_cfg, tdxio_cfg)
-    sp.run(command, shell=True)
+  command = '{} {} {} {}'.format(qemu_img, vm_cfg, tdx_cfg, tdxio_cfg)
+  sp.run(command, shell=True)

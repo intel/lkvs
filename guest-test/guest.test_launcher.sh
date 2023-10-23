@@ -75,7 +75,7 @@ EOF
 }
 
 guest_kernel_reboot() {
-	sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
+  sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
     systemctl reboot --reboot-argument=now
 EOF
 }
@@ -86,11 +86,11 @@ source ../.env
 
 ## PART 0: prepare test prerequisites ##
 if [ ! "$(which sshpass)" ]; then
-        dnf install -y sshpass > /dev/null
-        apt install -y sshpass > /dev/null
+  dnf install -y sshpass > /dev/null
+  apt install -y sshpass > /dev/null
 else
-        test_print_trc "sshpass prerequisites is ready for use"
-        test_print_trc "VM test is starting now..."
+  test_print_trc "sshpass prerequisites is ready for use"
+  test_print_trc "VM test is starting now..."
 fi
 
 ## PART 1: get params from qemu.cfg.json and script args ##
@@ -142,7 +142,7 @@ while getopts :v:s:m:d:t:x:c:p:g:h arg; do
       GCOV=$OPTARG
       echo GCOV="\"$GCOV\"" >> "$SCRIPT_DIR"/test_params.py
       ;;
-	  h)
+    h)
       usage && exit 0
       ;;
     :)
@@ -205,13 +205,13 @@ export GCOV
 cd "$SCRIPT_DIR" || die "fail to switch to $SCRIPT_DIR"
 rm -rf /root/.ssh/known_hosts
 while read -r line; do
-	echo "[${VM_TYPE}_vm]: $line"
+  echo "[${VM_TYPE}_vm]: $line"
   # within $TIMEOUT but bypass the very first 2 seconds to avoid unexpected $BOOT_PATTERN match (from parameter handling logic)
-	if [[ $SECONDS -lt $TIMEOUT ]] && [[ $SECONDS -ge 2 ]]; then
-		if [[ $line == $BOOT_PATTERN ]] && [[ $EXEC_FLAG -ne 0 ]]; then
-			test_print_trc "VM_TYPE: $VM_TYPE, VCPU: $VCPU, SOCKETS: $SOCKETS, MEM: $MEM, DEBUG: $DEBUG, PMU: $PMU, CMDLINE: $CMDLINE, TESTCASE: $TESTCASE, SECONDS: $SECONDS"
+  if [[ $SECONDS -lt $TIMEOUT ]] && [[ $SECONDS -ge 2 ]]; then
+    if [[ $line == $BOOT_PATTERN ]] && [[ $EXEC_FLAG -ne 0 ]]; then
+      test_print_trc "VM_TYPE: $VM_TYPE, VCPU: $VCPU, SOCKETS: $SOCKETS, MEM: $MEM, DEBUG: $DEBUG, PMU: $PMU, CMDLINE: $CMDLINE, TESTCASE: $TESTCASE, SECONDS: $SECONDS"
       EXEC_FLAG=0
-			if ! ./guest.test_executor.sh; then EXEC_FLAG=1 && break; fi # break while read loop in case of TD VM test failure
+      if ! ./guest.test_executor.sh; then EXEC_FLAG=1 && break; fi # break while read loop in case of TD VM test failure
     # err_handlers string matching
     elif [[ $line == $ERR_STR1 ]]; then
       test_print_err "There is $ERR_STR1, test is not fully PASS"
@@ -228,11 +228,11 @@ while read -r line; do
     elif [[ $line == $ERR_STR5 ]]; then
       test_print_wrg "There is $ERR_STR5, please check"
       ERR_FLAG5=1
-		fi
+    fi
     # end of err_handlers string matching
-	elif [[ $SECONDS -ge $TIMEOUT ]]; then # break while read loop in case of TD VM boot timeout (no $BOOT_PATTERN found)
-		break
-	fi
+  elif [[ $SECONDS -ge $TIMEOUT ]]; then # break while read loop in case of TD VM boot timeout (no $BOOT_PATTERN found)
+    break
+  fi
 done < <(if [ "$GCOV" == "off" ]; then timeout "$TIMEOUT" ./guest.qemu_runner.sh; \
   else test_print_trc "${VM_TYPE}vm_$PORT keep alive for gcov data collection" && ./guest.qemu_runner.sh; fi)
 
@@ -278,28 +278,28 @@ sleep 3
 # time count less or qual than 3 is case b
 # - handling: nothing to do, die for TDVM boot early failure, likely qemu config issue
 if ! guest_kernel_check; then
-	if [ "$SECONDS" -gt 3 ] && [ "$SECONDS" -lt "$TIMEOUT" ] && [ "$EXEC_FLAG" -eq 0 ]; then
-		test_print_trc "$VM_TYPE VM test complete..."
-	elif [ "$SECONDS" -ge "$TIMEOUT" ] && [ "$GCOV" == "on" ]; then
-		pkill "${VM_TYPE}vm_$PORT"
-		die "TEST TIMEOUT!!!!!!!!!!!!"
-	elif [ "$GCOV" == "off" ] && [ "$EXEC_FLAG" -eq 1 ]; then
+  if [ "$SECONDS" -gt 3 ] && [ "$SECONDS" -lt "$TIMEOUT" ] && [ "$EXEC_FLAG" -eq 0 ]; then
+    test_print_trc "$VM_TYPE VM test complete..."
+  elif [ "$SECONDS" -ge "$TIMEOUT" ] && [ "$GCOV" == "on" ]; then
     pkill "${VM_TYPE}vm_$PORT"
-		die "$VM_TYPE VM test seems fail at beginning, please check test log"
-	fi
+    die "TEST TIMEOUT!!!!!!!!!!!!"
+  elif [ "$GCOV" == "off" ] && [ "$EXEC_FLAG" -eq 1 ]; then
+    pkill "${VM_TYPE}vm_$PORT"
+    die "$VM_TYPE VM test seems fail at beginning, please check test log"
+  fi
 # guest_kernel_kernel function zero return value shows TDVM is still accessible handling
 # handling: no matter why it's still accessible, close it by guest_kernel_reboot function
 elif [ "$GCOV" == "off" ]; then
-	if ! guest_kernel_reboot; then
-		test_print_trc "$VM_TYPE VM is still up"
-		test_print_trc "time: $SECONDS"
-		test_print_trc "SSHPASS: $SSHPASS"
-		test_print_trc "PORT: $PORT"
-		test_print_trc "$VM_TYPE VM closed"
+  if ! guest_kernel_reboot; then
+    test_print_trc "$VM_TYPE VM is still up"
+    test_print_trc "time: $SECONDS"
+    test_print_trc "SSHPASS: $SSHPASS"
+    test_print_trc "PORT: $PORT"
+    test_print_trc "$VM_TYPE VM closed"
     # must die here since TDVM should be closed and not accessible if test complete all correctly
     # else it's due to test die before reaching final close point td_test_close function
-		die "$VM_TYPE VM test fail, please check test log"
-	fi
+    die "$VM_TYPE VM test fail, please check test log"
+  fi
 else # [ $GCOV == "on" ] || [ guest_kernel_check return 0 ]
   test_print_trc "${VM_TYPE}vm_$PORT keep alive for gcov data collection"
   test_print_trc "'ssh -p $PORT root@localhost' with PASSWORD '$SSHPASS' to login and get data"

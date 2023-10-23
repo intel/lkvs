@@ -25,9 +25,9 @@ import argparse
 # read from qemu.config.json format for all raw qemu vm config
 cwd = Path(os.getcwd())
 if cwd.stem == "guest-test":
-    raw_config = Path(f"{os.getcwd()}/qemu.config.json").read_text()
+  raw_config = Path(f"{os.getcwd()}/qemu.config.json").read_text()
 else:
-    exit(1)
+  exit(1)
 
 qemu_config = json.loads(raw_config)
 
@@ -54,40 +54,40 @@ print(kernel_img, initrd_img, bios_img, qemu_img, guest_img, guest_img_format, b
 # O-list variables default value from qemu.config.json
 vm_type = qemu_config["common"]["vm_type"]
 if 'PMU' in dir():
-    pmu = PMU
+  pmu = PMU
 else:
-    pmu = qemu_config["common"]["pmu"]
+  pmu = qemu_config["common"]["pmu"]
 
 if 'VCPU' in dir():
-    cpus = VCPU
+  cpus = VCPU
 else:
-    cpus = qemu_config["common"]["cpus"]
+  cpus = qemu_config["common"]["cpus"]
 
 if 'SOCKETS' in dir():
-    sockets = SOCKETS
+  sockets = SOCKETS
 else:
-    sockets = qemu_config["common"]["sockets"]
+  sockets = qemu_config["common"]["sockets"]
 
 if 'MEM' in dir():
-    mem = MEM
+  mem = MEM
 else:
-    mem = qemu_config["common"]["mem"]
+  mem = qemu_config["common"]["mem"]
 
 if 'CMDLINE' in dir():
-    cmdline = CMDLINE
+  cmdline = CMDLINE
 else:
-    cmdline = qemu_config["common"]["cmdline"]
+  cmdline = qemu_config["common"]["cmdline"]
 
 if 'DEBUG' in dir():
-    debug = DEBUG
+  debug = DEBUG
 else:
-    debug = qemu_config["common"]["debug"]
+  debug = qemu_config["common"]["debug"]
 
 if 'TESTCASE' in dir():
-    testcase = TESTCASE
+  testcase = TESTCASE
 else:
-    print("No TESTCASE info found, can't run any test!")
-    exit(1)
+  print("No TESTCASE info found, can't run any test!")
+  exit(1)
 
 # O-list variables override value handling with args passed options, not used in framework, keep it for customization
 params_o_list = argparse.ArgumentParser()
@@ -111,21 +111,21 @@ args = params_o_list.parse_args()
 
 # NOTICE!! O-list veriables' value will be override if passed through above args option
 if args.vmtype is not None:
-    vm_type = args.vmtype
+  vm_type = args.vmtype
 if args.pmu is not None:
-    pmu = args.pmu
+  pmu = args.pmu
 if args.cpus is not None:
-    cpus = args.cpus
+  cpus = args.cpus
 if args.sockets is not None:
-    sockets = args.sockets
+  sockets = args.sockets
 if args.mem is not None:
-    mem = args.mem
+  mem = args.mem
 if args.cmdline is not None:
-    cmdline = args.cmdline
+  cmdline = args.cmdline
 if args.debug is not None:
-    debug = args.debug
+  debug = args.debug
 if args.testcase is not None:
-    testcase = args.testcase
+  testcase = args.testcase
 
 # end of O-list variables handling
 
@@ -138,18 +138,18 @@ qemu_config["vm"]["cfg_var_4"] = qemu_config["vm"]["cfg_var_4"].replace("$MEM", 
 qemu_config["vm"]["cfg_var_5"] = qemu_config["vm"]["cfg_var_5"].replace("$KERNEL_IMG", kernel_img)
 # bypass -initrd config option in case it's not provided
 if os.path.isfile(initrd_img):
-    qemu_config["vm"]["cfg_var_6"] = qemu_config["vm"]["cfg_var_6"].replace("$INITRD_IMG", initrd_img)
+  qemu_config["vm"]["cfg_var_6"] = qemu_config["vm"]["cfg_var_6"].replace("$INITRD_IMG", initrd_img)
 else:
-    qemu_config["vm"]["cfg_var_6"] = ""
+  qemu_config["vm"]["cfg_var_6"] = ""
 
 qemu_config["vm"]["cfg_var_7"] = qemu_config["vm"]["cfg_var_7"].replace("$PORT", str(port))
 qemu_config["vm"]["cfg_var_8"] = qemu_config["vm"]["cfg_var_8"].replace("$GUEST_IMG", guest_img).replace("$IMG_FORMAT", guest_img_format)
 qemu_config["vm"]["cfg_var_9"] = qemu_config["vm"]["cfg_var_9"].replace("$CMDLINE", cmdline)
 # bypass -bios config option in case it's not provided, default seabios to use
 if os.path.isfile(bios_img):
-    qemu_config["vm"]["cfg_var_10"] = qemu_config["vm"]["cfg_var_10"].replace("$BIOS_IMG", bios_img)
+  qemu_config["vm"]["cfg_var_10"] = qemu_config["vm"]["cfg_var_10"].replace("$BIOS_IMG", bios_img)
 else:
-    qemu_config["vm"]["cfg_var_10"] = ""
+  qemu_config["vm"]["cfg_var_10"] = ""
 
 qemu_config["tdx"]["cfg_var_1"] = qemu_config["tdx"]["cfg_var_1"].replace("$DEBUG", debug)
 qemu_config["tdx"]["cfg_var_2"] = qemu_config["tdx"]["cfg_var_2"].replace("$MEM", str(mem))
@@ -158,31 +158,31 @@ qemu_config["tdx"]["cfg_var_2"] = qemu_config["tdx"]["cfg_var_2"].replace("$MEM"
 
 ###################### Functions ######################
 def get_sub_keys(d, key):
-    """
-    Recursively get all 2nd-level keys in a dictionary.
-    """
-    if isinstance(d, dict):
-        for k, v in d.items():
-            if isinstance(v, dict):
-                if k == key:
-                    for k2 in v.keys():
-                        yield k2
+  """
+  Recursively get all 2nd-level keys in a dictionary.
+  """
+  if isinstance(d, dict):
+    for k, v in d.items():
+      if isinstance(v, dict):
+        if k == key:
+          for k2 in v.keys():
+            yield k2
 
 def print_sub_keys(l, key):
-    """
-    Recursively get each 2nd-level key.
-    """
-    print("Key %s has sub-keys:" %(key))
-    for i in l:
-        print(i)
+  """
+  Recursively get each 2nd-level key.
+  """
+  print("Key %s has sub-keys:" %(key))
+  for i in l:
+    print(i)
 
 def get_sub_cfgs(l, key, result=""):
-    """
-    Recursively collect all 2nd-level key cfg string.
-    """
-    for i in l:
-        result += qemu_config[key][i]
-    return result
+  """
+  Recursively collect all 2nd-level key cfg string.
+  """
+  for i in l:
+    result += qemu_config[key][i]
+  return result
 
 ###################### Do Works ######################
 #common_keys = list(get_sub_keys(qemu_config, "common"))
@@ -192,30 +192,30 @@ tdxio_keys = list(get_sub_keys(qemu_config, "tdxio"))
 
 #print_sub_keys(vm_keys, "vm")
 if vm_type == "legacy":
-    vm_cfg = get_sub_cfgs(vm_keys, "vm")
-    print("HERE're all the vm configs to launch legacy vm:")
-    print("#### qemu config option, part 1 ####")
-    print(vm_cfg)
+  vm_cfg = get_sub_cfgs(vm_keys, "vm")
+  print("HERE're all the vm configs to launch legacy vm:")
+  print("#### qemu config option, part 1 ####")
+  print(vm_cfg)
 
 #print_sub_keys(tdx_keys, "tdx")
 if vm_type == "tdx":
-    vm_cfg = get_sub_cfgs(vm_keys, "vm")
-    tdx_cfg = get_sub_cfgs(tdx_keys, "tdx")
-    print("HERE're all the tdx configs to launch tdx vm:")
-    print("#### qemu config option, part 1 ####")
-    print(vm_cfg)
-    print("#### qemu config option, part 2 ####")
-    print(tdx_cfg)
+  vm_cfg = get_sub_cfgs(vm_keys, "vm")
+  tdx_cfg = get_sub_cfgs(tdx_keys, "tdx")
+  print("HERE're all the tdx configs to launch tdx vm:")
+  print("#### qemu config option, part 1 ####")
+  print(vm_cfg)
+  print("#### qemu config option, part 2 ####")
+  print(tdx_cfg)
 
 #print_sub_keys(tdxio_keys, "tdxio")
 if vm_type == "tdxio":
-    vm_cfg = get_sub_cfgs(vm_keys, "vm")
-    tdx_cfg = get_sub_cfgs(tdx_keys, "tdx")
-    tdxio_cfg = get_sub_cfgs(tdxio_keys, "tdxio")
-    print("HERE're all the tdx configs to launch tdxio vm:")
-    print("#### qemu config option, part 1 ####")
-    print(vm_cfg)
-    print("#### qemu config option, part 2 ####")
-    print(tdx_cfg)
-    print("#### qemu config option, part 3 ####")
-    print(tdxio_cfg)
+  vm_cfg = get_sub_cfgs(vm_keys, "vm")
+  tdx_cfg = get_sub_cfgs(tdx_keys, "tdx")
+  tdxio_cfg = get_sub_cfgs(tdxio_keys, "tdxio")
+  print("HERE're all the tdx configs to launch tdxio vm:")
+  print("#### qemu config option, part 1 ####")
+  print(vm_cfg)
+  print("#### qemu config option, part 2 ####")
+  print(tdx_cfg)
+  print("#### qemu config option, part 3 ####")
+  print(tdxio_cfg)
