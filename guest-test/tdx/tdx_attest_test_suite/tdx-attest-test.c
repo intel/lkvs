@@ -28,7 +28,7 @@
 #include <sys/mman.h>
 #include <time.h>
 
-#include "include/linux/tdx.h"
+#include <linux/tdx-guest.h>
 #include "include/linux/kselftest_harness.h"
 
 #define TDX_GUEST_DEVNAME "/dev/tdx_guest"
