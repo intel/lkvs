@@ -2,6 +2,19 @@
 # Copyright (c) 2022 Intel Corporation.
 
 SUBDIRS = $(shell ls -d */)
+
+PROXY :=
+
+ifneq ($(https_proxy),)
+PROXY := $(https_proxy)
+else ifneq ($(HTTPS_PROXY),)
+PROXY := $(HTTPS_PROXY)
+else ifneq ($(all_proxy),)
+PROXY := $(all_proxy)
+else ifneq ($(ALL_PROXY),)
+PROXY := $(ALL_PROXY)
+endif
+
 all:
 	@for dir in $(SUBDIRS) ; do			\
 		if [ -f "$$dir/Makefile" ]; then	\
@@ -31,7 +44,7 @@ docker_test:
 	docker run -it --rm -v $(PWD):/src --name ubuntu_2204_lkvs ubuntu:22.04 make test
 
 docker_image:
-	docker build --build-arg PROXY=$(https_proxy) -f ./Dockerfile.build -t ubuntu:22.04 .
+	docker build --build-arg PROXY=$(PROXY) -f ./Dockerfile.build -t ubuntu:22.04 .
 
 docker_make:
 	docker run -it --rm -v $(PWD):/src -v /lib/modules/`uname -r`:/lib/modules/`uname -r` --name ubuntu_2204_lkvs ubuntu:22.04 make
