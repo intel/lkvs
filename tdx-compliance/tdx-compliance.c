@@ -58,6 +58,7 @@ LIST_HEAD(cpuid_list);
 #define OPMASK_CPUID		1
 #define OPMASK_CR		2
 #define OPMASK_MSR		4
+#define OPMASK_DUMP			0x800
 #define OPMASK_SINGLE		0x8000
 
 #define CPUID_DUMP_PATTERN	\
@@ -85,6 +86,17 @@ void parse_version(void)
 		spec_version = VER1_5;
 	else
 		spec_version = (VER1_0 | VER1_5);
+}
+
+static char* case_version(int ret) {
+	switch (ret) {
+	case VER1_0:
+		return "1.0";
+	case VER1_5:
+		return "1.5";
+	}
+
+	return "";
 }
 
 void parse_input(char* s) 
@@ -209,6 +221,11 @@ static int run_all_msr(void)
 
 		if (!(spec_version & t->version)) continue;
 
+		if (operation & 0x800) {
+			pr_buf("%s %s\n", t->name, case_version(t->version));
+			continue;
+		}
+
 		if (t->pre_condition)
 			t->pre_condition(t);
 		if (t->run_msr_rw)
@@ -277,6 +294,11 @@ static int run_all_cpuid(void)
 			continue;
 
 		if (!(spec_version & t->version)) continue;
+
+		if (operation & 0x800) {
+			pr_buf("%s %s\n", t->name, case_version(t->version));
+			continue;
+		}
 
 		run_cpuid(t);
 
@@ -349,6 +371,11 @@ static int run_all_cr(void)
 
 		if (!(spec_version & t->version)) continue;
 
+		if (operation & 0x800) {
+			pr_buf("%s %s\n", t->name, case_version(t->version));
+			continue;
+		}
+
 		if (t->run_cr_get)
 			t->reg.val = t->run_cr_get();
 
@@ -409,6 +436,8 @@ tdx_tests_proc_write(struct file *file,
 		operation |= OPMASK_MSR;
 	else if (strstr(case_name, "all"))
 		operation |= OPMASK_CPUID | OPMASK_CR | OPMASK_MSR;
+	else if (strstr(case_name, "list"))
+		operation |= OPMASK_DUMP | OPMASK_CPUID | OPMASK_CR | OPMASK_MSR;
 	else
 		operation |= OPMASK_SINGLE | OPMASK_CPUID | OPMASK_CR | OPMASK_MSR;
 
@@ -426,9 +455,10 @@ tdx_tests_proc_write(struct file *file,
 	if (operation & OPMASK_MSR)
 		run_all_msr();
 
-	pr_buf("Total:%d, PASS:%d, FAIL:%d, SKIP:%d\n",
-	       stat_total, stat_pass, stat_fail,
-	       stat_total - stat_pass - stat_fail);
+	if (!(operation & OPMASK_DUMP))
+		pr_buf("Total:%d, PASS:%d, FAIL:%d, SKIP:%d\n",
+			   stat_total, stat_pass, stat_fail,
+			   stat_total - stat_pass - stat_fail);
 
 	kfree(str_input);
 	operation = 0;
