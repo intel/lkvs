@@ -143,6 +143,24 @@ case "$TESTCASE" in
     guest_attest_test "global.verify_quote" || \
     die "Failed on $TESTCASE"
     ;;
+  TD_TSC_DEFAULT)
+    guest_test_prepare osv_sanity/tdx_guest_tsc_check.sh
+    source osv_sanity/tdx_host_tsc_check.sh
+    guest_test_entry tdx_guest_tsc_check.sh "-c $HOST_TSC" || \
+    die "Failed on TD_TSC_DEFAULT tdx_guest_tsc_check.sh -c $HOST_TSC"
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
+  TD_TSC_CONFIG)
+    guest_test_prepare osv_sanity/tdx_guest_tsc_check.sh
+    CONFIG_TSC=3000000000
+    guest_test_entry tdx_guest_tsc_check.sh "-c $CONFIG_TSC" || \
+    die "Failed on TD_TSC_CONFIG tdx_guest_tsc_check.sh -c $CONFIG_TSC"
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
   :)
     test_print_err "Must specify the test scenario option by [-t]"
     usage && exit 1
