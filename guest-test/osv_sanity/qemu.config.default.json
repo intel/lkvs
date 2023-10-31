@@ -1,0 +1,50 @@
+{
+  "common": {
+    "kernel_img": "/boot/vmlinuz-xxx-yyy",
+    "initrd_img": "/boot/initramfs-xxx-yyy",
+    "bios_img": "/path/to/EDKII/OVMF.fd or other virtual BIOS",
+    "qemu_img": "/path/to/qemu-kvm with proper capabilty of VM test",
+    "guest_img": "/path/to/prepared/guest_os_image, in qcow2 or raw image format",
+    "guest_img_format": "raw",
+    "boot_pattern": "*Kernel*on*an*x86_64*",
+    "guest_root_passwd": "123456",
+    "vm_type": "tdx",
+    "pmu": "off",
+    "cpus": "4",
+    "sockets": "1",
+    "mem": "16",
+    "cmdline": "accept_memory=lazy",
+    "debug": "on"
+  },
+
+  "vm": {
+    "cfg_1": "-accel kvm -no-reboot -nographic -vga none -device virtio-net-pci,netdev=mynet0,mac=DE:AD:BE:EF:AB:CD,romfile= ",
+    "cfg_2": "-chardev stdio,id=mux,mux=on,signal=off -device virtio-serial,romfile= -device virtconsole,chardev=mux ",
+    "cfg_3": "-serial chardev:mux -monitor chardev:mux -monitor pty -no-hpet -nodefaults ",
+    "cfg_var_1": "-name process=$VM_TYPEVM_$PORT,debug-threads=on ",
+    "cfg_var_2": "-cpu host,host-phys-bits,pmu=$PMU ",
+    "cfg_var_3": "-smp cpus=$VCPU,sockets=$SOCKETS ",
+    "cfg_var_4": "-m $MEMG ",
+    "cfg_var_5": "-kernel $KERNEL_IMG ",
+    "cfg_var_6": "-initrd $INITRD_IMG",
+    "cfg_var_7": "-netdev user,id=mynet0,hostfwd=tcp::$PORT-:22 ",
+    "cfg_var_8": "-drive file=$GUEST_IMG,if=virtio,format=$IMG_FORMAT ",
+    "cfg_var_9": "-append \"root=/dev/vda3 ro console=hvc0 earlyprintk=ttyS0 ignore_loglevel debug earlyprintk l1tf=off initcall_debug log_buf_len=200M nokaslr tsc=reliable efi=debug mce=off efi=debug $CMDLINE\" ",
+    "cfg_var_10": "-bios $BIOS_IMG ",
+    "cfg_var_11": "-monitor telnet:127.0.0.1:$PORT_TEL,server,nowait "
+  },
+
+  "tdx": {
+    "cfg_1": "-machine q35,kernel_irqchip=split,confidential-guest-support=tdx,memory-backend=ram1 ",
+    "cfg_var_1": "-object tdx-guest,id=tdx,debug=$DEBUG,sept-ve-disable=on,quote-generation-service=vsock:2:4050 ",
+    "cfg_var_2": "-object memory-backend-memfd-private,id=ram1,size=$MEMG "
+  },
+
+  "tdxio": {
+    "cfg_1": "-object iommufd,id=iommufd0 ",
+    "cfg_2": "-device vfio-pci,host=tee_bdf1,id=hostdev2,addr=0x3,x-secure-mode=on ",
+    "cfg_3": "-device vfio-pci,host=tee_bdf2,id=hostdev3,addr=0x4,x-secure-mode=on ",
+    "cfg_4": "-device vfio-pci,host=tee_bdf3,id=hostdev4,addr=0x5,x-secure-mode=on ",
+    "cfg_5": "-device vfio-pci,host=tee_bdf4,id=hostdev5,addr=0x6,x-secure-mode=on "
+  }
+}
