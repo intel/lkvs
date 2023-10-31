@@ -25,7 +25,12 @@ import argparse
 # read from qemu.config.json format for all raw qemu vm config
 cwd = Path(os.getcwd())
 if cwd.stem == "guest-test":
-  raw_config = Path(f"{os.getcwd()}/qemu.config.json").read_text()
+  if JSON is not None:
+    # customized qemu.confg.xxx.json located by JSON under guest-test folder
+    raw_config = Path(os.path.join(f"{os.getcwd()}/", JSON)).read_text()
+  else:
+    # default qemu.config.json under guest-test
+    raw_config = Path(f"{os.getcwd()}/qemu.config.json").read_text()
 else:
   exit(1)
 
@@ -41,6 +46,7 @@ guest_img_format = qemu_config["common"]["guest_img_format"]
 boot_pattern = qemu_config["common"]["boot_pattern"]
 guest_root_passwd = qemu_config["common"]["guest_root_passwd"]
 port = PORT
+port_tel = port - 1000
 
 # print above G-list variables to test_launcher.sh to export for global shell scripts access
 # NOTICE!! DON'T interrupt before any of the following print to avoid mis-behaviors
@@ -135,7 +141,11 @@ qemu_config["vm"]["cfg_var_1"] = qemu_config["vm"]["cfg_var_1"].replace("$VM_TYP
 qemu_config["vm"]["cfg_var_2"] = qemu_config["vm"]["cfg_var_2"].replace("$PMU", pmu)
 qemu_config["vm"]["cfg_var_3"] = qemu_config["vm"]["cfg_var_3"].replace("$VCPU", str(cpus)).replace("$SOCKETS", str(sockets))
 qemu_config["vm"]["cfg_var_4"] = qemu_config["vm"]["cfg_var_4"].replace("$MEM", str(mem))
-qemu_config["vm"]["cfg_var_5"] = qemu_config["vm"]["cfg_var_5"].replace("$KERNEL_IMG", kernel_img)
+# bypass -kernel config option in case it's not provided
+if os.path.isfile(kernel_img):
+  qemu_config["vm"]["cfg_var_5"] = qemu_config["vm"]["cfg_var_5"].replace("$KERNEL_IMG", kernel_img)
+else:
+  qemu_config["vm"]["cfg_var_5"] = ""
 # bypass -initrd config option in case it's not provided
 if os.path.isfile(initrd_img):
   qemu_config["vm"]["cfg_var_6"] = qemu_config["vm"]["cfg_var_6"].replace("$INITRD_IMG", initrd_img)
@@ -144,12 +154,18 @@ else:
 
 qemu_config["vm"]["cfg_var_7"] = qemu_config["vm"]["cfg_var_7"].replace("$PORT", str(port))
 qemu_config["vm"]["cfg_var_8"] = qemu_config["vm"]["cfg_var_8"].replace("$GUEST_IMG", guest_img).replace("$IMG_FORMAT", guest_img_format)
-qemu_config["vm"]["cfg_var_9"] = qemu_config["vm"]["cfg_var_9"].replace("$CMDLINE", cmdline)
+# bypass -append config option in case -kernel option not used
+if os.path.isfile(kernel_img):
+  qemu_config["vm"]["cfg_var_9"] = qemu_config["vm"]["cfg_var_9"].replace("$CMDLINE", cmdline)
+else:
+  qemu_config["vm"]["cfg_var_9"] = ""
 # bypass -bios config option in case it's not provided, default seabios to use
 if os.path.isfile(bios_img):
   qemu_config["vm"]["cfg_var_10"] = qemu_config["vm"]["cfg_var_10"].replace("$BIOS_IMG", bios_img)
 else:
   qemu_config["vm"]["cfg_var_10"] = ""
+
+qemu_config["vm"]["cfg_var_11"] = qemu_config["vm"]["cfg_var_11"].replace("$PORT_TEL", str(port_tel))
 
 qemu_config["tdx"]["cfg_var_1"] = qemu_config["tdx"]["cfg_var_1"].replace("$DEBUG", debug)
 qemu_config["tdx"]["cfg_var_2"] = qemu_config["tdx"]["cfg_var_2"].replace("$MEM", str(mem))
