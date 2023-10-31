@@ -21,8 +21,8 @@ echo "$SCRIPT_DIR"
 # list all the variables value
 tdx_pre_check() {
   if [[ ! -f $KERNEL_IMG ]]; then
-    test_print_wrg "In qemu.config.json file, need to set guest kernel properly"
-    die "TDX guest kernel does not exist..."
+    test_print_wrg "Guest kernel not set in qemu.config.json file, \
+    please make sure if it's correct!"
   else
     test_print_trc "TDX guest kernel to test: $KERNEL_IMG"
   fi
