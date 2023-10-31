@@ -30,7 +30,8 @@
     "cfg_var_7": "-netdev user,id=mynet0,hostfwd=tcp::$PORT-:22 ",
     "cfg_var_8": "-drive file=$GUEST_IMG,if=virtio,format=$IMG_FORMAT ",
     "cfg_var_9": "-append \"root=/dev/vda3 ro console=hvc0 earlyprintk=ttyS0 ignore_loglevel debug earlyprintk l1tf=off initcall_debug log_buf_len=200M nokaslr tsc=reliable efi=debug mce=off efi=debug $CMDLINE\" ",
-    "cfg_var_10": "-bios $BIOS_IMG "
+    "cfg_var_10": "-bios $BIOS_IMG ",
+    "cfg_var_11": "-monitor telnet:127.0.0.1:$PORT_TEL,server,nowait "
   },
 
   "tdx": {
