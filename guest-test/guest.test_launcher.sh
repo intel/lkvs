@@ -63,6 +63,7 @@ NOTE!! args passed here will override params in qemu.confg.json
   -c guest kernel extra commandline
   -p guest pmu off/on
   -g [optional, default off] code coverage test mode off/on
+  -j [optional] path under guest-test to standalone qemu.config.json file
   -h HELP info
 EOF
 }
@@ -104,7 +105,7 @@ echo PORT="$PORT" > "$SCRIPT_DIR"/test_params.py
 # used across test_launcher.sh, qemu_runner.py, test_executor.sh
 
 # get args for QEMU boot configurable parameters
-while getopts :v:s:m:d:t:x:c:p:g:h arg; do
+while getopts :v:s:m:d:t:x:c:p:g:j:h arg; do
   case $arg in
     v)
       VCPU=$OPTARG
@@ -141,6 +142,10 @@ while getopts :v:s:m:d:t:x:c:p:g:h arg; do
     g)
       GCOV=$OPTARG
       echo GCOV="\"$GCOV\"" >> "$SCRIPT_DIR"/test_params.py
+      ;;
+    j)
+      JSON=$OPTARG
+      echo JSON="\"$JSON\"" >> "$SCRIPT_DIR"/test_params.py
       ;;
     h)
       usage && exit 0
