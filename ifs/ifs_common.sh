@@ -177,14 +177,14 @@ cpuid_check_atom() {
   cpu_num=$(grep -c "processor" /proc/cpuinfo)
   cpu_id=$((cpu_num - 1))
   # Check if CPU0 is ATOM
-  [[ $(taskset -c 0 "$cpu_check" 1a 0 0 0 a 29) ]] || {
+  taskset -c 0 "$cpu_check" 1a 0 0 0 a 29 && {
     test_print_trc "CPU0 CPUID(EAX=0x1a),EAX bit29 is 1:ATOM"
     IS_ATOM="$TRUE"
     return 0
   }
 
   # Check max CPU ID is ATOM
-  [[ $(taskset -c "$cpu_id" "$cpu_check" 1a 0 0 0 a 29) ]] || {
+  taskset -c "$cpu_id" "$cpu_check" 1a 0 0 0 a 29 && {
     test_print_trc "CPU num:$cpu_id CPUID(EAX=0x1a),EAX bit29 is 1:ATOM"
     IS_ATOM="$TRUE"
     return 0
