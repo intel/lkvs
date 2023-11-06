@@ -92,6 +92,7 @@ run_ifs_tests() {
       ;;
     legacy_twice_run)
       online_all_cpu
+      modprobe -r "$IFS_NAME"
       enable_ifs_trace
       do_cmd "echo $BATCH_NUM > ${IFS_PATH}/${BATCH}"
       # Need to wait after boot up 1800s, then could test ifs
@@ -132,13 +133,12 @@ run_ifs_tests() {
       ;;
     "$IFS_OFFLINE")
       online_all_cpu
-      enable_ifs_trace
       is_atom
       [[ "$IS_ATOM" == "$TRUE" ]] && {
-        if [[ "$BATCH_NUM" -eq 3 ]]; then
-          skip_test "It's an atom CPU, no sibling CPU for ifs testing."
-        fi
+        skip_test "It's an atom CPU, no sibling CPU for ifs testing."
       }
+      modprobe -r "$IFS_NAME"
+      enable_ifs_trace
       do_cmd "echo $BATCH_NUM > ${IFS_PATH}/${BATCH}"
       init_log "${NAME}_${BATCH_NUM}"
 
