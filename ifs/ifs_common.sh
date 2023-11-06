@@ -974,6 +974,8 @@ ifs_scan_loop() {
 
   for ((i=1; i<=times; i++)); do
     test_print_trc "Scan loop times:$i"
+    # SPEC: Target 100ms at lowest frequency for all test content on a given core.
+    sleep 0.1
     # If there is bin app, execute the app in target CPU
     [[ -n "$bin" ]] && {
       taskset -c "$cpu_num" "$bin" &
