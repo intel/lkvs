@@ -216,7 +216,8 @@ struct test_cr cr_list[] = {
 	 * TD attempts to modify them results in a #VE,
 	 * bits VMXE(13) and SMXE(14) are fixed to 0.
 	 */
-	DEF_XCH_CR4(X86_CR4_VMXE | X86_CR4_SMXE, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_XCH_CR4(X86_CR4_VMXE, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_XCH_CR4(X86_CR4_SMXE, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
 
 	/*
 	 * TD attempts to modify bit MCE(6) results in a #VE,
