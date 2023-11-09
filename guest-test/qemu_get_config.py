@@ -25,12 +25,14 @@ import argparse
 # read from qemu.config.json format for all raw qemu vm config
 cwd = Path(os.getcwd())
 if cwd.stem == "guest-test":
-  if JSON is not None:
-    # customized qemu.confg.xxx.json located by JSON under guest-test folder
-    raw_config = Path(os.path.join(f"{os.getcwd()}/", JSON)).read_text()
-  else:
+  try:
+    JSON
+  except NameError:
     # default qemu.config.json under guest-test
     raw_config = Path(f"{os.getcwd()}/qemu.config.json").read_text()
+  else:
+    # customized qemu.confg.xxx.json located by JSON under guest-test folder
+    raw_config = Path(os.path.join(f"{os.getcwd()}/", JSON)).read_text()
 else:
   exit(1)
 
