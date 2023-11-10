@@ -1,0 +1,4 @@
+yogini
+*.o
+*.S
+result
