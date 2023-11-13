@@ -18,7 +18,7 @@
     "cfg_var_3": "-smp cpus=$VCPU,sockets=$SOCKETS ",
     "cfg_var_4": "-m $MEMG ",
     "cfg_var_5": "-kernel $KERNEL_IMG ",
-    "cfg_var_6": "-initrd $INITRD_IMG",
+    "cfg_var_6": "-initrd $INITRD_IMG ",
     "cfg_var_7": "-netdev user,id=mynet0,hostfwd=tcp::$PORT-:22 ",
     "cfg_var_8": "-drive file=$GUEST_IMG,if=virtio,format=$IMG_FORMAT ",
     "cfg_var_9": "-append \"root=/dev/vda3 ro console=hvc0 earlyprintk=ttyS0 ignore_loglevel debug earlyprintk l1tf=off initcall_debug log_buf_len=200M nokaslr tsc=reliable efi=debug mce=off efi=debug $CMDLINE\" ",
