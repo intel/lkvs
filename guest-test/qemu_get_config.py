@@ -29,24 +29,27 @@ if cwd.stem == "guest-test":
     JSON
   except NameError:
     # default qemu.config.json under guest-test
+    common_config = Path(f"{os.getcwd()}/common.json").read_text()
     raw_config = Path(f"{os.getcwd()}/qemu.config.json").read_text()
   else:
     # customized qemu.confg.xxx.json located by JSON under guest-test folder
-    raw_config = Path(os.path.join(f"{os.getcwd()}/", JSON)).read_text()
+    common_config = Path(os.path.join(f"{os.getcwd()}/", JSON_C)).read_text()
+    raw_config = Path(os.path.join(f"{os.getcwd()}/", JSON_Q)).read_text()
 else:
   exit(1)
 
+image_config = json.loads(common_config)
 qemu_config = json.loads(raw_config)
 
-# pre-config G-list variables' values confirmed by qemu.config.json
-kernel_img = qemu_config["common"]["kernel_img"]
-initrd_img = qemu_config["common"]["initrd_img"]
-bios_img = qemu_config["common"]["bios_img"]
-qemu_img = qemu_config["common"]["qemu_img"]
-guest_img = qemu_config["common"]["guest_img"]
-guest_img_format = qemu_config["common"]["guest_img_format"]
-boot_pattern = qemu_config["common"]["boot_pattern"]
-guest_root_passwd = qemu_config["common"]["guest_root_passwd"]
+# pre-config G-list variables' values confirmed by common.json
+kernel_img = image_config["kernel_img"]
+initrd_img = image_config["initrd_img"]
+bios_img = image_config["bios_img"]
+qemu_img = image_config["qemu_img"]
+guest_img = image_config["guest_img"]
+guest_img_format = image_config["guest_img_format"]
+boot_pattern = image_config["boot_pattern"]
+guest_root_passwd = image_config["guest_root_passwd"]
 port = PORT
 port_tel = port - 1000
 
