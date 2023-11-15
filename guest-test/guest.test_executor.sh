@@ -161,6 +161,14 @@ case "$TESTCASE" in
       guest_test_close
     fi
     ;;
+  TD_NET_SPEED)
+    guest_test_prepare tdx/tdx_speed_test.sh
+    guest_test_entry tdx_speed_test.sh || \
+    die "Failed on TD_NET_SPEED tdx_speed_test.sh"
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
   :)
     test_print_err "Must specify the test scenario option by [-t]"
     usage && exit 1
