@@ -42,8 +42,14 @@ image_config = json.loads(common_config)
 qemu_config = json.loads(raw_config)
 
 # pre-config G-list variables' values confirmed by common.json
-kernel_img = image_config["kernel_img"]
-initrd_img = image_config["initrd_img"]
+if os.path.isfile(image_config["kernel_img"]):
+  kernel_img = image_config["kernel_img"]
+else:
+  kernel_img = "not_use"
+if os.path.isfile(image_config["initrd_img"]):
+  initrd_img = image_config["initrd_img"]
+else:
+  initrd_img = "not_use"
 bios_img = image_config["bios_img"]
 qemu_img = image_config["qemu_img"]
 guest_img = image_config["guest_img"]
