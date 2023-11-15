@@ -1,10 +1,8 @@
 {
-  "kernel_img": "/boot/vmlinuz-xxx-yyy",
-  "initrd_img": "/boot/initramfs-xxx-yyy",
   "bios_img": "/path/to/EDKII/OVMF.fd or other virtual BIOS",
   "qemu_img": "/path/to/qemu-kvm with proper capabilty of VM test",
   "guest_img": "/path/to/prepared/guest_os_image, in qcow2 or raw image format",
-  "guest_img_format": "raw",
+  "guest_img_format": "raw or qcow2",
   "boot_pattern": "*Kernel*on*an*x86_64*",
   "guest_root_passwd": "123456"
 }
