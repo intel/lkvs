@@ -98,9 +98,9 @@ static void compare_buf_result(struct xsave_buffer *valid_buf,
 			       const char *case_name)
 {
 	if (memcmp(&valid_buf->bytes[0], &compare_buf->bytes[0], xstate_size))
-		ksft_test_result_fail("The case: %s.\n", case_name);
+		ksft_test_result_fail("%s", case_name);
 	else
-		ksft_test_result_pass("The case: %s.\n", case_name);
+		ksft_test_result_pass("%s", case_name);
 }
 
 static void test_xstate_sig_handle(void)
@@ -132,9 +132,9 @@ static void test_xstate_fork(void)
 	/* Child process xstate should be same as the parent process xstate. */
 	if (xstate_fork(valid_xbuf, compared_xbuf, xstate_info.mask,
 	    xstate_size)) {
-		ksft_test_result_pass("The case: %s.\n", case_name2);
+		ksft_test_result_pass("%s", case_name2);
 	} else {
-		ksft_test_result_fail("The case: %s.\n", case_name2);
+		ksft_test_result_fail("%s", case_name2);
 	}
 
 	/* The parent process xstate should not change after context switch. */
