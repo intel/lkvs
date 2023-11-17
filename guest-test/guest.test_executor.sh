@@ -100,6 +100,16 @@ guest_attest_test() {
   fi
 }
 
+guest_tsm_attest() {
+  test_item=$1
+  guest_test_prepare tdx/tdx_attest_check.sh
+  guest_test_entry tdx_attest_check.sh "-t $test_item" || \
+  { die "Failed on $TESTCASE tdx_attest_check.sh -t $test_item"; return 1; }
+  if [[ $GCOV == "off" ]]; then
+    guest_test_close
+  fi
+}
+
 ###################### Do Works ######################
 cd "$(dirname "$0")" 2>/dev/null || exit 1
 source ../.env
@@ -168,6 +178,18 @@ case "$TESTCASE" in
     if [[ $GCOV == "off" ]]; then
       guest_test_close
     fi
+    ;;
+  TD_TSM_ATTEST_QUOTE_PRECHECK)
+    guest_tsm_attest "tsm.get_quote.precheck" || \
+    die "Failed on $TESTCASE"
+    ;;
+  TD_TSM_ATTEST_QUOTE)
+    guest_tsm_attest "tsm.get_quote" || \
+    die "Failed on $TESTCASE"
+    ;;
+  TD_TSM_ATTEST_QUOTE_NEG)
+    guest_tsm_attest "tsm.get_quote.negative" || \
+    die "Failed on $TESTCASE"
     ;;
   :)
     test_print_err "Must specify the test scenario option by [-t]"
