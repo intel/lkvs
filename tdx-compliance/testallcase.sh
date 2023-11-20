@@ -1,6 +1,6 @@
 #!/bin/bash
 case=("msr" "cr" "cpuid" "all")
-ver=("1.0" "1.5" "")
+ver=("1.0" "1.5" "2.0")
 
 # store test results to a specified folder
 script_dir=$(dirname "$0")

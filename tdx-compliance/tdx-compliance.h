@@ -23,6 +23,7 @@
 
 #define VER1_0 1
 #define VER1_5 2
+#define VER2_0 4
 
 struct cpuid_reg {
 	u32 val;

@@ -84,8 +84,10 @@ void parse_version(void)
 		spec_version = VER1_0;
 	else if (strstr(version_name, "1.5"))
 		spec_version = VER1_5;
+	else if (strstr(version_name, "2.0"))
+		spec_version = VER2_0;
 	else
-		spec_version = (VER1_0 | VER1_5);
+		spec_version = (VER1_0 | VER1_5 | VER2_0);
 }
 
 static char* case_version(int ret) {
@@ -94,6 +96,8 @@ static char* case_version(int ret) {
 		return "1.0";
 	case VER1_5:
 		return "1.5";
+	case VER2_0:
+		return "2.0";
 	}
 
 	return "";
