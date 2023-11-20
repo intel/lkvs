@@ -196,34 +196,34 @@ struct test_cr cr_list[] = {
 	 *   bits PE(0) and NE(5) are always set to 1
 	 *   bits NW(29) and CD(30) are always cleared to 0
 	 */
-	DEF_GET_CR0(X86_CR0_CD, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
-	DEF_GET_CR0(X86_CR0_NW, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
-	DEF_GET_CR0(X86_CR0_PE, BIT_SET, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
-	DEF_GET_CR0(X86_CR0_NE, BIT_SET, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_GET_CR0(X86_CR0_CD, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
+	DEF_GET_CR0(X86_CR0_NW, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
+	DEF_GET_CR0(X86_CR0_PE, BIT_SET, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
+	DEF_GET_CR0(X86_CR0_NE, BIT_SET, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
 
-	DEF_GET_CR4(X86_CR4_SMXE, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
-	DEF_GET_CR4(X86_CR4_VMXE, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
-	DEF_GET_CR4(X86_CR4_MCE, BIT_SET, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_GET_CR4(X86_CR4_SMXE, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
+	DEF_GET_CR4(X86_CR4_VMXE, BIT_CLEAR, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
+	DEF_GET_CR4(X86_CR4_MCE, BIT_SET, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
 
-	DEF_CLEAR_CR0(X86_CR0_PE, X86_TRAP_GP, NO_PRE_COND, VER1_0 | VER1_5),
-	DEF_CLEAR_CR0(X86_CR0_NE, X86_TRAP_GP, NO_PRE_COND, VER1_0 | VER1_5),
-	DEF_CLEAR_CR0(X86_CR0_PE | X86_CR0_PG, NO_EXCP, pre_cond_cr0_combine, VER1_0 | VER1_5),
+	DEF_CLEAR_CR0(X86_CR0_PE, X86_TRAP_GP, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
+	DEF_CLEAR_CR0(X86_CR0_NE, X86_TRAP_GP, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
+	DEF_CLEAR_CR0(X86_CR0_PE | X86_CR0_PG, NO_EXCP, pre_cond_cr0_combine, VER1_0 | VER1_5 | VER2_0),
 
-	DEF_SET_CR0(X86_CR0_NW, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
-	DEF_SET_CR0(X86_CR0_CD, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_SET_CR0(X86_CR0_NW, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
+	DEF_SET_CR0(X86_CR0_CD, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
 
 	/*
 	 * TD attempts to modify them results in a #VE,
 	 * bits VMXE(13) and SMXE(14) are fixed to 0.
 	 */
-	DEF_XCH_CR4(X86_CR4_VMXE, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
-	DEF_XCH_CR4(X86_CR4_SMXE, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_XCH_CR4(X86_CR4_VMXE, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
+	DEF_XCH_CR4(X86_CR4_SMXE, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
 
 	/*
 	 * TD attempts to modify bit MCE(6) results in a #VE,
 	 * bits MCE(6) are fixed to 1.
 	 */
-	DEF_XCH_CR4(X86_CR4_MCE, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5),
+	DEF_XCH_CR4(X86_CR4_MCE, X86_TRAP_VE, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
 
 	/*
 	 * TD attempts to set bit PCE(8) results in a #GP(0),
@@ -235,29 +235,29 @@ struct test_cr cr_list[] = {
 	 * TD attempts to set bit KL(19) results in a #GP(0),
 	 * if the TD's ATTRIBUTES.KL is 0.
 	 */
-	DEF_SET_CR4(X86_CR4_KL, NO_EXCP, pre_cond_cr4_kl, VER1_0 | VER1_5),
+	DEF_SET_CR4(X86_CR4_KL, NO_EXCP, pre_cond_cr4_kl, VER1_0 | VER1_5 | VER2_0),
 
 	/*
 	 * TD attempts to set bit PKS(24) results in a #GP(0),
 	 * if the TD's ATTRIBUTES.PKS is 0.
 	 */
-	DEF_SET_CR4(X86_CR4_PKS, NO_EXCP, pre_cond_cr4_pks, VER1_0 | VER1_5),
+	DEF_SET_CR4(X86_CR4_PKS, NO_EXCP, pre_cond_cr4_pks, VER1_0 | VER1_5 | VER2_0),
 
 	/*
 	 * TD modification of CR4 bit PKE(22) is prevented,
 	 * depending on TD's XFAM.
 	 */
-	DEF_XCH_CR4(X86_CR4_PKE, NO_EXCP, pre_cond_cr4_pke, VER1_0 | VER1_5),
+	DEF_XCH_CR4(X86_CR4_PKE, NO_EXCP, pre_cond_cr4_pke, VER1_0 | VER1_5 | VER2_0),
 
 	/*
 	 * TD modification of CR4 bit CET(23) is prevented,
 	 * depending on TD's XFAM.
 	 */
-	DEF_XCH_CR4(X86_CR4_CET, NO_EXCP, pre_cond_cr4_cet, VER1_0 | VER1_5),
+	DEF_XCH_CR4(X86_CR4_CET, NO_EXCP, pre_cond_cr4_cet, VER1_0 | VER1_5 | VER2_0),
 
 	/*
 	 * TD modification of CR4 bit UINT(25) is prevented,
 	 * depending on TD's XFAM
 	 */
-	DEF_XCH_CR4(X86_CR4_UINT, NO_EXCP, pre_cond_cr4_uint, VER1_0 | VER1_5),
+	DEF_XCH_CR4(X86_CR4_UINT, NO_EXCP, pre_cond_cr4_uint, VER1_0 | VER1_5 | VER2_0),
 };
