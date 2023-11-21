@@ -1,0 +1,4 @@
+# This file collects the split lock feature tests on
+# Intel® Architecture-based platforms.
+
+sl_test
