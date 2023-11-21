@@ -1,0 +1,5 @@
+# This file collects the split lock feature tests on
+# Intel® Architecture-based platforms.
+
+split_lock.sh -t sl_on_default
+split_lock.sh -t check_ac_dmesg
