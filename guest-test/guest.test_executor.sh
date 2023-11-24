@@ -191,6 +191,16 @@ case "$TESTCASE" in
     guest_tsm_attest "tsm.get_quote.negative" || \
     die "Failed on $TESTCASE"
     ;;
+  TD_MEM_EBIZZY_FUNC)
+    guest_test_prepare tdx/tdx_mem_test.sh
+    guest_test_source_code tdx/tdx_ebizzy_test_suite ebizzy || \
+    { die "Failed to prepare guest test source code of tdx_ebizzy_test_suite"; return 1; }
+    guest_test_entry tdx_mem_test.sh "-t EBIZZY_FUNC" || \
+    { die "Failed on $TESTCASE tdx_mem_test.sh -t EBIZZY_FUNC"; return 1; }
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
   :)
     test_print_err "Must specify the test scenario option by [-t]"
     usage && exit 1
