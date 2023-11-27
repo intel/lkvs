@@ -201,6 +201,46 @@ case "$TESTCASE" in
       guest_test_close
     fi
     ;;
+  TD_MEM_ACCEPT_TIME_4G)
+    guest_test_prepare tdx/tdx_mem_test.sh
+    guest_test_entry tdx_mem_test.sh "-t MEM_ACCEPT_TIME_4G" || \
+    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACCEPT_TIME_4G"; return 1; }
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
+  TD_MEM_ACCEPT_TIME_16G)
+    guest_test_prepare tdx/tdx_mem_test.sh
+    guest_test_entry tdx_mem_test.sh "-t MEM_ACCEPT_TIME_16G" || \
+    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACCEPT_TIME_16G"; return 1; }
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
+  TD_MEM_ACCEPT_TIME_32G)
+    guest_test_prepare tdx/tdx_mem_test.sh
+    guest_test_entry tdx_mem_test.sh "-t MEM_ACCEPT_TIME_32G" || \
+    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACCEPT_TIME_32G"; return 1; }
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
+  TD_MEM_ACCEPT_TIME_64G)
+    guest_test_prepare tdx/tdx_mem_test.sh
+    guest_test_entry tdx_mem_test.sh "-t MEM_ACCEPT_TIME_64G" || \
+    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACCEPT_TIME_64G"; return 1; }
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
+  TD_MEM_ACCEPT_TIME_96G)
+    guest_test_prepare tdx/tdx_mem_test.sh
+    guest_test_entry tdx_mem_test.sh "-t MEM_ACCEPT_TIME_96G" || \
+    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACCEPT_TIME_96G"; return 1; }
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
   :)
     test_print_err "Must specify the test scenario option by [-t]"
     usage && exit 1
