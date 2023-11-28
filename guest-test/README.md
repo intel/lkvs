@@ -20,11 +20,8 @@ In any case of issue debugging, please refer to above test log with VM QEMU conf
 A prepared Guest OS Image (qcow2 or raw image format) is requried with preset root account and password, several values/parameters in qemu.config.json highly depend on Guest OS Image, please accomodate accordingly.
 
 ## Usage
-### qemu.config.json description
-with QEMU emulator version 7.2 support, qemu.config.json parameters are fully aligned to it, and grouped in 4 by 1st-level-keys: "common", "vm", "tdx", "tdxio".
-
-group "common" includes all configurable values to be passed to group "vm", "tdx", "tdxio"
-2nd-level-keys info:
+### common.json and qemu.config.json description
+common.json parameters are basic test info setup might only need revision, it's single level keys based, includes following info:
 - "kernel_img": [mandatory] /abs/path/to/vmlinuz file or bzImage file of target VM guest kernel
 - "initrd_img": [optional] /abs/path/to/initrd file or initramfs file of target VM guest kernel
 - "bios_img": [legacy vm optional, tdx/tdxio vm mandatory] /abs/path/to/ovmf file or other bios file of target VM guest bios
@@ -33,6 +30,11 @@ group "common" includes all configurable values to be passed to group "vm", "tdx
 - "guest_img_format": [mandatory] value range in [qcow2/raw], guest os image file type qcow2 or raw image
 - "boot_pattern": [mandatory] Guest OS booting pattern shows bootup completed, depends on Guest OS image provided
 - "guest_root_passwd": [mandatory] Guest OS root account password
+
+with QEMU emulator version 7.2 support, qemu.config.json parameters are fully aligned to it, and grouped in 4 by 1st-level-keys: "common", "vm", "tdx", "tdxio".
+
+group "common" includes all configurable values to be passed to group "vm", "tdx", "tdxio"
+2nd-level-keys info:
 - "vm_type": [mandatory] value range in [legacy/tdx/tdxio], VM type to test includes legacy vm, tdx vm or tdxio vm
 - "pmu": [mandatory] value range in [on/off], qemu config -cpu pmu=on or -cpu pmu=off
 - "cpus": [mandatory] value range in [1 ~ maximum vcpu number], qemu config -smp cpus=$VCPU
@@ -53,7 +55,7 @@ group "tdxio" includes tdxio vm specific qemu config options, which is used to l
 note about qemu.config.json:
 - no changes allowed on 1st-level-keys hierarchy
 - cfg_x part is allowed to extend freely based on needs
-- cfg_var_x part is allowed to revised/extended too, please remember to keep changes specifically aligned in qemu_get_config.py
+- cfg_var_x part is allowed to revise/extend too, please remember to keep changes specifically aligned in qemu_get_config.py
 
 ### guest.test_launcher description
 main test entrance, with following key args can be passed to override the values in qemu.config.json
