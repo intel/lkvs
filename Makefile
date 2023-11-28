@@ -5,6 +5,8 @@ SUBDIRS = $(shell ls -d */)
 
 PROXY :=
 
+MAKE_LKVS_LOG = /tmp/make_lkvs.log
+
 ifneq ($(https_proxy),)
 PROXY := $(https_proxy)
 else ifneq ($(HTTPS_PROXY),)
@@ -16,18 +18,30 @@ PROXY := $(ALL_PROXY)
 endif
 
 all:
-	@for dir in $(SUBDIRS) ; do			\
+	@cat /dev/null > ${MAKE_LKVS_LOG};
+	@for dir in $(SUBDIRS); do			\
 		if [ -f "$$dir/Makefile" ]; then	\
 			cd $$dir &&			\
-			make	&&			\
-			cd .. || exit 2;		\
+			make || {			\
+				echo " - Make subfolder $${dir} failed." >> ${MAKE_LKVS_LOG};	\
+				cd ..;			\
+				continue;		\
+			};				\
+			cd ..;				\
 		fi					\
 	done
+	cat $(MAKE_LKVS_LOG)
+ifeq ($(shell cat $(MAKE_LKVS_LOG)),)
+	@exit 0
+else
+	@exit 1
+endif
+
 clean:
-	for dir in $(SUBDIRS) ; do 			\
-		if [ -f "$$dir/Makefile" ]; then	\
-			make -C  $$dir clean || exit 2;	\
-		fi					\
+	@for dir in $(SUBDIRS); do 				\
+		if [ -f "$$dir/Makefile" ]; then		\
+			make -C $$dir clean || continue;	\
+		fi						\
 	done
 docker_clean:
 	docker run -it --rm -v $(PWD):/src --name ubuntu_2204_lkvs ubuntu:22.04 make clean
