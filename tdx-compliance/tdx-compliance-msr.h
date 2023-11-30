@@ -1,9 +1,37 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "tdx-compliance.h"
+#include "msr_case.h"
 
 #define NO_EXCP 0
 #define NO_PRE_COND NULL
 
+#define DEF_MSR(_name, _msr_num, _rw, _excp, _precond, _size, _vsn)	\
+{							\
+	.name = _name "_" #_rw,			\
+	.version = _vsn,				\
+	.msr.msr_num = _msr_num,			\
+	.run_msr_rw = _rw##_msr##_native,		\
+	.excp.expect = _excp,				\
+	.pre_condition = _precond,			\
+	.size = _size,					\
+}
+
+#define DEF_READ_MSR(_name, _msr_num, _excp, _precond, _vsn)			\
+	DEF_MSR(_name, _msr_num, read, _excp, _precond, 1, _vsn)
+
+#define DEF_WRITE_MSR(_name, _msr_num, _excp, _precond, _vsn)			\
+	DEF_MSR(_name, _msr_num, write, _excp, _precond, 1, _vsn)
+
+#define DEF_READ_MSR_SIZE(_name, _msr_num, _excp, _precond, _size, _vsn)	\
+	DEF_MSR(_name, _msr_num, read, _excp, _precond, _size, _vsn)
+
+#define DEF_WRITE_MSR_SIZE(_name, _msr_num, _excp, _precond, _size, _vsn)	\
+	DEF_MSR(_name, _msr_num, write, _excp, _precond, _size, _vsn)
+
+#ifdef AUTOGEN_MSR
+#include "pre_condition.h"
+extern struct test_msr msr_cases[];
+#else
 #define DEF_MSR(_name, _msr_num, _rw, _excp, _precond, _size, _vsn)	\
 {							\
 	.name = _name "_" #_rw,			\
@@ -551,3 +579,4 @@ struct test_msr msr_cases[] = {
 	DEF_READ_MSR(MSR_KERNEL_GS_BASE, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
 	DEF_READ_MSR(MSR_TSC_AUX, NO_EXCP, NO_PRE_COND, VER1_0 | VER1_5 | VER2_0),
 };
+#endif

@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "tdx-compliance.h"
+#include "cpuid_case.h"
 
 #define DEF_CPUID_TEST(_leaf, _subleaf)		\
 {						\
