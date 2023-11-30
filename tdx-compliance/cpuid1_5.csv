@@ -1,0 +1,1009 @@
+﻿,,,,,"This page is auto-generated, do not touch!
+1. Hide Column E
+2. Update the required versions in the Version Lookup page
+3. Filter column A by ""yes""
+4. Copy columns B - N to the FAS",,,,,,,
+,Leaf and Sub-Leaf,,,hide,CPUID Field,,,,,,Virtualization,
+Applicable for Selected Versions,Leaf,Sub-Leaf From,Sub-Leaf To,Header,Reg.,MSB,LSB,Field Size,Field Name,Configuration Details,Bit or Field Virtualization Type,Virtualization Details
+yes,0x0,N/A,N/A,Leaf,,,,,Leaf 0x0,,,
+yes,0x0,N/A,N/A,Field,EAX,31,0,32,MaxIndex,,Fixed,0x23
+yes,0x0,N/A,N/A,Field,EBX,31,0,32,Genu,,Fixed,0x756e6547
+yes,0x0,N/A,N/A,Field,ECX,31,0,32,ntel,,Fixed,0x6c65746e
+yes,0x0,N/A,N/A,Field,EDX,31,0,32,ineI,,Fixed,0x49656e69
+yes,0x1,N/A,N/A,Leaf,,,,,Leaf 0x1,,,
+yes,0x1,N/A,N/A,Field,EAX,3,0,4,Stepping ID,Minimum stepping value of all packages,Calculated,"Min. of all packages, config by Mig. TD"
+yes,0x1,N/A,N/A,Field,EAX,7,4,4,Model ID,,Native,
+yes,0x1,N/A,N/A,Field,EAX,11,8,4,Family ID,,Native,
+yes,0x1,N/A,N/A,Field,EAX,13,12,2,Processor Type,,Native,
+yes,0x1,N/A,N/A,Field,EAX,15,14,2,Reserved,,Fixed,0x0
+yes,0x1,N/A,N/A,Field,EAX,19,16,4,Extended Model ID,,Native,
+yes,0x1,N/A,N/A,Field,EAX,27,20,8,Extended Family ID,,Native,
+yes,0x1,N/A,N/A,Field,EAX,31,28,4,Reserved,,Fixed,0x0
+yes,0x1,N/A,N/A,Field,EBX,7,0,8,Brand Index,,Fixed,0x0
+yes,0x1,N/A,N/A,Field,EBX,15,8,8,CLFLUSH Line Size,,Fixed,0x8
+yes,0x1,N/A,N/A,Field,EBX,23,16,8,Maximum Addressable IDs,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x1,N/A,N/A,Field,EBX,31,24,8,Initial APIC ID,Bits 7:0 of TDVPS.VCPU_INDEX,Calculated,TDVPS.VCPU_INDEX[7:0]
+yes,0x1,N/A,N/A,Field,ECX,0,0,1,SSE3,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,1,1,1,PCLMULQDQ,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,2,2,1,DTES64,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,3,3,1,MONITOR,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,ECX,4,4,1,DS-CPL,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,5,5,1,VMX,,Fixed,0x0
+yes,0x1,N/A,N/A,Field,ECX,6,6,1,SMX,,Fixed,0x0
+yes,0x1,N/A,N/A,Field,ECX,7,7,1,EST,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,ECX,8,8,1,TM2,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,ECX,9,9,1,SSSE3,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,10,10,1,CNXT-ID,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,ECX,11,11,1,SDBG,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,ECX,12,12,1,FMA,TD_PARAMS.XFAM,XFAM & Native,XFAM[2]
+yes,0x1,N/A,N/A,Field,ECX,13,13,1,CMPXCHG16B,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,14,14,1,xTPR Update Control,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,ECX,15,15,1,PDCM,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,16,16,1,Reserved,,Fixed,0x0
+yes,0x1,N/A,N/A,Field,ECX,17,17,1,PCID,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,18,18,1,DCA,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,ECX,19,19,1,SSE4_1,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,20,20,1,SSE4_2,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,21,21,1,x2APIC,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,22,22,1,MOVBE,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,23,23,1,POPCNT,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,24,24,1,TSC-Deadline,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,ECX,25,25,1,AESNI,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,26,26,1,XSAVE,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,27,27,1,OSXSAVE,TD VMCS.GUEST_CR4.OSXSAVE,Calculated,CR4.OSXSAVE
+yes,0x1,N/A,N/A,Field,ECX,28,28,1,AVX,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[2]
+yes,0x1,N/A,N/A,Field,ECX,29,29,1,F16C,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[2]
+yes,0x1,N/A,N/A,Field,ECX,30,30,1,RDRAND,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,ECX,31,31,1,Hypervisor,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,0,0,1,FPU,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,1,1,1,VME,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,2,2,1,DE,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,3,3,1,PSE,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,4,4,1,TSC,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,5,5,1,MSR,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,6,6,1,PAE,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,7,7,1,MCE,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,8,8,1,CX8,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,9,9,1,APIC,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,10,10,1,Reserved,,Fixed,0x0
+yes,0x1,N/A,N/A,Field,EDX,11,11,1,SEP,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,12,12,1,MTRR,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,13,13,1,PGE,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,14,14,1,MCA,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,15,15,1,CMOV,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,16,16,1,PAT,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,17,17,1,PSE-36,,Fixed,0x0
+yes,0x1,N/A,N/A,Field,EDX,18,18,1,PSN,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,EDX,19,19,1,CLFSH,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,20,20,1,Reserved,,Fixed,0x0
+yes,0x1,N/A,N/A,Field,EDX,21,21,1,DS,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,22,22,1,ACPI,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,EDX,23,23,1,MMX,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,24,24,1,FXSR,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,25,25,1,SSE,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,26,26,1,SSE2,,Fixed,0x1
+yes,0x1,N/A,N/A,Field,EDX,27,27,1,SS,,Configured & Native,
+yes,0x1,N/A,N/A,Field,EDX,28,28,1,HTT,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,EDX,29,29,1,TM,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x1,N/A,N/A,Field,EDX,30,30,1,Reserved,,Fixed,0x0
+yes,0x1,N/A,N/A,Field,EDX,31,31,1,PBE,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x2,N/A,N/A,Leaf,,,,,Leaf 0x2,,#VE,
+yes,0x2,N/A,N/A,Field,EAX,7,0,8,Number of descriptors,,#VE,
+yes,0x2,N/A,N/A,Field,EAX,15,8,8,LLC Descriptor,,#VE,
+yes,0x2,N/A,N/A,Field,EAX,23,16,8,TLB Descriptor,,#VE,
+yes,0x2,N/A,N/A,Field,EAX,31,24,8,Descriptor,,#VE,
+yes,0x2,N/A,N/A,Field,EBX,7,0,8,Prefetching size,,#VE,
+yes,0x2,N/A,N/A,Field,EBX,15,8,8,0,,#VE,
+yes,0x2,N/A,N/A,Field,EBX,23,16,8,0,,#VE,
+yes,0x2,N/A,N/A,Field,EBX,31,24,8,Descriptor,,#VE,
+yes,0x2,N/A,N/A,Field,ECX,7,0,8,0,,#VE,
+yes,0x2,N/A,N/A,Field,ECX,15,8,8,0,,#VE,
+yes,0x2,N/A,N/A,Field,ECX,23,16,8,0,,#VE,
+yes,0x2,N/A,N/A,Field,ECX,31,24,8,Descriptor,,#VE,
+yes,0x2,N/A,N/A,Field,EDX,7,0,8,0,,#VE,
+yes,0x2,N/A,N/A,Field,EDX,15,8,8,0,,#VE,
+yes,0x2,N/A,N/A,Field,EDX,23,16,8,0,,#VE,
+yes,0x2,N/A,N/A,Field,EDX,31,24,8,Descriptor,,#VE,
+yes,0x3,N/A,N/A,Leaf,,,,,Leaf 0x3,,,
+yes,0x3,N/A,N/A,Field,EAX,31,0,32,Reserved,,Fixed,0x0
+yes,0x3,N/A,N/A,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x3,N/A,N/A,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x3,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x4,0x0,0x0,Sub-Leaf,,,,,Leaf 0x4 / Sub-Leaf 0x0,,,
+yes,0x4,0x0,0x0,Field,EAX,4,0,5,Type,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x0,0x0,Field,EAX,7,5,3,Level,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x0,0x0,Field,EAX,8,8,1,Self Initializing,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x0,0x0,Field,EAX,9,9,1,Fully Associative,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x0,0x0,Field,EAX,13,10,4,Reserved,TD_PARAMS.CPUID_CONFIG,Fixed,0x0
+yes,0x4,0x0,0x0,Field,EAX,25,14,12,Addressable IDs Sharing this Cache,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x0,0x0,Field,EAX,31,26,6,Addressable IDs for Cores in Package,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x0,0x0,Field,EBX,11,0,12,L,,Fixed,0x3F
+yes,0x4,0x0,0x0,Field,EBX,21,12,10,P,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x0,0x0,Field,EBX,31,22,10,W,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x0,0x0,Field,ECX,31,0,32,Number of Sets,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x0,0x0,Field,EDX,0,0,1,WBINVD,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x0,0x0,Field,EDX,1,1,1,Cache Inclusiveness,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x0,0x0,Field,EDX,2,2,1,Reserved,TD_PARAMS.CPUID_CONFIG,Fixed,0x0
+yes,0x4,0x0,0x0,Field,EDX,31,3,29, ,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Sub-Leaf,,,,,Leaf 0x4 / Sub-Leaf 0x1,,,
+yes,0x4,0x1,0x1,Field,EAX,4,0,5,Type,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Field,EAX,7,5,3,Level,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Field,EAX,8,8,1,Self Initializing,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Field,EAX,9,9,1,Fully Associative,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Field,EAX,13,10,4,Reserved,TD_PARAMS.CPUID_CONFIG,Fixed,0x0
+yes,0x4,0x1,0x1,Field,EAX,25,14,12,Addressable IDs Sharing this Cache,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Field,EAX,31,26,6,Addressable IDs for Cores in Package,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Field,EBX,11,0,12,L,,Fixed,0x3F
+yes,0x4,0x1,0x1,Field,EBX,21,12,10,P,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Field,EBX,31,22,10,W,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Field,ECX,31,0,32,Number of Sets,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Field,EDX,0,0,1,WBINVD,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Field,EDX,1,1,1,Cache Inclusiveness,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x1,0x1,Field,EDX,2,2,1,Reserved,TD_PARAMS.CPUID_CONFIG,Fixed,0x0
+yes,0x4,0x1,0x1,Field,EDX,31,3,29, ,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Sub-Leaf,,,,,Leaf 0x4 / Sub-Leaf 0x2,,,
+yes,0x4,0x2,0x2,Field,EAX,4,0,5,Type,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Field,EAX,7,5,3,Level,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Field,EAX,8,8,1,Self Initializing,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Field,EAX,9,9,1,Fully Associative,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Field,EAX,13,10,4,Reserved,TD_PARAMS.CPUID_CONFIG,Fixed,0x0
+yes,0x4,0x2,0x2,Field,EAX,25,14,12,Addressable IDs Sharing this Cache,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Field,EAX,31,26,6,Addressable IDs for Cores in Package,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Field,EBX,11,0,12,L,,Fixed,0x3F
+yes,0x4,0x2,0x2,Field,EBX,21,12,10,P,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Field,EBX,31,22,10,W,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Field,ECX,31,0,32,Number of Sets,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Field,EDX,0,0,1,WBINVD,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Field,EDX,1,1,1,Cache Inclusiveness,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x2,0x2,Field,EDX,2,2,1,Reserved,TD_PARAMS.CPUID_CONFIG,Fixed,0x0
+yes,0x4,0x2,0x2,Field,EDX,31,3,29, ,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Sub-Leaf,,,,,Leaf 0x4 / Sub-Leaf 0x3,,,
+yes,0x4,0x3,0x3,Field,EAX,4,0,5,Type,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,EAX,7,5,3,Level,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,EAX,8,8,1,Self Initializing,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,EAX,9,9,1,Fully Associative,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,EAX,13,10,4,Reserved,TD_PARAMS.CPUID_CONFIG,Fixed,0x0
+yes,0x4,0x3,0x3,Field,EAX,25,14,12,Addressable IDs Sharing this Cache,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,EAX,31,26,6,Addressable IDs for Cores in Package,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,EBX,11,0,12,L,,Fixed,0x3F
+yes,0x4,0x3,0x3,Field,EBX,21,12,10,P,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,EBX,31,22,10,W,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,ECX,31,0,32,Number of Sets,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,EDX,0,0,1,WBINVD,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,EDX,1,1,1,Cache Inclusiveness,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,EDX,2,2,1,Complex cache indexing,TD_PARAMS.CPUID_CONFIG,Configured,
+yes,0x4,0x3,0x3,Field,EDX,31,3,29,Reserved,TD_PARAMS.CPUID_CONFIG,Fixed,0x0
+yes,0x4,0x4,0x4,Sub-Leaf,,,,,Leaf 0x4 / Sub-Leaf 0x4,,,
+yes,0x4,0x4,0x4,Field,EAX,4,0,5,Type,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EAX,7,5,3,Level,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EAX,8,8,1,Self Initializing,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EAX,9,9,1,Fully Associative,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EAX,13,10,4,Reserved,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EAX,25,14,12,Addressable IDs Sharing this Cache,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EAX,31,26,6,Addressable IDs for Cores in Package,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EBX,11,0,12,L,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EBX,21,12,10,P,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EBX,31,22,10,W,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,ECX,31,0,32,Number of Sets,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EDX,0,0,1,WBINVD,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EDX,1,1,1,Cache Inclusiveness,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EDX,2,2,1,Complex Cache Indexing,,Fixed,0x0
+yes,0x4,0x4,0x4,Field,EDX,31,3,29,Reserved,,Fixed,0x0
+yes,0x5,N/A,N/A,Leaf,,,,,Leaf 0x5,,#VE,
+yes,0x5,N/A,N/A,Field,EAX,15,0,16,Smallest Monitor-line Size, ,#VE,
+yes,0x5,N/A,N/A,Field,EAX,31,16,16,Reserved,,#VE,
+yes,0x5,N/A,N/A,Field,EBX,15,0,16,Largest Monitor-line Size,,#VE,
+yes,0x5,N/A,N/A,Field,EBX,31,16,16,Reserved,,#VE,
+yes,0x5,N/A,N/A,Field,ECX,0,0,1,"b0: Monitor-Mwait Extensions, b1: Interrupt as Break-Event",,#VE,
+yes,0x5,N/A,N/A,Field,ECX,1,1,1,Masked interrupts as break-event for MWAIT,,#VE,
+yes,0x5,N/A,N/A,Field,ECX,31,2,30,Reserved,,#VE,
+yes,0x5,N/A,N/A,Field,EDX,3,0,4,C0 Sub-States,,#VE,
+yes,0x5,N/A,N/A,Field,EDX,7,4,4,C1 Sub-States,,#VE,
+yes,0x5,N/A,N/A,Field,EDX,11,8,4,C2 Sub-States,,#VE,
+yes,0x5,N/A,N/A,Field,EDX,15,12,4,C3 Sub-States,,#VE,
+yes,0x5,N/A,N/A,Field,EDX,19,16,4,C4 Sub-States,,#VE,
+yes,0x5,N/A,N/A,Field,EDX,23,20,4,C5 Sub-States,,#VE,
+yes,0x5,N/A,N/A,Field,EDX,27,24,4,C6 Sub-States,,#VE,
+yes,0x5,N/A,N/A,Field,EDX,31,28,4,C7 Sub-States,,#VE,
+yes,0x6,N/A,N/A,Leaf,,,,,Leaf 0x6,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,0,0,1,Digital Temperature Sensor,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,1,1,1,Intel Turbo Boost Technology,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,2,2,1,ARAT,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,3,3,1,Reserved_3,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,4,4,1,PLN,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,5,5,1,ECMD,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,6,6,1,PTM,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,7,7,1,HWP,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,8,8,1,HWP Notification,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,9,9,1,HWP Activity Window,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,10,10,1,HWP Energy Performance Preference,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,11,11,1,HWP Package Level Request,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,12,12,1,Reserved_12,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,13,13,1,HDC,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,14,14,1,Favored Core Enable,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,15,15,1,HWP Notification Due Highest Change,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,16,16,1,HWP PECI Override,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,17,17,1,HWP Thread Request Support,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,18,18,1,Low Latency and Post IA32_HWP_REQUEST,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,19,19,1,HW_FEEDBACK,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,20,20,1,Voting Rights (new in GLC?),,#VE,
+yes,0x6,N/A,N/A,Field,EAX,21,21,1,HWP Thread Info,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,22,22,1,Reserved_22,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,23,23,1,Intel Thread Director supported,,#VE,
+yes,0x6,N/A,N/A,Field,EAX,31,24,8,Reserved_31_24,,#VE,
+yes,0x6,N/A,N/A,Field,EBX,3,0,4,Interrupt Thresholds,,#VE,
+yes,0x6,N/A,N/A,Field,EBX,31,4,28,Reserved,,#VE,
+yes,0x6,N/A,N/A,Field,ECX,0,0,1,Hardware Coordination Feedback,,#VE,
+yes,0x6,N/A,N/A,Field,ECX,1,1,1,ACNT2,,#VE,
+yes,0x6,N/A,N/A,Field,ECX,2,2,1,Reserved_2,,#VE,
+yes,0x6,N/A,N/A,Field,ECX,3,3,1,Performance-Energy Bias,,#VE,
+yes,0x6,N/A,N/A,Field,ECX,31,4,28,Reserved_31_4,,#VE,
+yes,0x6,N/A,N/A,Field,EDX,7,0,8,Supported Capabilities bitmap,,#VE,
+yes,0x6,N/A,N/A,Field,EDX,11,8,4,HW Feedback Table size,,#VE,
+yes,0x6,N/A,N/A,Field,EDX,15,12,4,Reserved,,#VE,
+yes,0x6,N/A,N/A,Field,EDX,31,16,16,HW Feedback Table Indication,,#VE,
+yes,0x7,0x0,0x0,Sub-Leaf,,,,,Leaf 0x7 / Sub-Leaf 0x0,,,
+yes,0x7,0x0,0x0,Field,EAX,31,0,32,Max Sub-Leaves,,Fixed,0x2
+yes,0x7,0x0,0x0,Field,EBX,0,0,1,FSGSBASE,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EBX,1,1,1,IA32_TSC_ADJUST,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EBX,2,2,1,SGX,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EBX,3,3,1,BMI1,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,EBX,4,4,1,HLE,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,EBX,5,5,1,AVX2,TD_PARAMS.XFAM,XFAM & Native,XFAM[2]
+yes,0x7,0x0,0x0,Field,EBX,6,6,1,FDP_EXCPTN_ONLY,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EBX,7,7,1,SMEP,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EBX,8,8,1,BMI2,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,EBX,9,9,1,Enhanced REP MOVSB/STOSB,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,EBX,10,10,1,INVPCID,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EBX,11,11,1,RTM,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,EBX,12,12,1,PQM,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,EBX,13,13,1,FCS/FDS Deprecation,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EBX,14,14,1,MPX,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EBX,15,15,1,Cache QoS Enforcement,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,EBX,16,16,1,AVX512F,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,EBX,17,17,1,AVX512DQ,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,EBX,18,18,1,RDSEED,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EBX,19,19,1,ADCX/ADOX,TD_PARAMS.XFAM,Configured & Native,
+yes,0x7,0x0,0x0,Field,EBX,20,20,1,SMAP/CLAC/STAC,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EBX,21,21,1,AVX512_IFMA,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,EBX,22,22,1,PCOMMIT,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EBX,23,23,1,CLFLUSHOPT,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EBX,24,24,1,CLWB,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EBX,25,25,1,RTIT,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x7,0x0,0x0,Field,EBX,26,26,1,AVX512PF,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,EBX,27,27,1,AVX512ER,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,EBX,28,28,1,AVX512CD,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,EBX,29,29,1,SHA,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EBX,30,30,1,AVX512BW,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,EBX,31,31,1,AVX512VL,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,ECX,0,0,1,PREFETCHWT1,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,ECX,1,1,1,AVX512VBMI,TD_PARAMS.XFAM,XFAM & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,ECX,2,2,1,UMIP,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,ECX,3,3,1,PKU,TD_PARAMS.XFAM,XFAM & Native,XFAM[9]
+yes,0x7,0x0,0x0,Field,ECX,4,4,1,OSPKE,,Calculated,CR4.PKE
+yes,0x7,0x0,0x0,Field,ECX,5,5,1,MONITORX/MWAITX,,Configured & Native,
+yes,0x7,0x0,0x0,Field,ECX,6,6,1,AVX512_VBMI2,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,ECX,7,7,1,CET Shadow Stack,TD_PARAMS.XFAM,XFAM & Native,XFAM[12:11]
+yes,0x7,0x0,0x0,Field,ECX,8,8,1,GFNI,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,ECX,9,9,1,VAES,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[2]
+yes,0x7,0x0,0x0,Field,ECX,10,10,1,VPCLMULQDQ,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[2]
+yes,0x7,0x0,0x0,Field,ECX,11,11,1,AVX512_VNNI,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,ECX,12,12,1,AVX512_BITALG,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,ECX,13,13,1,TME,,Configured & Native,
+yes,0x7,0x0,0x0,Field,ECX,14,14,1,AVX512_VPOPCNTDQ,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,ECX,15,15,1,Reserved,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,ECX,16,16,1,57 bit Address Support,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,ECX,21,17,5,MAWAU for MPX,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,ECX,22,22,1,RDPID,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,ECX,23,23,1,KL_ENABLED,,Attributes & Native,KL
+yes,0x7,0x0,0x0,Field,ECX,24,24,1,BUSLOCK,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,ECX,25,25,1,CLDEMOTE,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,ECX,26,26,1,Reserved,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,ECX,27,27,1,MOVDIRI,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,ECX,28,28,1,MOVDIR64B,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,ECX,29,29,1,ENQCMD,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,ECX,30,30,1,SGX_LC,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,ECX,31,31,1,PKS,,Attributes & Native,PKS
+yes,0x7,0x0,0x0,Field,EDX,0,0,1,Reserved,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EDX,1,1,1,Reserved,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EDX,2,2,1,AVX512_4VNNIW,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,EDX,3,3,1,AVX512_4FMAPS,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,EDX,4,4,1,Fast Short REP MOV,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,EDX,5,5,1,ULI,TD_PARAMS.XFAM,XFAM & Native,XFAM[14]
+yes,0x7,0x0,0x0,Field,EDX,6,6,1,Reserved,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EDX,7,7,1,Reserved,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EDX,8,8,1,AVX512_VP2INTERSECT,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,EDX,9,9,1,MCU_OPT supported,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EDX,10,10,1,MD_CLEAR supported,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EDX,11,11,1,Reserved,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EDX,12,12,1,Reserved,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EDX,13,13,1,RTM_FORCE_ABORT_SUPPORT,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EDX,14,14,1,SERIALIZE Inst,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,EDX,15,15,1,Hybrid Part,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EDX,16,16,1,TSXLDTRK,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x0,0x0,Field,EDX,17,17,1,Reserved,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EDX,18,18,1,PCONFIG,,Configured & Native,
+yes,0x7,0x0,0x0,Field,EDX,19,19,1,Architectural LBR support,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x7,0x0,0x0,Field,EDX,20,20,1,CET,TD_PARAMS.XFAM,XFAM & Native,XFAM[12:11]
+yes,0x7,0x0,0x0,Field,EDX,21,21,1,Reserved,,Fixed,0x0
+yes,0x7,0x0,0x0,Field,EDX,22,22,1,TMUL_AMX-BF16,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x7,0x0,0x0,Field,EDX,23,23,1,FP16,,XFAM & Native,XFAM[7:5]
+yes,0x7,0x0,0x0,Field,EDX,24,24,1,TMUL_AMX-TILE,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x7,0x0,0x0,Field,EDX,25,25,1,TMUL_AMX-INT8,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x7,0x0,0x0,Field,EDX,26,26,1,IBRS (indirect branch restricted speculation),,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EDX,27,27,1,STIBP (single thread indirect branch predictors),,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EDX,28,28,1,L1D_FLUSH.  IA32_FLUSH_CMD support.,TD_PARAMS.CPUID_CONFIG,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EDX,29,29,1,IA32_ARCH_CAPABILITIES Support,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EDX,30,30,1,IA32_CORE_CAPABILITIES Present,,Fixed,0x1
+yes,0x7,0x0,0x0,Field,EDX,31,31,1,SSBD (Speculative Store Bypass Disable),,Fixed,0x1
+yes,0x7,0x1,0x1,Sub-Leaf,,,,,Leaf 0x7 / Sub-Leaf 0x1,,,
+yes,0x7,0x1,0x1,Field,EAX,0,0,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,1,1,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,2,2,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,3,3,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,4,4,1,VEX VNNI,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x1,0x1,Field,EAX,5,5,1,AVX512_BF16,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[7:5]
+yes,0x7,0x1,0x1,Field,EAX,6,6,1,LASS,,Configured & Native,
+yes,0x7,0x1,0x1,Field,EAX,7,7,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,8,8,1,Arch Perfmon Extended Leaf Supported,"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Attributes & Configured & Native,PERFMON
+yes,0x7,0x1,0x1,Field,EAX,9,9,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,10,10,1,Fast Zero-Length MOVSB,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x1,0x1,Field,EAX,11,11,1,Fast Short STOSB,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x1,0x1,Field,EAX,12,12,1,Fast short CMPSB/SCASB,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x1,0x1,Field,EAX,16,13,4,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,17,17,1,Reserved,TD_PARAMS.CPUID_CONFIG,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,18,18,1,Reserved,TD_PARAMS.CPUID_CONFIG,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,19,19,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,20,20,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,21,21,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,22,22,1,HRESET,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,23,23,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,24,24,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,25,25,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,26,26,1,LAM,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x7,0x1,0x1,Field,EAX,27,27,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EAX,31,28,4,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EBX,0,0,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EBX,1,1,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EBX,29,2,28,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EBX,30,30,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EBX,31,31,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,0,0,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,1,1,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,2,2,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,3,3,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,4,4,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,5,5,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,7,6,2,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,8,8,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,9,9,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,10,10,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,13,11,3,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,14,14,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,16,15,2,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,17,17,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,18,18,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,19,19,1,Reserved,,Fixed,0x0
+yes,0x7,0x1,0x1,Field,EDX,31,20,12,Reserved,,Fixed,0x0
+yes,0x7,0x2,0x2,Sub-Leaf,,,,,Leaf 0x7 / Sub-Leaf 0x2,,,
+yes,0x7,0x2,0x2,Field,EAX,31,0,32,Reserved,,Fixed,0x0
+yes,0x7,0x2,0x2,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x7,0x2,0x2,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x7,0x2,0x2,Field,EDX,0,0,1,PSFD,,Fixed,0x1
+yes,0x7,0x2,0x2,Field,EDX,1,1,1,IPRED_CTRL,,Fixed,0x1
+yes,0x7,0x2,0x2,Field,EDX,2,2,1,RRSBA_CTRL,,Fixed,0x1
+yes,0x7,0x2,0x2,Field,EDX,3,3,1,DDPD,,Configured & Native,
+yes,0x7,0x2,0x2,Field,EDX,4,4,1,BHI_CTRL,,Fixed,0x1
+yes,0x7,0x2,0x2,Field,EDX,5,5,1,MCDT_NO,,Configured & Native,
+yes,0x7,0x2,0x2,Field,EDX,6,6,1,Reserved,,Fixed,0x0
+yes,0x7,0x2,0x2,Field,EDX,31,7,25,Reserved,,Fixed,0x0
+yes,0x8,N/A,N/A,Leaf,,,,,Leaf 0x8,,,
+yes,0x8,N/A,N/A,Field,EAX,31,0,32,Reserved,,Fixed,0x0
+yes,0x8,N/A,N/A,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x8,N/A,N/A,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x8,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x9,N/A,N/A,Leaf,,,,,Leaf 0x9,,#VE,
+yes,0x9,N/A,N/A,Field,EAX,31,0,32,IA32_PLATFORM_DCA_CAP,,#VE,
+yes,0x9,N/A,N/A,Field,EBX,31,0,32,Reserved,,#VE,
+yes,0x9,N/A,N/A,Field,ECX,31,0,32,Reserved,,#VE,
+yes,0x9,N/A,N/A,Field,EDX,31,0,32,Reserved,,#VE,
+yes,0xa,N/A,N/A,Leaf,,,,,Leaf 0xa,,,
+yes,0xa,N/A,N/A,Field,EAX,7,0,8,Version,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native,PERFMON
+yes,0xa,N/A,N/A,Field,EAX,15,8,8,Number of GP Counters,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EAX,23,16,8,Width of GP Counters,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native,PERFMON
+yes,0xa,N/A,N/A,Field,EAX,31,24,8,Length of EBX Vector,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EBX,0,0,1,Core Cycles Not Available,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EBX,1,1,1,Instructions Retired Not Available,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EBX,2,2,1,Reference Cycles Not Available,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EBX,3,3,1,Last-Level Cache References Not Available,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EBX,4,4,1,Last-Level Cache Misses Not Available,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EBX,5,5,1,Branch Instruction Retired Not Available,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EBX,6,6,1,Branch Mispredict Retired Not Available,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EBX,7,7,1,Top-down slots event not available,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EBX,31,8,24,Other events not available bitmap,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,ECX,6,0,7,Fixed Counter Support Bitmap [7:0],"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,ECX,31,7,25,Fixed Counter Support Bitmap [31:8],"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EDX,4,0,5,Number of Fixed-Function Counters,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native (Hybrid),
+yes,0xa,N/A,N/A,Field,EDX,12,5,8,Width of Fixed-Function Counters,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native,PERFMON
+yes,0xa,N/A,N/A,Field,EDX,13,13,1,Reserved,TD_PARAMS.ATTRIBUTES.PERFMON,Fixed,0x0
+yes,0xa,N/A,N/A,Field,EDX,14,14,1,Reserved,TD_PARAMS.ATTRIBUTES.PERFMON,Fixed,0x0
+yes,0xa,N/A,N/A,Field,EDX,15,15,1,AnyThread Deprecation,,Fixed,0x1
+yes,0xa,N/A,N/A,Field,EDX,31,16,16,Reserved,TD_PARAMS.ATTRIBUTES.PERFMON,Fixed,0x0
+yes,0xb,0x0,0x0,Sub-Leaf,,,,,Leaf 0xb / Sub-Leaf 0x0,,#VE,
+yes,0xb,0x0,0x0,Field,EAX,3,0,4,Shift Count,,#VE,
+yes,0xb,0x0,0x0,Field,EAX,4,4,1, ,,#VE,
+yes,0xb,0x0,0x0,Field,EAX,31,5,27,Reserved,,#VE,
+yes,0xb,0x0,0x0,Field,EBX,15,0,16,Logical Processors at this Level,,#VE,
+yes,0xb,0x0,0x0,Field,EBX,31,16,16,Reserved,,#VE,
+yes,0xb,0x0,0x0,Field,ECX,7,0,8,Level Number,,#VE,
+yes,0xb,0x0,0x0,Field,ECX,15,8,8,Level Type,,#VE,
+yes,0xb,0x0,0x0,Field,ECX,31,16,16,Reserved,,#VE,
+yes,0xb,0x0,0x0,Field,EDX,31,0,32,X2APIC ID,,#VE,
+yes,0xb,0x1,0x1,Sub-Leaf,,,,,Leaf 0xb / Sub-Leaf 0x1,,#VE,
+yes,0xb,0x1,0x1,Field,EAX,3,0,4,Shift Count,,#VE,
+yes,0xb,0x1,0x1,Field,EAX,4,4,1, ,,#VE,
+yes,0xb,0x1,0x1,Field,EAX,31,5,27,Reserved,,#VE,
+yes,0xb,0x1,0x1,Field,EBX,15,0,16,Logical Processors at this Level,,#VE,
+yes,0xb,0x1,0x1,Field,EBX,31,16,16,Reserved,,#VE,
+yes,0xb,0x1,0x1,Field,ECX,7,0,8,Level Number,,#VE,
+yes,0xb,0x1,0x1,Field,ECX,15,8,8,Level Type,,#VE,
+yes,0xb,0x1,0x1,Field,ECX,31,16,16,Reserved,,#VE,
+yes,0xb,0x1,0x1,Field,EDX,31,0,32,X2APIC ID,,#VE,
+yes,0xb,0x2,0x1F,Sub-Leaf,,,,,Leaf 0xb / Sub-Leaves 0x2-0x1F,,#VE,
+yes,0xb,0x2,0x1F,Field,EAX,4,0,5,Shift Count,,#VE,
+yes,0xb,0x2,0x1F,Field,EAX,31,5,27,Reserved,,#VE,
+yes,0xb,0x2,0x1F,Field,EBX,15,0,16,Logical Processors at this Level,,#VE,
+yes,0xb,0x2,0x1F,Field,EBX,31,16,16,Reserved,,#VE,
+yes,0xb,0x2,0x1F,Field,ECX,7,0,8,Level Number,,#VE,
+yes,0xb,0x2,0x1F,Field,ECX,15,8,8,Level Type,,#VE,
+yes,0xb,0x2,0x1F,Field,ECX,31,16,16,Reserved,,#VE,
+yes,0xb,0x2,0x1F,Field,EDX,31,0,32,X2APIC ID,,#VE,
+yes,0xc,N/A,N/A,Leaf,,,,,Leaf 0xc,,#VE,
+yes,0xc,N/A,N/A,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0xc,N/A,N/A,Field,EBX,31,0,32,Reserved,,#VE,
+yes,0xc,N/A,N/A,Field,ECX,31,0,32,Reserved,,#VE,
+yes,0xc,N/A,N/A,Field,EDX,31,0,32,Reserved,,#VE,
+yes,0xd,0x0,0x0,Sub-Leaf,,,,,Leaf 0xd / Sub-Leaf 0x0,,,
+yes,0xd,0x0,0x0,Field,EAX,0,0,1,X87,,Fixed,0x1
+yes,0xd,0x0,0x0,Field,EAX,1,1,1,SSE,,Fixed,0x1
+yes,0xd,0x0,0x0,Field,EAX,2,2,1,AVX256,TD_PARAMS.XFAM,XFAM & Native,XFAM[2]
+yes,0xd,0x0,0x0,Field,EAX,3,3,1,PL_BNDREGS,,Fixed,0x0
+yes,0xd,0x0,0x0,Field,EAX,4,4,1,PL_BNDCFS,,Fixed,0x0
+yes,0xd,0x0,0x0,Field,EAX,5,5,1,KMASK,TD_PARAMS.XFAM,XFAM & Native,XFAM[7:5]
+yes,0xd,0x0,0x0,Field,EAX,6,6,1,AVX3 ZMM 15:0,TD_PARAMS.XFAM,XFAM & Native,XFAM[7:5]
+yes,0xd,0x0,0x0,Field,EAX,7,7,1,AVX3 ZMM 31:18,TD_PARAMS.XFAM,XFAM & Native,XFAM[7:5]
+yes,0xd,0x0,0x0,Field,EAX,8,8,1,Reserved,,Fixed,0x0
+yes,0xd,0x0,0x0,Field,EAX,9,9,1,PKRU,TD_PARAMS.XFAM,XFAM & Native,XFAM[9]
+yes,0xd,0x0,0x0,Field,EAX,16,10,7,Reserved,,Fixed,0x0
+yes,0xd,0x0,0x0,Field,EAX,17,17,1,AMX - XTILECFG,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0xd,0x0,0x0,Field,EAX,18,18,1,AMX - XTILEDATA,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0xd,0x0,0x0,Field,EAX,31,19,13,Reserved,,Fixed,0x0
+yes,0xd,0x0,0x0,Field,EBX,31,0,32,Max Bytes for Enabled Features,,Calculated,Native
+yes,0xd,0x0,0x0,Field,ECX,31,0,32,Max Bytes for Supported Features,TD_PARAMS.XFAM  (only for bits in XCR0),XFAM,
+yes,0xd,0x0,0x0,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0xd,0x1,0x1,Sub-Leaf,,,,,Leaf 0xd / Sub-Leaf 0x1,,,
+yes,0xd,0x1,0x1,Field,EAX,0,0,1,Supports XSAVEOPT,,Fixed,0x1
+yes,0xd,0x1,0x1,Field,EAX,1,1,1,Supports XSAVEC and compacted XRSTOR,,Fixed,0x1
+yes,0xd,0x1,0x1,Field,EAX,2,2,1,Supports XGETBV with ECX = 1,,Fixed,0x1
+yes,0xd,0x1,0x1,Field,EAX,3,3,1,Supports XSAVES/XRSTORS and IA32_XSS,,Fixed,0x1
+yes,0xd,0x1,0x1,Field,EAX,4,4,1,XFD support,TD_PARAMS.XFAM,XFAM,
+yes,0xd,0x1,0x1,Field,EAX,31,5,27,Reserved,,Fixed,0x0
+yes,0xd,0x1,0x1,Field,EBX,31,0,32,Max Bytes for Enabled Features,,Calculated,Native
+yes,0xd,0x1,0x1,Field,ECX,7,0,8,Reserved,,Fixed,0x0
+yes,0xd,0x1,0x1,Field,ECX,8,8,1,XSS_RTIT,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0xd,0x1,0x1,Field,ECX,9,9,1,Reserved,,Fixed,0x0
+yes,0xd,0x1,0x1,Field,ECX,10,10,1,PASID,,Fixed,0x0
+yes,0xd,0x1,0x1,Field,ECX,11,11,1,U_CET,TD_PARAMS.XFAM,XFAM & Native,XFAM[12:11]
+yes,0xd,0x1,0x1,Field,ECX,12,12,1,S_CET,TD_PARAMS.XFAM,XFAM & Native,XFAM[12:11]
+yes,0xd,0x1,0x1,Field,ECX,13,13,1,HDC,,Fixed,0x0
+yes,0xd,0x1,0x1,Field,ECX,14,14,1,ULI/UNIT,TD_PARAMS.XFAM,XFAM & Native,XFAM[14]
+yes,0xd,0x1,0x1,Field,ECX,15,15,1,XSS_ARCH_LBRS,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0xd,0x1,0x1,Field,ECX,16,16,1,HWP Request,,Fixed,0x0
+yes,0xd,0x1,0x1,Field,ECX,31,17,15,Reserved,,Fixed,0x0
+yes,0xd,0x1,0x1,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0xd,0x2,0x12,Sub-Leaf,,,,,Leaf 0xd / Sub-Leaves 0x2-0x12,,,
+yes,0xd,0x2,0x12,Field,EAX,31,0,32,Size,TD_PARAMS.XFAM,XFAM & Native,XFAM[n]
+yes,0xd,0x2,0x12,Field,EBX,31,0,32,Offset,TD_PARAMS.XFAM,XFAM & Native,XFAM[n]
+yes,0xd,0x2,0x12,Field,ECX,0,0,1,IA32_XSS,TD_PARAMS.XFAM,XFAM & Native,XFAM[n]
+yes,0xd,0x2,0x12,Field,ECX,1,1,1, ,TD_PARAMS.XFAM,XFAM & Native,XFAM[n]
+yes,0xd,0x2,0x12,Field,ECX,31,2,30, ,TD_PARAMS.XFAM,XFAM & Native,XFAM[n]
+yes,0xd,0x2,0x12,Field,EDX,31,0,32,Reserved,TD_PARAMS.XFAM,Fixed,0x0
+yes,0xe,N/A,N/A,Leaf,,,,,Leaf 0xe,,,
+yes,0xe,N/A,N/A,Field,EAX,31,0,32,Reserved,,Fixed,0x0
+yes,0xe,N/A,N/A,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0xe,N/A,N/A,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0xe,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0xf,0x0,0x0,Sub-Leaf,,,,,Leaf 0xf / Sub-Leaf 0x0,,#VE,
+yes,0xf,0x0,0x0,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0xf,0x0,0x0,Field,EBX,31,0,32,Max RMID,,#VE,
+yes,0xf,0x0,0x0,Field,ECX,31,0,32,Reserved,,#VE,
+yes,0xf,0x0,0x0,Field,EDX,0,0,1,Supports L3 Monitoring,,#VE,
+yes,0xf,0x0,0x0,Field,EDX,1,1,1, ,,#VE,
+yes,0xf,0x0,0x0,Field,EDX,2,2,1, ,,#VE,
+yes,0xf,0x0,0x0,Field,EDX,31,3,29,Reserved,,#VE,
+yes,0xf,0x1,0x1,Sub-Leaf,,,,,Leaf 0xf / Sub-Leaf 0x1,,#VE,
+yes,0xf,0x1,0x1,Field,EAX,31,0,32,Counter Length (as offset from 24b),,#VE,
+yes,0xf,0x1,0x1,Field,EBX,31,0,32,QM Counter Conversion Factor,,#VE,
+yes,0xf,0x1,0x1,Field,ECX,31,0,32,Max RMID,,#VE,
+yes,0xf,0x1,0x1,Field,EDX,0,0,1,Supports L3 Monitoring,,#VE,
+yes,0xf,0x1,0x1,Field,EDX,1,1,1, ,,#VE,
+yes,0xf,0x1,0x1,Field,EDX,2,2,1, ,,#VE,
+yes,0xf,0x1,0x1,Field,EDX,31,3,29,Reserved,,#VE,
+yes,0x10,0x0,0x0,Leaf,,,,,Leaf 0x10,,#VE,
+yes,0x10,0x0,0x0,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0x10,0x0,0x0,Field,EBX,0,0,1,Reserved_0,,#VE,
+yes,0x10,0x0,0x0,Field,EBX,1,1,1,L3,,#VE,
+yes,0x10,0x0,0x0,Field,EBX,2,2,1,L2,,#VE,
+yes,0x10,0x0,0x0,Field,EBX,3,3,1,L2_TO_L3_RBE,,#VE,
+yes,0x10,0x0,0x0,Field,EBX,31,4,28,Reserved_31_4,,#VE,
+yes,0x10,0x0,0x0,Field,ECX,31,0,32,Reserved,,#VE,
+yes,0x10,0x0,0x0,Field,EDX,31,0,32,Reserved,,#VE,
+yes,0x10,0x1,0x1,Leaf,,,,,Leaf 0x10,,#VE,
+yes,0x10,0x1,0x1,Field,EAX,11,0,12,Length of Mask,,#VE,
+yes,0x10,0x1,0x1,Field,EAX,31,12,20, ,,#VE,
+yes,0x10,0x1,0x1,Field,EBX,31,0,32,Bits In USE,,#VE,
+yes,0x10,0x1,0x1,Field,ECX,0,0,1,Reserved_1_0,,#VE,
+yes,0x10,0x1,0x1,Field,ECX,1,1,1, ,,#VE,
+yes,0x10,0x1,0x1,Field,ECX,2,2,1,CDP,,#VE,
+yes,0x10,0x1,0x1,Field,ECX,31,3,29,Reserved_31_3,,#VE,
+yes,0x10,0x1,0x1,Field,EDX,15,0,16,COS,,#VE,
+yes,0x10,0x1,0x1,Field,EDX,31,16,16,Reserved,,#VE,
+yes,0x10,0x2,0x2,Leaf,,,,,Leaf 0x10,,#VE,
+yes,0x10,0x2,0x2,Field,EAX,11,0,12,Length of Mask,,#VE,
+yes,0x10,0x2,0x2,Field,EAX,31,12,20, ,,#VE,
+yes,0x10,0x2,0x2,Field,EBX,31,0,32,Bits In USE,,#VE,
+yes,0x10,0x2,0x2,Field,ECX,0,0,1,Reserved_1_0,,#VE,
+yes,0x10,0x2,0x2,Field,ECX,1,1,1, ,,#VE,
+yes,0x10,0x2,0x2,Field,ECX,2,2,1,CDP,,#VE,
+yes,0x10,0x2,0x2,Field,ECX,31,3,29,Reserved_31_3,,#VE,
+yes,0x10,0x2,0x2,Field,EDX,15,0,16,COS,,#VE,
+yes,0x10,0x2,0x2,Field,EDX,31,16,16,Reserved,,#VE,
+yes,0x10,0x3,0x3,Leaf,,,,,Leaf 0x10,,#VE,
+yes,0x10,0x3,0x3,Field,EAX,11,0,12,RBE Max Value,,#VE,
+yes,0x10,0x3,0x3,Field,EAX,31,12,20,Reserved,,#VE,
+yes,0x10,0x3,0x3,Field,EBX,31,0,32,Reserved,,#VE,
+yes,0x10,0x3,0x3,Field,ECX,0,0,1,Per-thread MBA controls are supported,,#VE,
+yes,0x10,0x3,0x3,Field,ECX,1,1,1, ,,#VE,
+yes,0x10,0x3,0x3,Field,ECX,2,2,1,Throttling value is linear,,#VE,
+yes,0x10,0x3,0x3,Field,ECX,31,3,29,Reserved_31_3,,#VE,
+yes,0x10,0x3,0x3,Field,EDX,15,0,16,COS,,#VE,
+yes,0x10,0x3,0x3,Field,EDX,31,16,16,Reserved,,#VE,
+yes,0x11,N/A,N/A,Sub-Leaf,,,,,Leaf 0x11 / Sub-Leaf N/A,,,
+yes,0x11,N/A,N/A,Field,EAX,31,0,32,Reserved,,Fixed,0x0
+yes,0x11,N/A,N/A,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x11,N/A,N/A,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x11,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x12,N/A,N/A,Leaf,,,,,Leaf 0x12,,,
+yes,0x12,N/A,N/A,Field,EAX,31,0,32,Reserved,,Fixed,0x0
+yes,0x12,N/A,N/A,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x12,N/A,N/A,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x12,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x13,N/A,N/A,Leaf,,,,,Leaf 0x13,,,
+yes,0x13,N/A,N/A,Field,EAX,31,0,32,Reserved,,Fixed,0x0
+yes,0x13,N/A,N/A,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x13,N/A,N/A,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x13,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x14,0x0,0x0,Sub-Leaf,,,,,Leaf 0x14 / Sub-Leaf 0x0,,,
+yes,0x14,0x0,0x0,Field,EAX,31,0,32,Max Valid Subleaf,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,EBX,0,0,1,CR3 Filtering,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,EBX,1,1,1,Cycle Accurate Mode,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,EBX,2,2,1,IP Filtering,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,EBX,3,3,1,MSRs Preserved Across Warm Reset,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,EBX,4,4,1,PTWRITE Support,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,EBX,5,5,1,Power Event Trace Support,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,EBX,6,6,1,PSB/PMI Injection Support,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,EBX,7,7,1,PT Event Trace Support,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,EBX,8,8,1,PT TNT packet generation disabling support,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,EBX,31,9,23,Reserved,TD_PARAMS.XFAM,Fixed,0x0
+yes,0x14,0x0,0x0,Field,ECX,0,0,1,ToPA Output Supported,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,ECX,1,1,1,ToPA Tables Support Multiple Regions,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,ECX,2,2,1,Single-Range Output Supported,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,ECX,3,3,1,Trace Transport subsystem output supported,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x0,0x0,Field,ECX,30,4,27,Reserved,TD_PARAMS.XFAM,Fixed,0x0
+yes,0x14,0x0,0x0,Field,ECX,31,31,1,IP Payload Contains LIP,TD_PARAMS.XFAM,XFAM & Native (Hybrid),
+yes,0x14,0x0,0x0,Field,EDX,31,0,32,Reserved,TD_PARAMS.XFAM,Fixed,0x0
+yes,0x14,0x1,0x1,Sub-Leaf,,,,,Leaf 0x14 / Sub-Leaf 0x1,,,
+yes,0x14,0x1,0x1,Field,EAX,2,0,3,Number of configurable Address Ranges for filtering,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x1,0x1,Field,EAX,15,3,13,Reserved,TD_PARAMS.XFAM,Fixed,0x0
+yes,0x14,0x1,0x1,Field,EAX,31,16,16,Number of Address Ranges Supported,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x1,0x1,Field,EBX,15,0,16,Cycle Thresholds,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x1,0x1,Field,EBX,31,16,16,PSB Frequencies,TD_PARAMS.XFAM,XFAM & Native,XFAM[8]
+yes,0x14,0x1,0x1,Field,ECX,31,0,32,Reserved,TD_PARAMS.XFAM,Fixed,0x0
+yes,0x14,0x1,0x1,Field,EDX,31,0,32,Reserved,TD_PARAMS.XFAM,Fixed,0x0
+yes,0x15,N/A,N/A,Leaf,,,,,Leaf 0x15,,,
+yes,0x15,N/A,N/A,Field,EAX,31,0,32,Denominator,,Fixed,0x1
+yes,0x15,N/A,N/A,Field,EBX,31,0,32,Numerator,TD_PARAMS.TSC_FREQUENCY,Configured,
+yes,0x15,N/A,N/A,Field,ECX,31,0,32,Nominal ART Frequency,,Fixed,0x017D7840
+yes,0x15,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x16,N/A,N/A,Leaf,,,,,Leaf 0x16,,#VE,
+yes,0x16,N/A,N/A,Field,EAX,15,0,16,Processor Base Frequency,,#VE,
+yes,0x16,N/A,N/A,Field,EAX,31,16,16,Reserved,,#VE,
+yes,0x16,N/A,N/A,Field,EBX,15,0,16,Maximum Frequency,,#VE,
+yes,0x16,N/A,N/A,Field,EBX,31,16,16,Reserved,,#VE,
+yes,0x16,N/A,N/A,Field,ECX,15,0,16,Bus (Reference) Frequency,,#VE,
+yes,0x16,N/A,N/A,Field,ECX,31,16,16,Reserved,,#VE,
+yes,0x16,N/A,N/A,Field,EDX,31,0,32,Reserved,,#VE,
+yes,0x17,0x0,0x0,Sub-Leaf,,,,,Leaf 0x17 / Sub-Leaf 0x0,,#VE,
+yes,0x17,0x0,0x0,Field,EAX,31,0,32,Maximum Subleaf,,#VE,
+yes,0x17,0x0,0x0,Field,EBX,15,0,16,SoC Vendor ID,,#VE,
+yes,0x17,0x0,0x0,Field,EBX,16,16,1,IsVendorScheme,,#VE,
+yes,0x17,0x0,0x0,Field,EBX,31,17,15,Reserved_31_17,,#VE,
+yes,0x17,0x0,0x0,Field,ECX,31,0,32,Project ID,,#VE,
+yes,0x17,0x0,0x0,Field,EDX,31,0,32,Stepping ID,,#VE,
+yes,0x17,0x1,0x1,Sub-Leaf,,,,,Leaf 0x17 / Sub-Leaf 0x1,,#VE,
+yes,0x17,0x1,0x1,Field,EAX,31,0,32, ,,#VE,
+yes,0x17,0x1,0x1,Field,EBX,31,0,32, ,,#VE,
+yes,0x17,0x1,0x1,Field,ECX,31,0,32, ,,#VE,
+yes,0x17,0x1,0x1,Field,EDX,31,0,32, ,,#VE,
+yes,0x17,0x2,0x2,Sub-Leaf,,,,,Leaf 0x17 / Sub-Leaf 0x2,,#VE,
+yes,0x17,0x2,0x2,Field,EAX,31,0,32, ,,#VE,
+yes,0x17,0x2,0x2,Field,EBX,31,0,32, ,,#VE,
+yes,0x17,0x2,0x2,Field,ECX,31,0,32, ,,#VE,
+yes,0x17,0x2,0x2,Field,EDX,31,0,32, ,,#VE,
+yes,0x17,0x3,0x3,Sub-Leaf,,,,,Leaf 0x17 / Sub-Leaf 0x3,,#VE,
+yes,0x17,0x3,0x3,Field,EAX,31,0,32, ,,#VE,
+yes,0x17,0x3,0x3,Field,EBX,31,0,32, ,,#VE,
+yes,0x17,0x3,0x3,Field,ECX,31,0,32, ,,#VE,
+yes,0x17,0x3,0x3,Field,EDX,31,0,32, ,,#VE,
+yes,0x18,0x0,0x0,Sub-Leaf,,,,,Leaf 0x18 / Sub-Leaf 0x0,,#VE,
+yes,0x18,0x0,0x0,Field,EAX,31,0,32,MaxNumSubLeaves,,#VE,
+yes,0x18,0x0,0x0,Field,EBX,31,0,32,Not detailed here,,#VE,
+yes,0x18,0x0,0x0,Field,ECX,31,0,32,Number of sets,,#VE,
+yes,0x18,0x0,0x0,Field,EDX,31,0,32,Not detailed here,,#VE,
+yes,0x18,0x1,0x1,Sub-Leaf,,,,,Leaf 0x18 / Sub-Leaf 0x1,,#VE,
+yes,0x18,0x1,0x1,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0x18,0x1,0x1,Field,EBX,0,0,1,4KB pages,,#VE,
+yes,0x18,0x1,0x1,Field,EBX,1,1,1,2MB pages,,#VE,
+yes,0x18,0x1,0x1,Field,EBX,2,2,1,4MB pages,,#VE,
+yes,0x18,0x1,0x1,Field,EBX,3,3,1,1GB pages,,#VE,
+yes,0x18,0x1,0x1,Field,EBX,7,4,4,Reserved_7_4,,#VE,
+yes,0x18,0x1,0x1,Field,EBX,10,8,3,Partitioning,,#VE,
+yes,0x18,0x1,0x1,Field,EBX,15,11,5,Reserved_15_11,,#VE,
+yes,0x18,0x1,0x1,Field,EBX,31,16,16,Ways of associativity,,#VE,
+yes,0x18,0x1,0x1,Field,ECX,31,0,32,Number of sets,,#VE,
+yes,0x18,0x1,0x1,Field,EDX,4,0,5,Translation Cache Type,,#VE,
+yes,0x18,0x1,0x1,Field,EDX,7,5,3,Translation Cache Level,,#VE,
+yes,0x18,0x1,0x1,Field,EDX,8,8,1,Fully associative structure,,#VE,
+yes,0x18,0x1,0x1,Field,EDX,13,9,5,Reserved,,#VE,
+yes,0x18,0x1,0x1,Field,EDX,25,14,12,Max threads sharing this cache,,#VE,
+yes,0x18,0x1,0x1,Field,EDX,31,26,6,Number of linear-address spaces for PCID,,#VE,
+yes,0x18,0x2,0x2,Sub-Leaf,,,,,Leaf 0x18 / Sub-Leaf 0x2,,#VE,
+yes,0x18,0x2,0x2,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0x18,0x2,0x2,Field,EBX,0,0,1,4KB pages,,#VE,
+yes,0x18,0x2,0x2,Field,EBX,1,1,1,2MB pages,,#VE,
+yes,0x18,0x2,0x2,Field,EBX,2,2,1,4MB pages,,#VE,
+yes,0x18,0x2,0x2,Field,EBX,3,3,1,1GB pages,,#VE,
+yes,0x18,0x2,0x2,Field,EBX,7,4,4,Reserved_7_4,,#VE,
+yes,0x18,0x2,0x2,Field,EBX,10,8,3,Partitioning,,#VE,
+yes,0x18,0x2,0x2,Field,EBX,15,11,5,Reserved_15_11,,#VE,
+yes,0x18,0x2,0x2,Field,EBX,31,16,16,Ways of associativity,,#VE,
+yes,0x18,0x2,0x2,Field,ECX,31,0,32,Number of sets,,#VE,
+yes,0x18,0x2,0x2,Field,EDX,4,0,5,Translation Cache Type,,#VE,
+yes,0x18,0x2,0x2,Field,EDX,7,5,3,Translation Cache Level,,#VE,
+yes,0x18,0x2,0x2,Field,EDX,8,8,1,Fully associative structure,,#VE,
+yes,0x18,0x2,0x2,Field,EDX,13,9,5,Reserved,,#VE,
+yes,0x18,0x2,0x2,Field,EDX,25,14,12,Max threads sharing this cache,,#VE,
+yes,0x18,0x2,0x2,Field,EDX,31,26,6,Number of linear-address spaces for PCID,,#VE,
+yes,0x18,0x3,0x3,Sub-Leaf,,,,,Leaf 0x18 / Sub-Leaf 0x3,,#VE,
+yes,0x18,0x3,0x3,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0x18,0x3,0x3,Field,EBX,0,0,1,4KB pages,,#VE,
+yes,0x18,0x3,0x3,Field,EBX,1,1,1,2MB pages,,#VE,
+yes,0x18,0x3,0x3,Field,EBX,2,2,1,4MB pages,,#VE,
+yes,0x18,0x3,0x3,Field,EBX,3,3,1,1GB pages,,#VE,
+yes,0x18,0x3,0x3,Field,EBX,7,4,4,Reserved_7_4,,#VE,
+yes,0x18,0x3,0x3,Field,EBX,10,8,3,Partitioning,,#VE,
+yes,0x18,0x3,0x3,Field,EBX,15,11,5,Reserved_15_11,,#VE,
+yes,0x18,0x3,0x3,Field,EBX,31,16,16,Ways of associativity,,#VE,
+yes,0x18,0x3,0x3,Field,ECX,31,0,32,Number of sets,,#VE,
+yes,0x18,0x3,0x3,Field,EDX,4,0,5,Translation Cache Type,,#VE,
+yes,0x18,0x3,0x3,Field,EDX,7,5,3,Translation Cache Level,,#VE,
+yes,0x18,0x3,0x3,Field,EDX,8,8,1,Fully associative structure,,#VE,
+yes,0x18,0x3,0x3,Field,EDX,13,9,5,Reserved,,#VE,
+yes,0x18,0x3,0x3,Field,EDX,25,14,12,Max threads sharing this cache,,#VE,
+yes,0x18,0x3,0x3,Field,EDX,31,26,6,Number of linear-address spaces for PCID,,#VE,
+yes,0x18,0x4,0x4,Sub-Leaf,,,,,Leaf 0x18 / Sub-Leaf 0x4,,#VE,
+yes,0x18,0x4,0x4,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0x18,0x4,0x4,Field,EBX,0,0,1,4KB pages,,#VE,
+yes,0x18,0x4,0x4,Field,EBX,1,1,1,2MB pages,,#VE,
+yes,0x18,0x4,0x4,Field,EBX,2,2,1,4MB pages,,#VE,
+yes,0x18,0x4,0x4,Field,EBX,3,3,1,1GB pages,,#VE,
+yes,0x18,0x4,0x4,Field,EBX,7,4,4,Reserved_7_4,,#VE,
+yes,0x18,0x4,0x4,Field,EBX,10,8,3,Partitioning,,#VE,
+yes,0x18,0x4,0x4,Field,EBX,15,11,5,Reserved_15_11,,#VE,
+yes,0x18,0x4,0x4,Field,EBX,31,16,16,Ways of associativity,,#VE,
+yes,0x18,0x4,0x4,Field,ECX,31,0,32,Number of sets,,#VE,
+yes,0x18,0x4,0x4,Field,EDX,4,0,5,Translation Cache Type,,#VE,
+yes,0x18,0x4,0x4,Field,EDX,7,5,3,Translation Cache Level,,#VE,
+yes,0x18,0x4,0x4,Field,EDX,8,8,1,Fully associative structure,,#VE,
+yes,0x18,0x4,0x4,Field,EDX,13,9,5,Reserved,,#VE,
+yes,0x18,0x4,0x4,Field,EDX,25,14,12,Max threads sharing this cache,,#VE,
+yes,0x18,0x4,0x4,Field,EDX,31,26,6,Number of linear-address spaces for PCID,,#VE,
+yes,0x18,0x5,0x5,Sub-Leaf,,,,,Leaf 0x18 / Sub-Leaf 0x5,,#VE,
+yes,0x18,0x5,0x5,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0x18,0x5,0x5,Field,EBX,0,0,1,4KB pages,,#VE,
+yes,0x18,0x5,0x5,Field,EBX,1,1,1,2MB pages,,#VE,
+yes,0x18,0x5,0x5,Field,EBX,2,2,1,4MB pages,,#VE,
+yes,0x18,0x5,0x5,Field,EBX,3,3,1,1GB pages,,#VE,
+yes,0x18,0x5,0x5,Field,EBX,7,4,4,Reserved_7_4,,#VE,
+yes,0x18,0x5,0x5,Field,EBX,10,8,3,Partitioning,,#VE,
+yes,0x18,0x5,0x5,Field,EBX,15,11,5,Reserved_15_11,,#VE,
+yes,0x18,0x5,0x5,Field,EBX,31,16,16,Ways of associativity,,#VE,
+yes,0x18,0x5,0x5,Field,ECX,31,0,32,Number of sets,,#VE,
+yes,0x18,0x5,0x5,Field,EDX,4,0,5,Translation Cache Type,,#VE,
+yes,0x18,0x5,0x5,Field,EDX,7,5,3,Translation Cache Level,,#VE,
+yes,0x18,0x5,0x5,Field,EDX,8,8,1,Fully associative structure,,#VE,
+yes,0x18,0x5,0x5,Field,EDX,13,9,5,Reserved,,#VE,
+yes,0x18,0x5,0x5,Field,EDX,25,14,12,Max threads sharing this cache,,#VE,
+yes,0x18,0x5,0x5,Field,EDX,31,26,6,Number of linear-address spaces for PCID,,#VE,
+yes,0x18,0x6,0x6,Sub-Leaf,,,,,Leaf 0x18 / Sub-Leaf 0x6,,#VE,
+yes,0x18,0x6,0x6,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0x18,0x6,0x6,Field,EBX,0,0,1,4KB pages,,#VE,
+yes,0x18,0x6,0x6,Field,EBX,1,1,1,2MB pages,,#VE,
+yes,0x18,0x6,0x6,Field,EBX,2,2,1,4MB pages,,#VE,
+yes,0x18,0x6,0x6,Field,EBX,3,3,1,1GB pages,,#VE,
+yes,0x18,0x6,0x6,Field,EBX,7,4,4,Reserved_7_4,,#VE,
+yes,0x18,0x6,0x6,Field,EBX,10,8,3,Partitioning,,#VE,
+yes,0x18,0x6,0x6,Field,EBX,15,11,5,Reserved_15_11,,#VE,
+yes,0x18,0x6,0x6,Field,EBX,31,16,16,Ways of associativity,,#VE,
+yes,0x18,0x6,0x6,Field,ECX,31,0,32,Number of sets,,#VE,
+yes,0x18,0x6,0x6,Field,EDX,4,0,5,Translation Cache Type,,#VE,
+yes,0x18,0x6,0x6,Field,EDX,7,5,3,Translation Cache Leve,,#VE,
+yes,0x18,0x6,0x6,Field,EDX,8,8,1,Fully associative structure,,#VE,
+yes,0x18,0x6,0x6,Field,EDX,13,9,5,Reserved,,#VE,
+yes,0x18,0x6,0x6,Field,EDX,25,14,12,Max threads sharing this cache,,#VE,
+yes,0x18,0x6,0x6,Field,EDX,31,26,6,Number of linear-address spaces for PCID,,#VE,
+yes,0x18,0x7,0x7,Sub-Leaf,,,,,Leaf 0x18 / Sub-Leaf 0x7,,#VE,
+yes,0x18,0x7,0x7,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0x18,0x7,0x7,Field,EBX,0,0,1,4KB pages,,#VE,
+yes,0x18,0x7,0x7,Field,EBX,1,1,1,2MB pages,,#VE,
+yes,0x18,0x7,0x7,Field,EBX,2,2,1,4MB pages,,#VE,
+yes,0x18,0x7,0x7,Field,EBX,3,3,1,1GB pages,,#VE,
+yes,0x18,0x7,0x7,Field,EBX,7,4,4,Reserved_7_4,,#VE,
+yes,0x18,0x7,0x7,Field,EBX,10,8,3,Partitioning,,#VE,
+yes,0x18,0x7,0x7,Field,EBX,15,11,5,Reserved_15_11,,#VE,
+yes,0x18,0x7,0x7,Field,EBX,31,16,16,Ways of associativity,,#VE,
+yes,0x18,0x7,0x7,Field,ECX,31,0,32,Number of sets,,#VE,
+yes,0x18,0x7,0x7,Field,EDX,4,0,5,Translation Cache Type,,#VE,
+yes,0x18,0x7,0x7,Field,EDX,7,5,3,Translation Cache Leve,,#VE,
+yes,0x18,0x7,0x7,Field,EDX,8,8,1,Fully associative structure,,#VE,
+yes,0x18,0x7,0x7,Field,EDX,13,9,5,Reserved,,#VE,
+yes,0x18,0x7,0x7,Field,EDX,25,14,12,Max threads sharing this cache,,#VE,
+yes,0x18,0x7,0x7,Field,EDX,31,26,6,Number of linear-address spaces for PCID,,#VE,
+yes,0x18,0x8,0x8,Sub-Leaf,,,,,Leaf 0x18 / Sub-Leaf 0x8,,#VE,
+yes,0x18,0x8,0x8,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0x18,0x8,0x8,Field,EBX,0,0,1,4KB pages,,#VE,
+yes,0x18,0x8,0x8,Field,EBX,1,1,1,2MB pages,,#VE,
+yes,0x18,0x8,0x8,Field,EBX,2,2,1,4MB pages,,#VE,
+yes,0x18,0x8,0x8,Field,EBX,3,3,1,1GB pages,,#VE,
+yes,0x18,0x8,0x8,Field,EBX,7,4,4,Reserved_7_4,,#VE,
+yes,0x18,0x8,0x8,Field,EBX,10,8,3,Partitioning,,#VE,
+yes,0x18,0x8,0x8,Field,EBX,15,11,5,Reserved_15_11,,#VE,
+yes,0x18,0x8,0x8,Field,EBX,31,16,16,Ways of associativity,,#VE,
+yes,0x18,0x8,0x8,Field,ECX,31,0,32,Number of sets,,#VE,
+yes,0x18,0x8,0x8,Field,EDX,4,0,5,Translation Cache Type,,#VE,
+yes,0x18,0x8,0x8,Field,EDX,7,5,3,Translation Cache Leve,,#VE,
+yes,0x18,0x8,0x8,Field,EDX,8,8,1,Fully associative structure,,#VE,
+yes,0x18,0x8,0x8,Field,EDX,13,9,5,Reserved,,#VE,
+yes,0x18,0x8,0x8,Field,EDX,25,14,12,Max threads sharing this cache,,#VE,
+yes,0x18,0x8,0x8,Field,EDX,31,26,6,Number of linear-address spaces for PCID,,#VE,
+yes,0x19,N/A,N/A,Leaf,,,,,Leaf 0x19,,,
+yes,0x19,N/A,N/A,Field,EAX,0,0,1,CPL0 Restriction,,Attributes & Native,KL
+yes,0x19,N/A,N/A,Field,EAX,1,1,1,Decrypt only Restriction,,Attributes & Native,KL
+yes,0x19,N/A,N/A,Field,EAX,2,2,1,Encrypt only Restriction,,Attributes & Native,KL
+yes,0x19,N/A,N/A,Field,EAX,3,3,1,Reserved,,Fixed,0x0
+yes,0x19,N/A,N/A,Field,EAX,31,4,28,Reserved,,Fixed,0x0
+yes,0x19,N/A,N/A,Field,EBX,0,0,1,AES KL Enabled,,Calculated,CR4.KL
+yes,0x19,N/A,N/A,Field,EBX,1,1,1,Reserved,,Fixed,0x0
+yes,0x19,N/A,N/A,Field,EBX,2,2,1,AES wide KL Support,,Attributes & Native,KL
+yes,0x19,N/A,N/A,Field,EBX,3,3,1,Reserved,,Fixed,0x0
+yes,0x19,N/A,N/A,Field,EBX,4,4,1,IW Key Backup Support,,Fixed,0x0
+yes,0x19,N/A,N/A,Field,EBX,31,5,27,Reserved,,Fixed,0x0
+yes,0x19,N/A,N/A,Field,ECX,0,0,1,LOADIWKEY No Backup parameter Support,,Fixed,0x0
+yes,0x19,N/A,N/A,Field,ECX,1,1,1,Random IWKey Support,,Attributes & Native,KL
+yes,0x19,N/A,N/A,Field,ECX,31,2,30,Reserved,,Fixed,0x0
+yes,0x19,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x1a,N/A,N/A,Leaf,,,,,Leaf 0x1a,,,
+yes,0x1a,N/A,N/A,Field,EAX,23,0,24,Core native model ID,,Special,"1 if MIGRATABLE, NATIVE otherwise"
+yes,0x1a,N/A,N/A,Field,EAX,31,24,8,Core Type,,Special,"1 if MIGRATABLE, NATIVE otherwise"
+yes,0x1a,N/A,N/A,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x1a,N/A,N/A,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x1a,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x1b,0x0,0x0,Sub-Leaf,,,,,Leaf 0x1b / Sub-Leaf 0x0,,#VE,
+yes,0x1b,0x0,0x0,Field,EAX,11,0,12,"Sub-leaf type.
+0: Invalid sub-leaf.
+1: PCONFIG target Identifier.
+",,#VE,
+yes,0x1b,0x0,0x0,Field,EAX,31,12,20,Reserved,,#VE,
+yes,0x1b,0x0,0x0,Field,EBX,31,0,32,"Target identifier:
+1: MKTME
+2: TSE",,#VE,
+yes,0x1b,0x0,0x0,Field,ECX,31,0,32,Target identifier,,#VE,
+yes,0x1b,0x0,0x0,Field,EDX,31,0,32,Target identifier,,#VE,
+yes,0x1b,0x1,0x1,Sub-Leaf,,,,,Leaf 0x1b / Sub-Leaf 0x1,,#VE,
+yes,0x1b,0x1,0x1,Field,EAX,31,0,32,0,,#VE,
+yes,0x1b,0x1,0x1,Field,EBX,31,0,32,0,,#VE,
+yes,0x1b,0x1,0x1,Field,ECX,31,0,32,0,,#VE,
+yes,0x1b,0x1,0x1,Field,EDX,31,0,32,0,,#VE,
+yes,0x1c,N/A,N/A,Leaf,,,,,Leaf 0x1c,,,
+yes,0x1c,N/A,N/A,Field,EAX,7,0,8,Supported LBR depth values,"TD_PARAMS.XFAM, TD_PARAMS.CPUID_CONFIG",XFAM & Configured & Native,XFAM[15]
+yes,0x1c,N/A,N/A,Field,EAX,29,8,22,Reserved_29_8,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x1c,N/A,N/A,Field,EAX,30,30,1,Deep C-state May Reset,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x1c,N/A,N/A,Field,EAX,31,31,1,IP values contain LIP,TD_PARAMS.XFAM,XFAM & Native (Hybrid),
+yes,0x1c,N/A,N/A,Field,EBX,0,0,1,CPL Filtering Supported,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x1c,N/A,N/A,Field,EBX,1,1,1,Branch Filtering Supported,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x1c,N/A,N/A,Field,EBX,2,2,1,Call-stack Mode Supported,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x1c,N/A,N/A,Field,EBX,31,3,29,Reserved_31_3,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x1c,N/A,N/A,Field,ECX,0,0,1,Mispredict Bit Supported,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x1c,N/A,N/A,Field,ECX,1,1,1,Timed LBRs Supported,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x1c,N/A,N/A,Field,ECX,2,2,1,Branch Type Field Supported,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x1c,N/A,N/A,Field,ECX,31,3,29,Reserved_31_3,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x1c,N/A,N/A,Field,EDX,31,0,32,Reserved,TD_PARAMS.XFAM,XFAM & Native,XFAM[15]
+yes,0x1d,0x0,0x0,Sub-Leaf,,,,,Leaf 0x1d / Sub-Leaf 0x0,,,
+yes,0x1d,0x0,0x0,Field,EAX,0,0,1,TILE support,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1d,0x0,0x0,Field,EAX,31,1,31,Reserved_31_1,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1d,0x0,0x0,Field,EBX,31,0,32,Reserved,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1d,0x0,0x0,Field,ECX,31,0,32,Reserved,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1d,0x0,0x0,Field,EDX,31,0,32,Reserved,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1d,0x1,0x1,Sub-Leaf,,,,,Leaf 0x1d / Sub-Leaf 0x1,,,
+yes,0x1d,0x1,0x1,Field,EAX,15,0,16,total_tile_bytes,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1d,0x1,0x1,Field,EAX,31,16,16,bytes_per_tile,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1d,0x1,0x1,Field,EBX,15,0,16,bytes_per_row,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1d,0x1,0x1,Field,EBX,31,16,16,max_names,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1d,0x1,0x1,Field,ECX,15,0,16,max_rows,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1d,0x1,0x1,Field,ECX,31,16,16,Reserved_31_16,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1d,0x1,0x1,Field,EDX,31,0,32,Reserved,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1e,N/A,N/A,Leaf,,,,,Leaf 0x1e,,,
+yes,0x1e,N/A,N/A,Field,EAX,31,0,32,Reserved,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1e,N/A,N/A,Field,EBX,7,0,8,impl.tmul_maxk (rows or cols),TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1e,N/A,N/A,Field,EBX,23,8,16,impl.tmul_maxn (column bytes),TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1e,N/A,N/A,Field,EBX,31,24,8,Reserved_31_24,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1e,N/A,N/A,Field,ECX,31,0,32,Reserved,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1e,N/A,N/A,Field,EDX,31,0,32,Reserved,TD_PARAMS.XFAM,XFAM & Native,XFAM[18:17]
+yes,0x1f,0x0,0x4,Sub-Leaf,,,,,Leaf 0x1f / Sub-Leaves 0x0-0x4,,#VE,
+yes,0x1f,0x0,0x4,Field,EAX,4,0,5,Shift Count,,#VE,
+yes,0x1f,0x0,0x4,Field,EAX,31,5,27,Reserved,,#VE,
+yes,0x1f,0x0,0x4,Field,EBX,15,0,16,Logical Processors at this Level,,#VE,
+yes,0x1f,0x0,0x4,Field,EBX,31,16,16,Reserved,,#VE,
+yes,0x1f,0x0,0x4,Field,ECX,7,0,8,Level Number,,#VE,
+yes,0x1f,0x0,0x4,Field,ECX,15,8,8,Level Type,,#VE,
+yes,0x1f,0x0,0x4,Field,ECX,31,16,16,Reserved,,#VE,
+yes,0x1f,0x0,0x4,Field,EDX,31,0,32,X2APIC ID,,#VE,
+yes,0x1f,0x5,0x5,Sub-Leaf,,,,,Leaf 0x1f / Sub-Leaf 0x5,,#VE,
+yes,0x1f,0x5,0x5,Field,EAX,4,0,5,Shift Count,,#VE,
+yes,0x1f,0x5,0x5,Field,EAX,31,5,27,Reserved,,#VE,
+yes,0x1f,0x5,0x5,Field,EBX,15,0,16,Logical Processors at this Level,,#VE,
+yes,0x1f,0x5,0x5,Field,EBX,31,16,16,Reserved,,#VE,
+yes,0x1f,0x5,0x5,Field,ECX,7,0,8,Level Number,,#VE,
+yes,0x1f,0x5,0x5,Field,ECX,15,8,8,Level Type,,#VE,
+yes,0x1f,0x5,0x5,Field,ECX,31,16,16,Reserved,,#VE,
+yes,0x1f,0x5,0x5,Field,EDX,31,0,32,X2APIC ID,,#VE,
+yes,0x20,0x0,0x0,Leaf,,,,,Leaf 0x20,,,
+yes,0x20,0x0,0x0,Field,EAX,31,0,32,Maximum sub-leaf,,Fixed,0x0
+yes,0x20,0x0,0x0,Field,EBX,31,0,32,IA32_HRESET_ENABLE mask,,Fixed,0x0
+yes,0x20,0x0,0x0,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x20,0x0,0x0,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x21,0x0,0x0,Sub-Leaf,,,,,Leaf 0x21 / Sub-Leaf 0x0,,,
+yes,0x21,0x0,0x0,Field,EAX,31,0,32,Maximum sub-leaf,,Fixed,0x00000000
+yes,0x21,0x0,0x0,Field,EBX,31,0,32,“Inte”,,Fixed,0x65746E49
+yes,0x21,0x0,0x0,Field,ECX,31,0,32,“    “,,Fixed,0x20202020
+yes,0x21,0x0,0x0,Field,EDX,31,0,32,“lTDX”,,Fixed,0x5844546C
+yes,0x22,N/A,N/A,Leaf,,,,,Leaf 0x22,,,
+yes,0x22,N/A,N/A,Field,EAX,31,0,32,Reserved,,Fixed,0x0
+yes,0x22,N/A,N/A,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x22,N/A,N/A,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x22,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x23,0x0,0x0,Sub-Leaf,,,,,Leaf 0x23 / Sub-Leaf 0x0,,,
+yes,0x23,0x0,0x0,Field,EAX,3,0,4,Valid sub-leaf bitmap,"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Attributes & Configured & Native,PERFMON
+yes,0x23,0x0,0x0,Field,EAX,5,4,2,Reserved,,Fixed,0x0
+yes,0x23,0x0,0x0,Field,EAX,31,6,26,Reserved,"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Fixed,0x0
+yes,0x23,0x0,0x0,Field,EBX,0,0,1,UnitMask2 Supported,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native,PERFMON
+yes,0x23,0x0,0x0,Field,EBX,1,1,1,Z-bit Supported,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native,PERFMON
+yes,0x23,0x0,0x0,Field,EBX,31,2,30,Perfmon feature bits,TD_PARAMS.ATTRIBUTES.PERFMON,Attributes & Native,PERFMON
+yes,0x23,0x0,0x0,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x23,0x0,0x0,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x23,0x1,0x1,Sub-Leaf,,,,,Leaf 0x23 / Sub-Leaf 0x1,,,
+yes,0x23,0x1,0x1,Field,EAX,7,0,8,General purpose counter bitmap,"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Attributes & Native (Hybrid),
+yes,0x23,0x1,0x1,Field,EAX,31,8,24,General purpose counter bitmap,"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Attributes & Native (Hybrid),
+yes,0x23,0x1,0x1,Field,EBX,3,0,4,Fixed counter bitmap,"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Attributes & Native (Hybrid),
+yes,0x23,0x1,0x1,Field,EBX,31,4,28,Fixed counter bitmap,"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Attributes & Native (Hybrid),
+yes,0x23,0x1,0x1,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x23,0x1,0x1,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x23,0x2,0x2,Sub-Leaf,,,,,Leaf 0x23 / Sub-Leaf 0x2,,,
+yes,0x23,0x2,0x2,Field,EAX,31,0,32,Reserved,"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Fixed,0x0
+yes,0x23,0x2,0x2,Field,EBX,31,0,32,Reserved,"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Fixed,0x0
+yes,0x23,0x2,0x2,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x23,0x2,0x2,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x23,0x3,0x3,Sub-Leaf,,,,,Leaf 0x23 / Sub-Leaf 0x3,,,
+yes,0x23,0x3,0x3,Field,EAX,31,0,32,Perfmon events bitmap,"TD_PARAMS.ATTRIBUTES.PERFMON, TD_PARAMS.CPUID_CONFIG",Attributes & Native (Hybrid),
+yes,0x23,0x3,0x3,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x23,0x3,0x3,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x23,0x3,0x3,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+no,0x23,0x4,0x4,Sub-Leaf,,,,,Leaf 0x23 / Sub-Leaf 0x4,,,
+no,0x23,0x4,0x4,Field,EAX,31,0,32,Reserved,,#N/A,#N/A
+no,0x23,0x4,0x4,Field,EBX,31,0,32,Reserved,,#N/A,#N/A
+no,0x23,0x4,0x4,Field,ECX,31,0,32,Reserved,,#N/A,#N/A
+no,0x23,0x4,0x4,Field,EDX,31,0,32,Reserved,,#N/A,#N/A
+no,0x23,0x5,0x5,Sub-Leaf,,,,,Leaf 0x23 / Sub-Leaf 0x5,,,
+no,0x23,0x5,0x5,Field,EAX,31,0,32,Reserved,,#N/A,#N/A
+no,0x23,0x5,0x5,Field,EBX,31,0,32,Reserved,,#N/A,#N/A
+no,0x23,0x5,0x5,Field,ECX,31,0,32,Reserved,,#N/A,#N/A
+no,0x23,0x5,0x5,Field,EDX,31,0,32,Reserved,,#N/A,#N/A
+no,0x24,0x0,0x0,Leaf,,,,,Leaf 0x24,,,
+no,0x24,0x0,0x0,Field,EAX,31,0,32,Reserved,,#N/A,#N/A
+no,0x24,0x0,0x0,Field,EBX,7,0,8,Reserved,,#N/A,#N/A
+no,0x24,0x0,0x0,Field,EBX,15,8,8,Reserved,,#N/A,#N/A
+no,0x24,0x0,0x0,Field,EBX,16,16,1,Reserved,TD_PARAMS.XFAM,#N/A,#N/A
+no,0x24,0x0,0x0,Field,EBX,17,17,1,Reserved,TD_PARAMS.XFAM,#N/A,#N/A
+no,0x24,0x0,0x0,Field,EBX,18,18,1,Reserved,TD_PARAMS.XFAM,#N/A,#N/A
+no,0x24,0x0,0x0,Field,EBX,31,19,13,Reserved,,#N/A,#N/A
+no,0x24,0x0,0x0,Field,ECX,31,0,32,Reserved,,#N/A,#N/A
+no,0x24,0x0,0x0,Field,EDX,31,0,32,Reserved,,#N/A,#N/A
+yes,0x80000000,N/A,N/A,Leaf,,,,,Leaf 0x80000000,,,
+yes,0x80000000,N/A,N/A,Field,EAX,31,0,32,MaxIndex,,Fixed,0x80000008
+yes,0x80000000,N/A,N/A,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x80000000,N/A,N/A,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x80000000,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
+yes,0x80000001,N/A,N/A,Leaf,,,,,Leaf 0x80000001,,,
+yes,0x80000001,N/A,N/A,Field,EAX,31,0,32,Reserved,,Fixed,0x0
+yes,0x80000001,N/A,N/A,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x80000001,N/A,N/A,Field,ECX,0,0,1,LAHF/SAHF in 64-bit Mode,,Fixed,0x1
+yes,0x80000001,N/A,N/A,Field,ECX,4,1,4,Reserved,,Fixed,0x0
+yes,0x80000001,N/A,N/A,Field,ECX,5,5,1,LZCNT,,Fixed,0x1
+yes,0x80000001,N/A,N/A,Field,ECX,7,6,2,Reserved,,Fixed,0x0
+yes,0x80000001,N/A,N/A,Field,ECX,8,8,1,PREFETCHW,,Fixed,0x1
+yes,0x80000001,N/A,N/A,Field,ECX,31,9,23,Reserved,,Fixed,0x0
+yes,0x80000001,N/A,N/A,Field,EDX,10,0,11,Reserved,,Fixed,0x0
+yes,0x80000001,N/A,N/A,Field,EDX,11,11,1,SYSCALL/SYSRET in 64-bit Mode,,Calculated,"1 in 64-bit mode, 0 in other modes"
+yes,0x80000001,N/A,N/A,Field,EDX,19,12,8,Reserved,,Fixed,0x0
+yes,0x80000001,N/A,N/A,Field,EDX,20,20,1,Execute Disable Bit,,Fixed,0x1
+yes,0x80000001,N/A,N/A,Field,EDX,25,21,5,Reserved,,Fixed,0x0
+yes,0x80000001,N/A,N/A,Field,EDX,26,26,1,1GB Pages,,Fixed,0x1
+yes,0x80000001,N/A,N/A,Field,EDX,27,27,1,RDTSCP and IA32_TSC_AUX,,Fixed,0x1
+yes,0x80000001,N/A,N/A,Field,EDX,28,28,1,Reserved_28,,Fixed,0x0
+yes,0x80000001,N/A,N/A,Field,EDX,29,29,1,Intel 64,,Fixed,0x1
+yes,0x80000001,N/A,N/A,Field,EDX,31,30,2,Reserved_31_30,,Fixed,0x0
+yes,0x80000002,N/A,N/A,Leaf,,,,,Leaf 0x80000002,,#VE,
+yes,0x80000002,N/A,N/A,Field,EAX,31,0,32, 31:0=Brand String Bytes 0 to 3,,#VE,
+yes,0x80000002,N/A,N/A,Field,EBX,31,0,32, 31:0=Brand String Bytes 4 to 7,,#VE,
+yes,0x80000002,N/A,N/A,Field,ECX,31,0,32, 31:0=Brand String Bytes 8 to 11,,#VE,
+yes,0x80000002,N/A,N/A,Field,EDX,31,0,32, 31:0=Brand String Bytes 12 to 15,,#VE,
+yes,0x80000003,N/A,N/A,Leaf,,,,,Leaf 0x80000003,,#VE,
+yes,0x80000003,N/A,N/A,Field,EAX,31,0,32, ,,#VE,
+yes,0x80000003,N/A,N/A,Field,EBX,31,0,32, ,,#VE,
+yes,0x80000003,N/A,N/A,Field,ECX,31,0,32, ,,#VE,
+yes,0x80000003,N/A,N/A,Field,EDX,31,0,32, ,,#VE,
+yes,0x80000004,N/A,N/A,Leaf,,,,,Leaf 0x80000004,,#VE,
+yes,0x80000004,N/A,N/A,Field,EAX,31,24,8, 31:0=Brand String Bytes 32 to 35,,#VE,
+yes,0x80000004,N/A,N/A,Field,EBX,31,24,8, 31:0=Brand String Bytes 36 to 39,,#VE,
+yes,0x80000004,N/A,N/A,Field,ECX,31,24,8, 31:0=Brand String Bytes 40 to 43,,#VE,
+yes,0x80000004,N/A,N/A,Field,EDX,31,24,8, 31:0=Brand String Bytes 44 to 47,,#VE,
+yes,0x80000005,N/A,N/A,Leaf,,,,,Leaf 0x80000005,,#VE,
+yes,0x80000005,N/A,N/A,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0x80000005,N/A,N/A,Field,EBX,31,0,32,Reserved,,#VE,
+yes,0x80000005,N/A,N/A,Field,ECX,31,0,32,Reserved,,#VE,
+yes,0x80000005,N/A,N/A,Field,EDX,31,0,32,Reserved,,#VE,
+yes,0x80000006,N/A,N/A,Leaf,,,,,Leaf 0x80000006,,#VE,
+yes,0x80000006,N/A,N/A,Field,EAX,31,0,32,Reserved,,#VE,
+yes,0x80000006,N/A,N/A,Field,EBX,31,0,32,Reserved,,#VE,
+yes,0x80000006,N/A,N/A,Field,ECX,7,0,8,Cache Line Size in Bytes,,#VE,
+yes,0x80000006,N/A,N/A,Field,ECX,11,8,4,Reserved_11_8,,#VE,
+yes,0x80000006,N/A,N/A,Field,ECX,15,12,4,L2 Associativity,,#VE,
+yes,0x80000006,N/A,N/A,Field,ECX,31,16,16,Cache Size (1kB Units),,#VE,
+yes,0x80000006,N/A,N/A,Field,EDX,31,0,32,Reserved,,#VE,
+yes,0x80000007,N/A,N/A,Leaf,,,,,Leaf 0x80000007,,,
+yes,0x80000007,N/A,N/A,Field,EAX,31,0,32,Reserved,,Fixed,0x0
+yes,0x80000007,N/A,N/A,Field,EBX,31,0,32,Reserved,,Fixed,0x0
+yes,0x80000007,N/A,N/A,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x80000007,N/A,N/A,Field,EDX,7,0,8,Reserved_7_0,,Fixed,0x0
+yes,0x80000007,N/A,N/A,Field,EDX,8,8,1,Invariant TSC,,Fixed,0x1
+yes,0x80000007,N/A,N/A,Field,EDX,31,9,23,Reserved_31_9,,Fixed,0x0
+yes,0x80000008,N/A,N/A,Leaf,,,,,Leaf 0x80000008,,,
+yes,0x80000008,N/A,N/A,Field,EAX,7,0,8,Number of Physical Address Bits,,Fixed,0x34
+yes,0x80000008,N/A,N/A,Field,EAX,15,8,8,Number of Linear Address Bits,,Special,"Based on virt. CPUID(7, 0).ECX[16]"
+yes,0x80000008,N/A,N/A,Field,EAX,31,16,16,Reserved,,Fixed,0x0
+yes,0x80000008,N/A,N/A,Field,EBX,8,0,9,Reserved_8_0,,Fixed,0x0
+yes,0x80000008,N/A,N/A,Field,EBX,9,9,1,WBNOINVD support,TD_PARAMS.CPUID_CONFIG,Configured & Native,
+yes,0x80000008,N/A,N/A,Field,EBX,31,10,22,Reserved_31_10,,Fixed,0x0
+yes,0x80000008,N/A,N/A,Field,ECX,31,0,32,Reserved,,Fixed,0x0
+yes,0x80000008,N/A,N/A,Field,EDX,31,0,32,Reserved,,Fixed,0x0
