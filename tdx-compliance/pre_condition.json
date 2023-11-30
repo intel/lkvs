@@ -1,0 +1,16 @@
+{
+  "~PERFMON": "pre_perfmon",
+  "~PKS": "pre_pks",
+  "~virt. CPUID(0x1).ECX[24]": "pre_0x1_ecx24",
+  "~virt. CPUID(7,0).ECX[5]": "pre_0x7_ecx5",
+  "~virt. CPUID(7,0).ECX[13]": "pre_0x7_ecx13",
+  "~virt. CPUID(7,0).EDX[18]": "pre_0x7_edx18",
+  "~(virt. CPUID(0xD,0x1).EAX[4])": "pre_0xd_0x1_eax4",
+  "~virt. CPUID(0x1).ECX[18]": "pre_0x1_ecx18",
+  "~XFAM[8]": "pre_xfam_8",
+  "~(XFAM[11] | XFAM[12])": "pre_xfam_12_11",
+  "~XFAM[14]": "pre_xfam_14",
+  "~XFAM[15]": "pre_xfam_15",
+  "~virt. TSX enabled": "pre_tsx",
+  "": "pre_fixedctr"
+}

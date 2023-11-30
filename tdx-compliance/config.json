@@ -1,12 +1,24 @@
 {
     "cpuid":{
-        "csv_path": "hh1_0.csv",
+
         "header_path": "cpuid_case.h",
-        "vdetail": ["Virtualization Details"],
-        "vtype": ["Bit or Field Virtualization Type", "Virtualization Type"],
         "fname": "Field Name",
-        "bias": "1",
-        "version": "1.0"
+        "spec_list": [
+            {
+                "csv_path": "cpuid1_0.csv",
+                "bias": "1",
+                "vtype": "Virtualization Type",
+                "vdetail": "Virtualization Details",
+                "version": "VER1_0"
+            },
+            {
+                "csv_path": "cpuid1_5.csv",
+                "bias": "2",
+                "vtype": "Bit or Field Virtualization Type",
+                "vdetail": "Virtualization Details",
+                "version": "VER1_5"
+            }
+        ]
     },
     "cr":{
         "csv_path": "",
@@ -16,10 +28,23 @@
         "bias": "2"
     },
     "msr":{
-        "csv_path": "",
+        "prepath": "pre_condition.json",
         "header_path": "msr_case.h",
-        "vdetail": "",
-        "vtype": "",
-        "bias": "2"
+        "spec_list": [
+            {
+                "csv_path": "msr1_0.csv",
+                "bias": "4",
+                "rdname": "On RDMSR",
+                "wrname": "On WRMSR",
+                "version": "VER1_0"
+            },
+            {
+                "csv_path": "msr1_5.csv",
+                "bias": "4",
+                "rdname": "On RDMSR",
+                "wrname": "On WRMSR",
+                "version": "VER1_5"
+            }
+        ]
     }
 }
