@@ -218,24 +218,24 @@ while read -r line; do
   echo "[${VM_TYPE}_vm]: $line"
   # within $TIMEOUT but bypass the very first 2 seconds to avoid unexpected $BOOT_PATTERN match (from parameter handling logic)
   if [[ $SECONDS -lt $TIMEOUT ]] && [[ $SECONDS -ge 2 ]]; then
-    if [[ $line == $BOOT_PATTERN ]] && [[ $EXEC_FLAG -ne 0 ]]; then
+    if [[ "$line" == @($BOOT_PATTERN) ]] && [[ $EXEC_FLAG -ne 0 ]]; then
       test_print_trc "VM_TYPE: $VM_TYPE, VCPU: $VCPU, SOCKETS: $SOCKETS, MEM: $MEM, DEBUG: $DEBUG, PMU: $PMU, CMDLINE: $CMDLINE, TESTCASE: $TESTCASE, SECONDS: $SECONDS"
       EXEC_FLAG=0
       if ! ./guest.test_executor.sh; then EXEC_FLAG=1 && break; fi # break while read loop in case of TD VM test failure
     # err_handlers string matching
-    elif [[ $line == $ERR_STR1 ]]; then
+    elif [[ "$line" == @($ERR_STR1) ]]; then
       test_print_err "There is $ERR_STR1, test is not fully PASS"
       ERR_FLAG1=1
-    elif [[ $line == $ERR_STR2 ]]; then
+    elif [[ "$line" == @($ERR_STR2) ]]; then
       test_print_err "There is $ERR_STR2, test failed"
       ERR_FLAG2=1
-    elif [[ $line == $ERR_STR3 ]] && [[ $line != *"DEBUG"* ]]; then
+    elif [[ "$line" == @($ERR_STR3) ]] && [[ $line != *"DEBUG"* ]]; then
       test_print_wrg "There is $ERR_STR3, please check"
       ERR_FLAG3=1
-    elif [[ $line == $ERR_STR4 ]]; then
+    elif [[ "$line" == @($ERR_STR4) ]]; then
       test_print_wrg "There is $ERR_STR4, please check"
       ERR_FLAG4=1
-    elif [[ $line == $ERR_STR5 ]]; then
+    elif [[ "$line" == @($ERR_STR5) ]]; then
       test_print_wrg "There is $ERR_STR5, please check"
       ERR_FLAG5=1
     fi
