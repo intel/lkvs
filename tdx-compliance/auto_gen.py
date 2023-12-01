@@ -8,11 +8,13 @@ pre_dict = {}
 func_names = []
 pattern = r'static\s+void\s+(\w+)\s*\(struct\s+test_msr\s*\*\s*c\)'
 
+
 def checkdef(funcName):
     if func_names is not None:
         if funcName in func_names:
             return True
     return False
+
 
 # some parse func
 def extract_func_name(file_path):
@@ -33,6 +35,7 @@ def extract_func_name(file_path):
         print(f"An error occurred: {e}")
 
     return func_names
+
 
 def parse_leaf(field_name):
     match_leaves = re.search(r'Leaf (\w+)', field_name)
@@ -57,6 +60,7 @@ def parse_leaf(field_name):
 
     return leaf, subleaves
 
+
 def parse_msrvirt(virtdesc):
     if virtdesc.startswith("native") or virtdesc.startswith("Native"):
         return True, "NO_EXCP", "NO_PRE_COND"
@@ -71,6 +75,7 @@ def parse_msrvirt(virtdesc):
     else:
         return False, "", ""
 
+
 def trimbracket(virtdesc):
     count = 0
     start = -1
@@ -79,7 +84,7 @@ def trimbracket(virtdesc):
     for i, char in enumerate(virtdesc):
         if char == '(':
             if count == 0:
-                start = i+1
+                start = i + 1
             count += 1
         elif char == ')':
             count -= 1
@@ -88,6 +93,7 @@ def trimbracket(virtdesc):
                 break
 
     return result
+
 
 def gen_rst(virtdesc, exception_type):
     pre_value = "Invalid Generator"
@@ -104,11 +110,14 @@ def gen_rst(virtdesc, exception_type):
 
     return True, exception_type, pre_value
 
+
 def gen_gp(virtdesc):
     return gen_rst(virtdesc, "X86_TRAP_GP")
 
+
 def gen_ve(virtdesc):
     return gen_rst(virtdesc, "X86_TRAP_VE")
+
 
 def get_valstr(str_wait, column_indices):
     virt = None
@@ -118,7 +127,12 @@ def get_valstr(str_wait, column_indices):
             break
     return virt
 
+
 class GenCase:
+    """
+    The base class for tdx-compliance-tests case generation.
+    """
+
     def __init__(self, config_path):
         self.config_path = config_path
         self.spec_list = []
@@ -131,6 +145,7 @@ class GenCase:
         self.body = []
         self.config = {}
 
+    # Get the corresponding config of the current ptype (usually cpuid/msr).
     def read_config(self):
         try:
             with open(self.config_path, 'r') as config_file:
@@ -142,6 +157,7 @@ class GenCase:
         except Exception as e:
             raise Exception(f"Failed to parse config: {e}")
 
+    # Get all rows and indexes in cvs file.
     def read_spec(self):
         try:
             df = pandas.read_csv(self.csv_path, skiprows=range(int(self.bias)))
@@ -151,9 +167,11 @@ class GenCase:
         except Exception as e:
             raise Exception(f"Failed to get csv_index: {e}")
 
+    # Get some special parameters corresponding to different versions.
     def getparam(self, item):
         pass
 
+    # Write the generated caseStr to the specified file.
     def write2header(self):
         try:
             with open(self.header_path, 'w') as header_file:
@@ -163,45 +181,52 @@ class GenCase:
         except Exception as e:
             raise Exception(f"Failed to write to header file: {e}")
 
+    # Assemble all case-lists after the fusion version into C.
     def get_body(self):
         pass
 
+    # Parse csv to get all cases of the current version.
     def parse_csv(self):
         pass
 
-    #核心方法
     def autorun(self):
+        """
+        - Parse different versions of csv
+        - then perform version fusion
+        - and finally generate C language statements
+        - write them into the specified header file
+        """
         i = 0
         for item in self.spec_list:
             self.getparam(item)
             self.parse_csv()
             if i:
-                self.fusion()
+                self.fusion(i)
                 self.ans[0] = self.sort_by_spec(self.ans[0])
             i += 1
         self.get_body()
         self.write2header()
 
-    #融合相关
-    def fusion(self):
+    # Version fusion.
+    def fusion(self, i):
         if self.ans is None:
             return
-        for it1 in self.ans[1:]:
-            for it2 in it1:
-                self.compre(it2)
+        for it1 in self.ans[i]:
+            self.compre(it1)
 
+    # Compress the same test cases under different versions.
     def compre(self, iter):
         pass
 
+    # Sort test cases (by cpuid or msr).
     def sort_by_spec(self, arr):
         pass
+
 
 class CpuidCase(GenCase):
     def __init__(self, config_path):
         super().__init__(config_path)
         self.ptype = "cpuid"
-
-        # 定义cpuid独属的csv的目录项
         self.vDetail = ""
         self.vType = ""
         self.fName = ""
@@ -232,9 +257,9 @@ class CpuidCase(GenCase):
             self.ans[0].append(iter)
 
     def sort_by_spec(self, arr):
-        leaf_order = {'-1': -1, 'eax': 0, 'ebx': 1, 'ecx': 2, 'edx': 3}
+        leaf_order = {-1: 0, 'eax': 1, 'ebx': 2, 'ecx': 3, 'edx': 4}
         arr.sort(key=lambda item: (
-        int(item[0], 16), int(item[1], 16), leaf_order.get(item[2], float('inf')), item[4], item[5]))
+            int(item[0], 16), int(item[1], 16), leaf_order.get(item[2], float('inf')), item[4], item[5]))
         return arr
 
     def parse_csv(self):
@@ -255,19 +280,25 @@ class CpuidCase(GenCase):
             if isinstance(reg, float) and math.isnan(reg):
                 leaf, subleaf = parse_leaf(field_name)
                 isNew = field_name
-            elif virt_type == 'Fixed':
+            elif virt_type == 'Fixed' or virt_type == 'Bit field is always reported as a fixed value to the TD.':
+                if virt_type == 'Fixed':
+                    virt_detail = str(row[columns[column_indices[self.vDetail]]])
+                else:
+                    virt_detail = str(row[columns[column_indices['Configuration Details']]])
+
                 msb = int(row[columns[column_indices['MSB']]])
                 lsb = int(row[columns[column_indices['LSB']]])
                 field_size = int(row[columns[column_indices['Field Size']]])
                 reg = reg.lower()
 
                 if isNew != "":
-                    anstmp.append([leaf,subleaf[0],-1,-1,-1,-1,isNew,-1, self.version])
+                    anstmp.append([leaf, subleaf[0], -1, -1, -1, -1, isNew, -1, self.version])
                     isNew = ""
 
                 for i in subleaf:
                     entry = [leaf, i, reg, msb, lsb, field_size, field_name, virt_detail, self.version]
                     anstmp.append(entry)
+
         self.ans.append(anstmp)
 
     def get_body(self):
@@ -297,12 +328,11 @@ class CpuidCase(GenCase):
                     leaf, subleaf, reg, lsb, msb, ver, name))
         self.body.append("}")
 
+
 class MsrCase(GenCase):
     def __init__(self, config_path):
         super().__init__(config_path)
         self.ptype = "msr"
-
-        # 定义msr独属的csv的目录项
         self.prepath = ""
         self.rdName = ""
         self.wrName = ""
@@ -360,7 +390,7 @@ class MsrCase(GenCase):
             lsb = str(hex(int(row[columns[column_indices['Last (H)']]], 16)))
             field_size = str(hex(int(row[columns[column_indices['Size (H)']]], 16)))
 
-            for i in range(2) :
+            for i in range(2):
                 isVaild, err_type, pre_name = parse_msrvirt(ept[i])
                 if isVaild:
                     rw_type = "r" if i == 0 else "w"
@@ -383,30 +413,28 @@ class MsrCase(GenCase):
                 if entry[2] == "0x1":
                     self.body.append("\tDEF_READ_MSR(\"%s\", %s, %s, %s, %s)," % (name, msb, err_type, pre_name, ver))
                 else:
-                    self.body.append("\tDEF_READ_MSR_SIZE(\"%s\", %s, %s, %s, %s, %s)," % (name, msb, err_type, pre_name, size, ver))
+                    self.body.append(
+                        "\tDEF_READ_MSR_SIZE(\"%s\", %s, %s, %s, %s, %s)," % (name, msb, err_type, pre_name, size, ver))
             elif entry[5] == 'w':
                 if entry[2] == "0x1":
                     self.body.append("\tDEF_WRITE_MSR(\"%s\", %s, %s, %s, %s)," % (name, msb, err_type, pre_name, ver))
                 else:
-                    self.body.append("\tDEF_WRITE_MSR_SIZE(\"%s\", %s, %s, %s, %s, %s)," % (name, msb, err_type, pre_name, size, ver))
+                    self.body.append("\tDEF_WRITE_MSR_SIZE(\"%s\", %s, %s, %s, %s, %s)," % (
+                    name, msb, err_type, pre_name, size, ver))
 
             else:
-                print("This case is invalid:\nMSR NAME: %s; INDEX: %s; ERRTYPE: %s; PRE_CON: %s; SIZE: %s; VERSION: %s; RW: %s." % (name, msb, err_type, pre_name, size, ver, rw_type))
+                print(
+                    "This case is invalid:\nMSR NAME: %s; INDEX: %s; ERRTYPE: %s; PRE_CON: %s; SIZE: %s; VERSION: %s; RW: %s." % (
+                    name, msb, err_type, pre_name, size, ver, rw_type))
         self.body.append("};")
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     func_names = extract_func_name("pre_condition.h")
-    # init all params
     config_path = 'config.json'
+
+    # here run cpuid&msr
     cpuid_case = CpuidCase(config_path)
     cpuid_case.autorun()
     msr_case = MsrCase(config_path)
     msr_case.autorun()
-
-
-
-
-
-
-

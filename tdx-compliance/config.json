@@ -17,6 +17,13 @@
                 "vtype": "Bit or Field Virtualization Type",
                 "vdetail": "Virtualization Details",
                 "version": "VER1_5"
+            },
+            {
+                "csv_path": "cpuid2_0.csv",
+                "bias": "2",
+                "vtype": "Bit or Field Virtualization Type",
+                "vdetail": "Virtualization Details",
+                "version": "VER2_0"
             }
         ]
     },
@@ -44,6 +51,13 @@
                 "rdname": "On RDMSR",
                 "wrname": "On WRMSR",
                 "version": "VER1_5"
+            },
+            {
+                "csv_path": "msr2_0.csv",
+                "bias": "4",
+                "rdname": "On RDMSR",
+                "wrname": "On WRMSR",
+                "version": "VER2_0"
             }
         ]
     }
