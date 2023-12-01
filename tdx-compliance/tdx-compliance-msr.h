@@ -90,17 +90,6 @@ extern struct test_msr msr_cases[];
 #define IA32_DEBUG_INTERFACE 0x0c80
 #define IA32_UARCH_MISC_CTL 0x1b01
 
-static void pre_tsx(struct test_msr *c)
-{
-	/* TSX enabled: IA32_ARCH_CAPABILITIES[7] */
-	struct test_msr t = DEF_READ_MSR(MSR_IA32_ARCH_CAPABILITIES, NO_EXCP, NO_PRE_COND, VER1_0);
-
-	if (!read_msr_native(&t)) {
-		if ((t.msr.val.q & _BITUL(7)) == 0)
-			c->excp.expect = X86_TRAP_GP;
-	}
-}
-
 struct test_msr msr_cases[] = {
 	DEF_READ_MSR(MSR_IA32_PLATFORM_ID, X86_TRAP_VE, NO_PRE_COND, VER1_5| VER2_0),
 	DEF_WRITE_MSR(MSR_IA32_PLATFORM_ID, X86_TRAP_VE, NO_PRE_COND, VER1_5| VER2_0),
