@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "tdx-compliance.h"
-#include "cpuid_case.h"
 
 #define DEF_CPUID_TEST(_leaf, _subleaf)		\
 {						\
@@ -47,6 +46,8 @@
 	}									\
 	list_add_tail(&t->list, &cpuid_list);					\
 } while (0)
+
+#include "cpuid_case.h"
 
 #ifdef AUTOGEN_CPUID
 extern void initial_cpuid(void);
