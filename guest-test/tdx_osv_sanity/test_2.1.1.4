@@ -1,0 +1,4 @@
+# Create TDX guest with default qemu config and check TSC value on guest
+guest.test_launcher.sh -v 1 -s 1 -m 4 -d on -t tdx -f tdx_osv_sanity -x TD_TSC_DEFAULT -p off -i "tdx_osv_sanity/common.json" -j "tdx_osv_sanity/qemu.config.default.json"
+# Create TDX guest with tsc-freq specified qemu config and check TSC value on guest
+guest.test_launcher.sh -v 1 -s 1 -m 4 -d on -t tdx -f tdx_osv_sanity -x TD_TSC_CONFIG -p off -i "tdx_osv_sanity/common.json" -j "tdx_osv_sanity/qemu.config.tsc.json"
