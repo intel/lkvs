@@ -13,7 +13,7 @@
 
 ###################### Variables ######################
 ## common variables example ##
-SCRIPT_DIR_LOCAL="$( cd "$( dirname "$0" )" && pwd )"
+SCRIPT_DIR_LOCAL="$( cd $( dirname "$0" ) && pwd )"
 echo "$SCRIPT_DIR_LOCAL"
 # get test scenario config for $FEATURE tdx test_executor
 source "$SCRIPT_DIR_LOCAL"/../test_params.py
