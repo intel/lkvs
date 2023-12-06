@@ -8,13 +8,20 @@
 
 
 # @desc This script prepare and run $TESTCASE in Guest VM
+# based on $FEATURE selection
 
 ###################### Variables ######################
-SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
-echo "$SCRIPT_DIR"
+# exec only if script being executed
+if [ "${BASH_SOURCE[0]}" -ef "$0" ]; then
+  SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+  echo "$SCRIPT_DIR"
+else # bypass above execution in case of being sourced
+  ehco "guest.test_executor.sh being sourced"
+fi
 GUEST_TEST_DIR="/root/guest_test/"
 
 ###################### Functions ######################
+# Common functions to be leveraged by $FEATURE/$FEATURE.test_executor.sh
 
 # function based on sshpass to scp common.sh and $1 test_script.sh to Guest VM
 guest_test_prepare() {
@@ -88,165 +95,18 @@ EOF
   test_print_trc "Guest VM closed properly after test"
 }
 
-guest_attest_test() {
-  selftest_item=$1
-  guest_test_prepare tdx/tdx_attest_check.sh
-  guest_test_source_code tdx/tdx_attest_test_suite tdx_guest_test || \
-  { die "Failed to prepare guest test source code for $selftest_item"; return 1; }
-  guest_test_entry tdx_attest_check.sh "-t $selftest_item" || \
-  { die "Failed on $TESTCASE tdx_attest_check.sh -t $selftest_item"; return 1; }
-  if [[ $GCOV == "off" ]]; then
-    guest_test_close
-  fi
-}
-
-guest_tsm_attest() {
-  test_item=$1
-  guest_test_prepare tdx/tdx_attest_check.sh
-  guest_test_entry tdx_attest_check.sh "-t $test_item" || \
-  { die "Failed on $TESTCASE tdx_attest_check.sh -t $test_item"; return 1; }
-  if [[ $GCOV == "off" ]]; then
-    guest_test_close
-  fi
-}
-
 ###################### Do Works ######################
-cd "$(dirname "$0")" 2>/dev/null || exit 1
-source ../.env
+# exec only if script being executed
+if [ "${BASH_SOURCE[0]}" -ef "$0" ]; then
+  cd "$(dirname "$0")" 2>/dev/null || exit 1
+  source ../.env
 
-# get test scenario config for test_executor
-source "$SCRIPT_DIR"/test_params.py
+  # get test scenario config for test_executor
+  echo SCRIPT_DIR="$SCRIPT_DIR" >> "$SCRIPT_DIR"/test_params.py
+  source "$SCRIPT_DIR"/test_params.py
 
-cd "$SCRIPT_DIR" || die "fail to switch to $SCRIPT_DIR"
-# select test_functions by $TEST_SCENARIO
-case "$TESTCASE" in
-  TD_BOOT)
-    guest_test_prepare tdx/tdx_guest_boot_check.sh
-    guest_test_entry tdx_guest_boot_check.sh "-v $VCPU -s $SOCKETS -m $MEM" || \
-    die "Failed on TD_BOOT test tdx_guest_boot_check.sh -v $VCPU -s $SOCKETS -m $MEM"
-    if [[ $GCOV == "off" ]]; then
-      guest_test_close
-    fi
-    ;;
-  GUEST_TESTCASE_EXAMPLE)
-    guest_test_prepare guest_test.sh
-    guest_test_source_code test_source_code_dir_example test_binary_example
-    guest_test_entry guest_test.sh "-t $TESTCASE" || \
-    die "Failed on $TESTCASE guest_test.sh -t $TESTCASE"
-    if [[ $GCOV == "off" ]]; then
-      guest_test_close
-    fi
-    ;;
-  TD_ATTEST_VERIFY_REPORT)
-    guest_attest_test "global.verify_report" || \
-    die "Failed on $TESTCASE"
-    ;;
-  TD_ATTEST_VERITY_REPORTMAC)
-    guest_attest_test "global.verify_reportmac" || \
-    die "Failed on $TESTCASE"
-    ;;
-  TD_ATTEST_VERIFY_RTMR_EXTEND)
-    guest_attest_test "global.verify_rtmr_extend" || \
-    die "Failed on $TESTCASE"
-    ;;
-  TD_ATTEST_VERIFY_QUOTE)
-    guest_attest_test "global.verify_quote" || \
-    die "Failed on $TESTCASE"
-    ;;
-  TD_TSC_DEFAULT)
-    guest_test_prepare osv_sanity/tdx_guest_tsc_check.sh
-    source osv_sanity/tdx_host_tsc_check.sh
-    guest_test_entry tdx_guest_tsc_check.sh "-c $HOST_TSC" || \
-    die "Failed on TD_TSC_DEFAULT tdx_guest_tsc_check.sh -c $HOST_TSC"
-    if [[ $GCOV == "off" ]]; then
-      guest_test_close
-    fi
-    ;;
-  TD_TSC_CONFIG)
-    guest_test_prepare osv_sanity/tdx_guest_tsc_check.sh
-    CONFIG_TSC=3000000000
-    guest_test_entry tdx_guest_tsc_check.sh "-c $CONFIG_TSC" || \
-    die "Failed on TD_TSC_CONFIG tdx_guest_tsc_check.sh -c $CONFIG_TSC"
-    if [[ $GCOV == "off" ]]; then
-      guest_test_close
-    fi
-    ;;
-  TD_NET_SPEED)
-    guest_test_prepare tdx/tdx_speed_test.sh
-    guest_test_entry tdx_speed_test.sh || \
-    die "Failed on TD_NET_SPEED tdx_speed_test.sh"
-    if [[ $GCOV == "off" ]]; then
-      guest_test_close
-    fi
-    ;;
-  TD_TSM_ATTEST_QUOTE_PRECHECK)
-    guest_tsm_attest "tsm.get_quote.precheck" || \
-    die "Failed on $TESTCASE"
-    ;;
-  TD_TSM_ATTEST_QUOTE)
-    guest_tsm_attest "tsm.get_quote" || \
-    die "Failed on $TESTCASE"
-    ;;
-  TD_TSM_ATTEST_QUOTE_NEG)
-    guest_tsm_attest "tsm.get_quote.negative" || \
-    die "Failed on $TESTCASE"
-    ;;
-  TD_MEM_EBIZZY_FUNC)
-    guest_test_prepare tdx/tdx_mem_test.sh
-    guest_test_source_code tdx/tdx_ebizzy_test_suite ebizzy || \
-    { die "Failed to prepare guest test source code of tdx_ebizzy_test_suite"; return 1; }
-    guest_test_entry tdx_mem_test.sh "-t EBIZZY_FUNC" || \
-    { die "Failed on $TESTCASE tdx_mem_test.sh -t EBIZZY_FUNC"; return 1; }
-    if [[ $GCOV == "off" ]]; then
-      guest_test_close
-    fi
-    ;;
-  TD_MEM_ACCEPT_TIME_4G)
-    guest_test_prepare tdx/tdx_mem_test.sh
-    guest_test_entry tdx_mem_test.sh "-t MEM_ACCEPT_TIME_4G" || \
-    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACCEPT_TIME_4G"; return 1; }
-    if [[ $GCOV == "off" ]]; then
-      guest_test_close
-    fi
-    ;;
-  TD_MEM_ACCEPT_TIME_16G)
-    guest_test_prepare tdx/tdx_mem_test.sh
-    guest_test_entry tdx_mem_test.sh "-t MEM_ACCEPT_TIME_16G" || \
-    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACCEPT_TIME_16G"; return 1; }
-    if [[ $GCOV == "off" ]]; then
-      guest_test_close
-    fi
-    ;;
-  TD_MEM_ACCEPT_TIME_32G)
-    guest_test_prepare tdx/tdx_mem_test.sh
-    guest_test_entry tdx_mem_test.sh "-t MEM_ACCEPT_TIME_32G" || \
-    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACCEPT_TIME_32G"; return 1; }
-    if [[ $GCOV == "off" ]]; then
-      guest_test_close
-    fi
-    ;;
-  TD_MEM_ACCEPT_TIME_64G)
-    guest_test_prepare tdx/tdx_mem_test.sh
-    guest_test_entry tdx_mem_test.sh "-t MEM_ACCEPT_TIME_64G" || \
-    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACCEPT_TIME_64G"; return 1; }
-    if [[ $GCOV == "off" ]]; then
-      guest_test_close
-    fi
-    ;;
-  TD_MEM_ACCEPT_TIME_96G)
-    guest_test_prepare tdx/tdx_mem_test.sh
-    guest_test_entry tdx_mem_test.sh "-t MEM_ACCEPT_TIME_96G" || \
-    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACCEPT_TIME_96G"; return 1; }
-    if [[ $GCOV == "off" ]]; then
-      guest_test_close
-    fi
-    ;;
-  :)
-    test_print_err "Must specify the test scenario option by [-t]"
-    usage && exit 1
-    ;;
-  \?)
-    test_print_err "Input test case option $TESTCASE is not supported"
-    usage && exit 1
-    ;;
-esac
+  cd "$SCRIPT_DIR" || die "fail to switch to $SCRIPT_DIR"
+  # select specific "$FEATURE.test_executor.sh" by $FEATURE
+  "$FEATURE"/"$FEATURE".test_executor.sh || \
+  { die "Failed on $TESTCASE of $FEATURE"; return 1; }
+fi

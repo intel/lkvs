@@ -1,27 +1,27 @@
 # case implemented by tdx_guest_boot_check.sh
-guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -x TD_BOOT -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -x TD_BOOT -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 4 -s 1 -m 4 -d on -t tdx -x TD_BOOT -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 4 -s 2 -m 4 -d on -t tdx -x TD_BOOT -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 4 -s 2 -m 96 -d on -t tdx -x TD_BOOT -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 64 -s 8 -m 96 -d on -t tdx -x TD_BOOT -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 288 -s 1 -m 1 -d on -t tdx -x TD_BOOT -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 288 -s 8 -m 96 -d on -t tdx -x TD_BOOT -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 1 -s 1 -m 1 -d off -t tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 4 -s 1 -m 4 -d on -t tdx -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 4 -s 2 -m 4 -d on -t tdx -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 4 -s 2 -m 96 -d on -t tdx -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 64 -s 8 -m 96 -d on -t tdx -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 288 -s 1 -m 1 -d on -t tdx -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 288 -s 8 -m 96 -d on -t tdx -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 1 -d off -t tdx -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
 # case implemented by tdx_attest_check.sh
-guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -x TD_ATTEST_VERIFY_REPORT -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -x TD_ATTEST_VERITY_REPORTMAC -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -x TD_ATTEST_VERIFY_RTMR_EXTEND -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -x TD_ATTEST_VERIFY_QUOTE -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -x TD_TSM_ATTEST_QUOTE_PRECHECK -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -x TD_TSM_ATTEST_QUOTE -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -x TD_TSM_ATTEST_QUOTE_NEG -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_ATTEST_VERIFY_REPORT -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_ATTEST_VERITY_REPORTMAC -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_ATTEST_VERIFY_RTMR_EXTEND -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_ATTEST_VERIFY_QUOTE -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_TSM_ATTEST_QUOTE_PRECHECK -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_TSM_ATTEST_QUOTE -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_TSM_ATTEST_QUOTE_NEG -c "accept_memory=lazy" -p off
 # case implemented by tdx_speed_test.sh
-guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -x TD_NET_SPEED -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_NET_SPEED -c "accept_memory=lazy" -p off
 # case implemented by tdx_mem_test.sh
-guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -x TD_MEM_EBIZZY_FUNC -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 4 -s 1 -m 4 -d on -t tdx -x TD_MEM_ACCEPT_TIME_4G -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 16 -s 1 -m 4 -d on -t tdx -x TD_MEM_ACCEPT_TIME_16G -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 16 -s 1 -m 4 -d on -t tdx -x TD_MEM_ACCEPT_TIME_32G -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 16 -s 1 -m 4 -d on -t tdx -x TD_MEM_ACCEPT_TIME_64G -c "accept_memory=lazy" -p off
-guest.test_launcher.sh -v 16 -s 1 -m 4 -d on -t tdx -x TD_MEM_ACCEPT_TIME_96G -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -f tdx -x TD_MEM_EBIZZY_FUNC -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 4 -s 1 -m 4 -d on -t tdx -f tdx -x TD_MEM_ACCEPT_TIME_4G -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 16 -s 1 -m 4 -d on -t tdx -f tdx -x TD_MEM_ACCEPT_TIME_16G -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 16 -s 1 -m 4 -d on -t tdx -f tdx -x TD_MEM_ACCEPT_TIME_32G -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 16 -s 1 -m 4 -d on -t tdx -f tdx -x TD_MEM_ACCEPT_TIME_64G -c "accept_memory=lazy" -p off
+guest.test_launcher.sh -v 16 -s 1 -m 4 -d on -t tdx -f tdx -x TD_MEM_ACCEPT_TIME_96G -c "accept_memory=lazy" -p off

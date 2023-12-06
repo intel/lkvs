@@ -52,13 +52,14 @@ ERR_FLAG5=0
 # helper function
 usage() {
   cat <<-EOF
-NOTE!! args passed here will override params in qemu.confg.json
+NOTE!! args passed here will override params in json config file
   usage: ./${0##*/}
   -v number of vcpus
   -s number of sockets
   -m memory size in GB
-  -d debug on/off
+  -d debug on/off (resive to true/false in new qemu)
   -t vm_type legacy/tdx/tdxio
+  -f feature (subfolder) to test
   -x testcase pass to test_executor
   -c guest kernel extra commandline
   -p guest pmu off/on
@@ -106,7 +107,7 @@ echo PORT="$PORT" > "$SCRIPT_DIR"/test_params.py
 # used across test_launcher.sh, qemu_runner.py, test_executor.sh
 
 # get args for QEMU boot configurable parameters
-while getopts :v:s:m:d:t:x:c:p:g:i:j:h arg; do
+while getopts :v:s:m:d:t:f:x:c:p:g:i:j:h arg; do
   case $arg in
     v)
       VCPU=$OPTARG
@@ -127,6 +128,10 @@ while getopts :v:s:m:d:t:x:c:p:g:i:j:h arg; do
     t)
       VM_TYPE=$OPTARG
       echo VM_TYPE="\"$VM_TYPE\"" >> "$SCRIPT_DIR"/test_params.py
+      ;;
+    f)
+      FEATURE=$OPTARG
+      echo FEATURE="\"$FEATURE\"" >> "$SCRIPT_DIR"/test_params.py
       ;;
     x)
       TESTCASE=$OPTARG
@@ -219,9 +224,10 @@ while read -r line; do
   # within $TIMEOUT but bypass the very first 2 seconds to avoid unexpected $BOOT_PATTERN match (from parameter handling logic)
   if [[ $SECONDS -lt $TIMEOUT ]] && [[ $SECONDS -ge 2 ]]; then
     if [[ "$line" == @($BOOT_PATTERN) ]] && [[ $EXEC_FLAG -ne 0 ]]; then
-      test_print_trc "VM_TYPE: $VM_TYPE, VCPU: $VCPU, SOCKETS: $SOCKETS, MEM: $MEM, DEBUG: $DEBUG, PMU: $PMU, CMDLINE: $CMDLINE, TESTCASE: $TESTCASE, SECONDS: $SECONDS"
+      test_print_trc "VM_TYPE: $VM_TYPE, VCPU: $VCPU, SOCKETS: $SOCKETS, MEM: $MEM, DEBUG: $DEBUG, PMU: $PMU, CMDLINE: $CMDLINE, \
+      FEATURE: $FEATURE, TESTCASE: $TESTCASE, SECONDS: $SECONDS"
       EXEC_FLAG=0
-      if ! ./guest.test_executor.sh; then EXEC_FLAG=1 && break; fi # break while read loop in case of TD VM test failure
+      if ! ./guest.test_executor.sh; then EXEC_FLAG=1 && break; fi # break while read loop in case of guest.test_executor.sh test failure
     # err_handlers string matching
     elif [[ "$line" == @($ERR_STR1) ]]; then
       test_print_err "There is $ERR_STR1, test is not fully PASS"
