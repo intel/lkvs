@@ -13,7 +13,7 @@
 ###################### Variables ######################
 # exec only if script being executed
 if [ "${BASH_SOURCE[0]}" -ef "$0" ]; then
-  SCRIPT_DIR="$( cd $( dirname "$0" ) && pwd )"
+  SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
   echo "$SCRIPT_DIR"
 else # bypass above execution in case of being sourced
   echo "guest.test_executor.sh being sourced"
