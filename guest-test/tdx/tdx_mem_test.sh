@@ -29,10 +29,10 @@ done
 ###################### Functions ######################
 ebizzy_func() {
   test_print_trc "Start TDX guest ebizzy test 10s with malloc"
-  ebizzy -M
+  ./ebizzy -M
   ebizzy_malloc=$?
   test_print_trc "Start TDX guest ebizzy test 10s with mmap"
-  ebizzy -m
+  ./ebizzy -m
   ebizzy_mmap=$?
   if [[ $ebizzy_malloc == 0 && $ebizzy_mmap == 0 ]]; then
     test_print_trc "TDX guest ebizzy test PASS"
@@ -47,6 +47,8 @@ ebizzy_func() {
 mem_accepted_time() {
 # common expected time consumed in seconds
 expected_time=$1
+# stress-ng mem stress process number
+workers=$2
 # prepare for prerequisites
   if [ ! "$(which stress-ng)" ]; then
     dnf install -y stress-ng > /dev/null
@@ -57,7 +59,7 @@ expected_time=$1
   fi
 # calculate memory accepted fully completed time
 SECONDS=0
-stress-ng --vm 1 --vm-bytes 100% &
+stress-ng --vm "$workers" --vm-bytes 100% &
 while (true); do 
   if [[ $(grep "nr_unaccepted" /proc/vmstat | awk '{print $2}') -eq 0 ]]; then
     actual_time=$SECONDS;
@@ -84,25 +86,65 @@ case "$MEM_CASE" in
   EBIZZY_FUNC)
     ebizzy_func
     ;;
-  MEM_ACCEPT_TIME_4G)
-    # expected 4 secs
-    mem_accepted_time 4
+  MEM_ACPT_T_1C_8G_1W)
+    # expected 24secs in case of
+    # 1VCPU + 8G MEM + 1 mem stress process
+    mem_accepted_time 24 1
     ;;
-  MEM_ACCEPT_TIME_16G)
-    # expected 1 min 4 secs
-    mem_accepted_time 64
+  MEM_ACPT_T_1C_8G_32W)
+    # expected 26secs in case of
+    # 1VCPU + 8G MEM + 32 mem stress processes
+    mem_accepted_time 26 32
     ;;
-  MEM_ACCEPT_TIME_32G)
-    # expected 2 mins 18 secs
-    mem_accepted_time 138
+  MEM_ACPT_T_1C_32G_1W)
+    # expected 148secs in case of
+    # 1VCPU + 32G MEM + 1 mem stress process
+    mem_accepted_time 148 1
     ;;
-  MEM_ACCEPT_TIME_64G)
-    # expected 4 mins 46 secs
-    mem_accepted_time 286
+  MEM_ACPT_T_1C_32G_32W)
+    # expected 232secs in case of
+    # 1VCPU + 32G MEM + 32 mem stress processes
+    mem_accepted_time 232 32
     ;;
-  MEM_ACCEPT_TIME_96G)
-    # expected 5 mins 59 secs
-    mem_accepted_time 359
+  MEM_ACPT_T_1C_96G_1W)
+    # expected 472secs in case of
+    # 1VCPU + 32G MEM + 1 mem stress process
+    mem_accepted_time 472 1
+    ;;
+  MEM_ACPT_T_1C_96G_32W)
+    # expected 773secs in case of
+    # 1VCPU + 32G MEM + 32 mem stress processes
+    mem_accepted_time 773 32
+    ;;
+  MEM_ACPT_T_32C_8G_32W)
+    # expected 2secs in case of
+    # 32VCPU + 8G MEM + 32 mem stress processes
+    mem_accepted_time 2 32
+    ;;
+  MEM_ACPT_T_32C_8G_256W)
+    # expected 4secs in case of
+    # 32VCPU + 8G MEM + 256 mem stress processes
+    mem_accepted_time 4 256
+    ;;
+  MEM_ACPT_T_32C_32G_32W)
+    # expected 29secs in case of
+    # 32VCPU + 32G MEM + 32 mem stress processes
+    mem_accepted_time 29 32
+    ;;
+  MEM_ACPT_T_32C_32G_256W)
+    # expected 33secs in case of
+    # 32VCPU + 32G MEM + 256 mem stress processes
+    mem_accepted_time 33 256
+    ;;
+  MEM_ACPT_T_32C_96G_32W)
+    # expected 284secs in case of
+    # 32VCPU + 96G MEM + 32 mem stress processes
+    mem_accepted_time 284 32
+    ;;
+  MEM_ACPT_T_32C_96G_256W)
+    # expected 92secs in case of
+    # 32VCPU + 96G MEM + 256 mem stress processes
+    mem_accepted_time 92 256
     ;;
   :)
     test_print_err "Must specify the memory case option by [-t]"
