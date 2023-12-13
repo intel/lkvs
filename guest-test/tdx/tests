@@ -35,3 +35,5 @@ guest.test_launcher.sh -v 32 -s 1 -m 96 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_32C
 guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -f tdx -x TD_MEM_ACPT_FUNC -c "accept_memory=lazy" -p off
 guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -f tdx -x TD_MEM_ACPT_CAL -c "accept_memory=lazy" -p off
 guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -f tdx -x TD_MEM_ACPT_NEG -c "accept_memory=eager" -p off
+# case implemented by tdx_test_module.sh
+guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_VE_HALT -c "accept_memory=lazy" -p off

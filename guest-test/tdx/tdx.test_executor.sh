@@ -248,6 +248,16 @@ case "$TESTCASE" in
       guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
+  TD_VE_HALT)
+    guest_test_prepare tdx_test_module.sh
+    guest_test_source_code tdx_halt_test_module halt_test || \
+    { die "Failed to prepare guest test kernel module for $TESTCASE"; return 1; }
+    guest_test_entry tdx_test_module.sh "halt_test" || \
+    { die "Failed on $TESTCASE tdx_test_module.sh halt_test"; return 1; }
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
+    fi
+    ;;
   :)
     test_print_err "Must specify the test scenario option by [-t]"
     usage && exit 1
