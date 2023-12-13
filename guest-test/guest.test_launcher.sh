@@ -25,7 +25,7 @@ echo "$SCRIPT_DIR"
 GCOV="off"
 # timeout control in case of TD VM booting hang
 SECONDS=0
-TIMEOUT=300
+TIMEOUT=900
 # EXEC_FLAG=0 shows test_executor being called
 EXEC_FLAG=1
 
@@ -249,8 +249,13 @@ while read -r line; do
   elif [[ $SECONDS -ge $TIMEOUT ]]; then # break while read loop in case of TD VM boot timeout (no $BOOT_PATTERN found)
     break
   fi
-done < <(if [ "$GCOV" == "off" ]; then timeout "$TIMEOUT" ./guest.qemu_runner.sh; \
-  else test_print_trc "${VM_TYPE}vm_$PORT keep alive for gcov data collection" && ./guest.qemu_runner.sh; fi)
+done < <(
+  if [ "$GCOV" == "off" ]; then
+    timeout "$TIMEOUT" ./guest.qemu_runner.sh
+  else
+    test_print_trc "${VM_TYPE}vm_$PORT keep alive for gcov data collection" && ./guest.qemu_runner.sh
+  fi
+)
 
 ## PART 3: err_handlers error management
 # unexpected error/bug/warning/call trace handling

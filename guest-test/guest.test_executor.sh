@@ -92,7 +92,13 @@ guest_test_close() {
     test_print_trc "guest test complete, close VM now"
     systemctl reboot --reboot-argument=now
 EOF
+ERR_NUM=$?
+if [ $ERR_NUM -eq 0 ]; then
   test_print_trc "Guest VM closed properly after test"
+  return 0
+else
+  return 1
+fi
 }
 
 ###################### Do Works ######################
