@@ -29,7 +29,7 @@ guest_attest_test() {
   guest_test_entry tdx_attest_check.sh "-t $selftest_item" || \
   { die "Failed on $TESTCASE tdx_attest_check.sh -t $selftest_item"; return 1; }
   if [[ $GCOV == "off" ]]; then
-    guest_test_close
+    guest_test_close || { die "Failed on close guest VM"; return 1; }
   fi
 }
 
@@ -39,7 +39,7 @@ guest_tsm_attest() {
   guest_test_entry tdx_attest_check.sh "-t $test_item" || \
   { die "Failed on $TESTCASE tdx_attest_check.sh -t $test_item"; return 1; }
   if [[ $GCOV == "off" ]]; then
-    guest_test_close
+    guest_test_close || { die "Failed on close guest VM"; return 1; }
   fi
 }
 
@@ -70,16 +70,16 @@ case "$TESTCASE" in
     guest_test_entry tdx_guest_boot_check.sh "-v $VCPU -s $SOCKETS -m $MEM" || \
     die "Failed on TD_BOOT test tdx_guest_boot_check.sh -v $VCPU -s $SOCKETS -m $MEM"
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   GUEST_TESTCASE_EXAMPLE)
     guest_test_prepare guest_test.sh
     guest_test_source_code test_source_code_dir_example test_binary_example
     guest_test_entry guest_test.sh "-t $TESTCASE" || \
-    die "Failed on $TESTCASE guest_test.sh -t $TESTCASE"
+    { die "Failed on $TESTCASE guest_test.sh -t $TESTCASE"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_ATTEST_VERIFY_REPORT)
@@ -103,7 +103,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_speed_test.sh || \
     die "Failed on TD_NET_SPEED tdx_speed_test.sh"
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_TSM_ATTEST_QUOTE_PRECHECK)
@@ -125,7 +125,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t EBIZZY_FUNC" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t EBIZZY_FUNC"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_1C_8G_1W)
@@ -133,7 +133,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_1C_8G_1W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_8G_1W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_1C_8G_32W)
@@ -141,7 +141,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_1C_8G_32W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_8G_32W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_1C_32G_1W)
@@ -149,7 +149,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_1C_32G_1W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_32G_1W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_1C_32G_32W)
@@ -157,7 +157,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_1C_32G_32W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_32G_32W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_1C_96G_1W)
@@ -165,7 +165,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_1C_96G_1W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_96G_1W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_1C_96G_32W)
@@ -173,7 +173,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_1C_96G_32W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_96G_32W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_32C_8G_32W)
@@ -181,7 +181,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_8G_32W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_8G_32W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_32C_8G_256W)
@@ -189,7 +189,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_8G_256W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_8G_256W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_32C_32G_32W)
@@ -197,7 +197,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_32G_32W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_32G_32W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_32C_32G_256W)
@@ -205,7 +205,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_32G_256W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_32G_256W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_32C_96G_32W)
@@ -213,7 +213,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_96G_32W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_96G_32W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   TD_MEM_ACPT_T_32C_96G_256W)
@@ -221,7 +221,7 @@ case "$TESTCASE" in
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_96G_256W" || \
     { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_96G_256W"; return 1; }
     if [[ $GCOV == "off" ]]; then
-      guest_test_close
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
   :)
