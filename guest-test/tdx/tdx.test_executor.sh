@@ -224,6 +224,30 @@ case "$TESTCASE" in
       guest_test_close || { die "Failed on close guest VM"; return 1; }
     fi
     ;;
+  TD_MEM_ACPT_FUNC)
+    guest_test_prepare tdx_mem_test.sh
+    guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_FUNC" || \
+    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_FUNC"; return 1; }
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
+    fi
+    ;;
+  TD_MEM_ACPT_CAL)
+    guest_test_prepare tdx_mem_test.sh
+    guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_CAL" || \
+    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_CAL"; return 1; }
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
+    fi
+    ;;
+  TD_MEM_ACPT_NEG)
+    guest_test_prepare tdx_mem_test.sh
+    guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_NEG" || \
+    { die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_NEG"; return 1; }
+    if [[ $GCOV == "off" ]]; then
+      guest_test_close || { die "Failed on close guest VM"; return 1; }
+    fi
+    ;;
   :)
     test_print_err "Must specify the test scenario option by [-t]"
     usage && exit 1

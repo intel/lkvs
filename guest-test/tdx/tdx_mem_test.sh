@@ -45,11 +45,11 @@ ebizzy_func() {
 
 # function based on stress-ng calculate total remained mem accepted time
 mem_accepted_time() {
-# common expected time consumed in seconds
-expected_time=$1
-# stress-ng mem stress process number
-workers=$2
-# prepare for prerequisites
+  # common expected time consumed in seconds
+  expected_time=$1
+  # stress-ng mem stress process number
+  workers=$2
+  # prepare for prerequisites
   if [ ! "$(which stress-ng)" ]; then
     dnf install -y stress-ng > /dev/null
     apt install -y stress-ng > /dev/null
@@ -57,28 +57,76 @@ workers=$2
     test_print_trc "stress-ng prerequisites is ready for use"
     test_print_trc "unaccepted memory drained time calculation is starting now..."
   fi
-# calculate memory accepted fully completed time
-SECONDS=0
-stress-ng --vm "$workers" --vm-bytes 100% &
-while (true); do 
-  if [[ $(grep "nr_unaccepted" /proc/vmstat | awk '{print $2}') -eq 0 ]]; then
-    actual_time=$SECONDS;
-    pkill stress-ng;
-    break;
+  # calculate memory accepted fully completed time
+  SECONDS=0
+  stress-ng --vm "$workers" --vm-bytes 100% &
+  while (true); do
+    if [[ $(grep "nr_unaccepted" /proc/vmstat | awk '{print $2}') -eq 0 ]]; then
+      actual_time=$SECONDS;
+      pkill stress-ng;
+      break;
+    fi
+  done
+  # check if memory accept time far exceed expected (passed in value)
+  compare_result=$(echo "scale=2; ($actual_time/$expected_time)" | bc)
+  baseline_result=1.1
+  result=$(awk -v n1="$compare_result" -v n2="$baseline_result" 'BEGIN {if (n1>n2) print 1; else print 0}')
+  if [ "$result" -eq 0 ]; then
+    test_print_trc "Memory accepted full time consumed: $actual_time"
+    return 0
+  else
+    die "Memory accepted full time consumed: $actual_time seconds"
+    die "It's over expectation $expected_time seconds 10% more!!!"
+    return 1
   fi
-done
-# check if memory accept time far exceed expected (passed in value)
-compare_result=$(echo "scale=2; ($actual_time/$expected_time)" | bc)
-baseline_result=1.1
-result=$(awk -v n1="$compare_result" -v n2="$baseline_result" 'BEGIN {if (n1>n2) print 1; else print 0}')
-if [ "$result" -eq 0 ]; then
-  test_print_trc "Memory accepted full time consumed: $actual_time"
-  return 0
-else
-  die "Memory accepted full time consumed: $actual_time seconds"
-  die "It's over expectation $expected_time seconds 10% more!!!"
-  return 1
-fi
+}
+
+# function based on stress-ng do basic mem lazy accept function check
+mem_accept_func() {
+  # prepare for prerequisites
+  if [ ! "$(which stress-ng)" ]; then
+    dnf install -y stress-ng > /dev/null
+    apt install -y stress-ng > /dev/null
+  else
+    test_print_trc "stress-ng prerequisites is ready for use"
+    test_print_trc "unaccepted memory drained time calculation is starting now..."
+  fi
+  bootup_vmstat=$(grep "nr_unaccepted" /proc/vmstat | cut -d' ' -f2)
+  stress-ng --vm 1 --vm-bytes 10% --timeout 3s
+  stress_vmstat=$(grep "nr_unaccepted" /proc/vmstat | cut -d' ' -f2)
+  if [[ "$bootup_vmstat" -gt "$stress_vmstat" ]]; then
+    test_print_trc "TD VM unaccepted memory func test PASS"
+  else
+    die "TD VM unaccepted memory func test FAIL"
+    return 1
+  fi
+}
+
+# function mem lazy accept info calculation
+mem_accept_cal() {
+  test_print_trc "Start TD VM unaccepted memory info calculation check"
+  vmstat=$(grep "nr_unaccepted" /proc/vmstat | cut -d' ' -f2)
+  meminfo=$(awk '/Unaccepted/{printf "%d\n", $2;}' </proc/meminfo)
+  pagesize=$(getconf PAGESIZE)
+  test_print_trc "vmstat: $vmstat; meminfo= $meminfo"
+  if [[ $((vmstat * pagesize / 1024)) -eq "$meminfo" ]]; then
+    test_print_trc "TD VM unaccepted memory info calculation PASS"
+  else
+    die "TD VM unaccepted memory info calculation FAIL"
+    return 1
+  fi
+}
+
+# function mem lazy accept negative test
+mem_accept_neg() {
+  test_print_trc "Start TD VM unaccepted memory negative test"
+  vmstat_disable=$(grep "nr_unaccepted" /proc/vmstat | cut -d' ' -f2)
+  if [[ "$vmstat_disable" -eq 0 ]]; then
+    test_print_trc "TD VM unaccepted memory negative test"
+  else
+    die "TD VM unaccepted memory negative test FAIL with nr_unaccepted: $vmstat_disable"
+    return 1
+  fi
 }
 
 ###################### Do Works ######################
@@ -145,6 +193,15 @@ case "$MEM_CASE" in
     # expected 92secs in case of
     # 32VCPU + 96G MEM + 256 mem stress processes
     mem_accepted_time 92 256
+    ;;
+  MEM_ACPT_FUNC)
+    mem_accept_func
+    ;;
+  MEM_ACPT_CAL)
+    mem_accept_cal
+    ;;
+  MEM_ACPT_NEG)
+    mem_accept_neg
     ;;
   :)
     test_print_err "Must specify the memory case option by [-t]"
