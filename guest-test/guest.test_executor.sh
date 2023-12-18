@@ -59,13 +59,13 @@ EOF
       return 1
     fi
 EOF
-ERR_NUM=$?
-if [ $ERR_NUM -eq 0 ]; then
-  test_print_trc "Guest VM test source code and binary prepare complete"
-  return 0
-else
-  return 1
-fi
+  ERR_NUM=$?
+  if [ $ERR_NUM -eq 0 ]; then
+    test_print_trc "Guest VM test source code and binary prepare complete"
+    return 0
+  else
+    return 1
+  fi
 }
 
 # function based on sshpass to execute $1 test_script.sh and potential $2 script params in Guest VM
@@ -77,12 +77,12 @@ guest_test_entry() {
     test_print_trc "guest_test_entry args 2: $2"
     ./$1 $2
 EOF
-ERR_NUM=$?
-if [ $ERR_NUM -eq 0 ] || [ $ERR_NUM -eq 255 ]; then
-  return 0
-else
-  return 1
-fi
+  ERR_NUM=$?
+  if [ $ERR_NUM -eq 0 ] || [ $ERR_NUM -eq 255 ]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 # function based on sshpass to close VM
@@ -92,13 +92,13 @@ guest_test_close() {
     test_print_trc "guest test complete, close VM now"
     systemctl reboot --reboot-argument=now
 EOF
-ERR_NUM=$?
-if [ $ERR_NUM -eq 0 ]; then
-  test_print_trc "Guest VM closed properly after test"
-  return 0
-else
-  return 1
-fi
+  ERR_NUM=$?
+  if [ $ERR_NUM -eq 0 ]; then
+    test_print_trc "Guest VM closed properly after test"
+    return 0
+  else
+    return 1
+  fi
 }
 
 ###################### Do Works ######################
