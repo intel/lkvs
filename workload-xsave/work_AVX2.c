@@ -26,7 +26,7 @@
 #pragma GCC optimize("unroll-loops")
 
 struct thread_data {
-	u_int8_t *input_x;
+	uint8_t *input_x;
 	int8_t *input_y;
 	int16_t *output;
 	int data_entries;

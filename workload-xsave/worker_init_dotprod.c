@@ -17,7 +17,7 @@ static int init(struct work_instance *wi)
 	if (!dp)
 		err(1, "thread_data");
 
-	dp->input_x = (u_int8_t *)calloc(entries, BYTES_PER_VECTOR);
+	dp->input_x = (uint8_t *)calloc(entries, BYTES_PER_VECTOR);
 	if (!dp->input_x)
 		err(1, "calloc input_x");
 
