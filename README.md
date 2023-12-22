@@ -61,7 +61,7 @@ dpkg -i linux-xxx-dev_TARGET_VERSION.deb
 dpkg -i linux-xxx-tools_TARGET_VERSION.deb
 
 Boot up with target kernel version.
-cd cet_driver
+cd cet/cet_driver
 make
 ```
 
