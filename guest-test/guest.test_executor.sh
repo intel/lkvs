@@ -46,17 +46,16 @@ EOF
     source $GUEST_TEST_DIR/common.sh
     cd $GUEST_TEST_DIR
     cd $1
-    dnf list installed gcc || dnf install -y gcc || \
-    { die "Failed to install gcc in guest os"; return 1; }
-    dnf list installed glibc-static || dnf install -y glibc-static || \
-    { die "Failed to install glibc-static in guest os"; return 1; }
-    make || { die "Failed to compile source code $1"; return 1; }
+    dnf list installed gcc || dnf install -y gcc > /dev/null 2>&1
+    dnf list installed glibc-static || dnf install -y glibc-static > /dev/null 2>&1
+    apt list installed gcc | grep "installed" || apt-get install -y gcc > /dev/null 2>&1
+    apt list installed libc6-dev | grep "installed" || apt-get install -y libc6-dev > /dev/null 2>&1
+    make || die "Failed to compile source code $1"
     if [ -f $2 ]; then
       chmod a+x $2
       cp $2 $GUEST_TEST_DIR
     else
       die "Can't find test binary $2"
-      return 1
     fi
 EOF
   ERR_NUM=$?
@@ -90,14 +89,18 @@ guest_test_close() {
   sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
     source $GUEST_TEST_DIR/common.sh
     test_print_trc "guest test complete, close VM now"
-    systemctl reboot --reboot-argument=now
+    if [[ "$VM_TYPE" = "legacy" ]]; then
+      shutdown now
+    else
+      systemctl reboot --reboot-argument=now
+    fi
 EOF
   ERR_NUM=$?
   if [ $ERR_NUM -eq 0 ]; then
     test_print_trc "Guest VM closed properly after test"
     return 0
   else
-    return 1
+    die "Failed on close guest VM"
   fi
 }
 
@@ -114,5 +117,5 @@ if [ "${BASH_SOURCE[0]}" -ef "$0" ]; then
   cd "$SCRIPT_DIR" || die "fail to switch to $SCRIPT_DIR"
   # select specific "$FEATURE.test_executor.sh" by $FEATURE
   "$FEATURE"/"$FEATURE".test_executor.sh || \
-  { die "Failed on $TESTCASE of $FEATURE"; return 1; }
+  die "Failed on $TESTCASE of $FEATURE"
 fi
