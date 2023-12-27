@@ -16,6 +16,49 @@ SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 echo "$SCRIPT_DIR"
 
 ###################### Functions ######################
+# function to remove 0x and prefix useless 0 for hex data
+version_check() {
+  local version_raw=$1
+  if [[ "$version_raw" = "0x00000000" ]]; then
+    local version=0x0
+  else
+    local version_hex
+    version_hex=${version_raw#0x}
+    version_hex=${version_hex##+(0)}
+    local version=$((16#$version_hex))
+  fi
+  echo "$version"
+}
+
+# function to do tdx module status and version check
+tdx_module_check() {
+  local tdx_module_path="/sys/firmware/tdx/tdx_module/"
+  local status
+  local attributes
+  local vendor_id
+  local major_version
+  local minor_version
+  local build_date
+  local build_num
+  status=$(cat "$tdx_module_path"status)
+  [[ "$status" = "initialized" ]] || \
+  die "TDX module not initialized correctly, \
+  please check host kernel tdx enabling setup."
+  test_print_trc "TDX module initialized correctly"
+  attributes=$(cat "$tdx_module_path"attributes)
+  attributes=$(version_check "$attributes")
+  vendor_id=$(cat "$tdx_module_path"vendor_id)
+  major_version=$(cat "$tdx_module_path"major_version)
+  major_version=$(version_check "$major_version")
+  minor_version=$(cat "$tdx_module_path"minor_version)
+  minor_version=$(version_check "$minor_version")
+  build_date=$(cat "$tdx_module_path"build_date)
+  build_num=$(cat "$tdx_module_path"build_num)
+  build_num=$(version_check "$build_num")
+  test_print_trc "TDX module: attributes $attributes, vendor_id $vendor_id, \
+  major_version $major_version, minor_version $minor_version, \
+  build_date $build_date, build_num $build_num"
+}
 
 # function to do TDX/TDXIO VM launching basic pre-check
 # list all the variables value
@@ -81,6 +124,7 @@ source "$SCRIPT_DIR"/test_params.py
 # do basic pre-check for TDX/TDXIO VM launching
 if [[ $VM_TYPE == "tdx" ]] || [[ $VM_TYPE == "tdxio" ]]; then
   tdx_pre_check
+  tdx_module_check
 fi
 
 # launch VM by qemu via qemu_runner.py
