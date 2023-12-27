@@ -39,7 +39,6 @@ ebizzy_func() {
     return 0
   else
     die "TDX guest ebizzy test FAIL"
-    return 1
   fi
 }
 
@@ -75,9 +74,8 @@ mem_accepted_time() {
     test_print_trc "Memory accepted full time consumed: $actual_time"
     return 0
   else
-    die "Memory accepted full time consumed: $actual_time seconds"
-    die "It's over expectation $expected_time seconds 10% more!!!"
-    return 1
+    die "Memory accepted full time consumed: $actual_time seconds, \
+    It's over expectation $expected_time seconds 10% more!!!"
   fi
 }
 
@@ -98,7 +96,6 @@ mem_accept_func() {
     test_print_trc "TD VM unaccepted memory func test PASS"
   else
     die "TD VM unaccepted memory func test FAIL"
-    return 1
   fi
 }
 
@@ -113,7 +110,6 @@ mem_accept_cal() {
     test_print_trc "TD VM unaccepted memory info calculation PASS"
   else
     die "TD VM unaccepted memory info calculation FAIL"
-    return 1
   fi
 }
 
@@ -125,7 +121,6 @@ mem_accept_neg() {
     test_print_trc "TD VM unaccepted memory negative test"
   else
     die "TD VM unaccepted memory negative test FAIL with nr_unaccepted: $vmstat_disable"
-    return 1
   fi
 }
 

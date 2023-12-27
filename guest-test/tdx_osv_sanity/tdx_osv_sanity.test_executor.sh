@@ -57,7 +57,7 @@ case "$TESTCASE" in
     guest_test_prepare tdx_guest_tsc_check.sh
     source tdx_host_tsc_check.sh
     guest_test_entry tdx_guest_tsc_check.sh "-c $HOST_TSC" || \
-    { die "Failed on TD_TSC_DEFAULT tdx_guest_tsc_check.sh -c $HOST_TSC"; return 1; }
+    die "Failed on TD_TSC_DEFAULT tdx_guest_tsc_check.sh -c $HOST_TSC"
     if [[ $GCOV == "off" ]]; then
       guest_test_close
     fi
@@ -66,7 +66,7 @@ case "$TESTCASE" in
     guest_test_prepare tdx_guest_tsc_check.sh
     CONFIG_TSC=3000000000
     guest_test_entry tdx_guest_tsc_check.sh "-c $CONFIG_TSC" || \
-    { die "Failed on TD_TSC_CONFIG tdx_guest_tsc_check.sh -c $CONFIG_TSC"; return 1; }
+    die "Failed on TD_TSC_CONFIG tdx_guest_tsc_check.sh -c $CONFIG_TSC"
     if [[ $GCOV == "off" ]]; then
       guest_test_close
     fi

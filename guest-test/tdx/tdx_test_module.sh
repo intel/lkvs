@@ -18,7 +18,7 @@ test_module=$1
 ###################### Functions ######################
 module_check() {
   lsmod | grep "$test_module" || \
-  { die "test module $test_module not found in lsmod"; return 1; }
+  die "test module $test_module not found in lsmod"
   test_print_trc "test module loaded and test should be completed now"
 }
 
