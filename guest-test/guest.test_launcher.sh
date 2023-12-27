@@ -77,9 +77,14 @@ guest_kernel_check() {
 EOF
 }
 
-guest_kernel_reboot() {
+guest_kernel_shutdown() {
   sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
-    systemctl reboot --reboot-argument=now
+    echo "$VM_TYPE VM guest kernel shutdown now"
+    if [[ "$VM_TYPE" = "legacy" ]]; then
+      shutdown now
+    else
+      systemctl reboot --reboot-argument=now
+    fi
 EOF
 }
 
@@ -251,7 +256,9 @@ while read -r line; do
   fi
 done < <(
   if [ "$GCOV" == "off" ]; then
-    timeout "$TIMEOUT" ./guest.qemu_runner.sh
+    # keep timeout process run foreground for direct script execution correctness
+    # handle timeout effect case SIGTERM impact on terminal no type-in prompt issue
+    timeout --foreground "$TIMEOUT" ./guest.qemu_runner.sh || reset
   else
     test_print_trc "${VM_TYPE}vm_$PORT keep alive for gcov data collection" && ./guest.qemu_runner.sh
   fi
@@ -308,17 +315,17 @@ if ! guest_kernel_check; then
     pkill "${VM_TYPE}vm_$PORT"
     die "$VM_TYPE VM test seems fail at beginning, please check test log"
   fi
-# guest_kernel_kernel function zero return value shows TDVM is still accessible handling
-# handling: no matter why it's still accessible, close it by guest_kernel_reboot function
+# guest_kernel_check function zero return value shows TDVM is still accessible handling
+# handling: no matter why it's still accessible, close it by guest_kernel_shutdown function
 elif [ "$GCOV" == "off" ]; then
-  if ! guest_kernel_reboot; then
+  if guest_kernel_shutdown; then
     test_print_trc "$VM_TYPE VM is still up"
     test_print_trc "time: $SECONDS"
     test_print_trc "SSHPASS: $SSHPASS"
     test_print_trc "PORT: $PORT"
     test_print_trc "$VM_TYPE VM closed"
     # must die here since TDVM should be closed and not accessible if test complete all correctly
-    # else it's due to test die before reaching final close point td_test_close function
+    # else it's due to test die before reaching final close point guest_test_close function
     die "$VM_TYPE VM test fail, please check test log"
   fi
 else # [ $GCOV == "on" ] || [ guest_kernel_check return 0 ]
