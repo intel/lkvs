@@ -17,6 +17,7 @@
 import subprocess as sp
 from qemu_get_config import *
 from test_params import *
+from signal import signal, SIGPIPE, SIG_DFL
 
 ###################### Variables ######################
 # all variables imported from qemu_get_config and test_params
@@ -25,6 +26,8 @@ from test_params import *
 # all work done in qemu_get_config.py
 
 ###################### Do Works ######################
+# igore SIGPIPE in case of broken pipe errno 32 case
+signal(SIGPIPE, SIG_DFL)
 # launch legacy common vm based on vm_type config
 if vm_type == "legacy":
   command = '{} {}'.format(qemu_img, vm_cfg)
