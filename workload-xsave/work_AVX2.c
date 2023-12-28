@@ -14,6 +14,7 @@
 #include <sched.h>		/* CPU_SET */
 #include "yogini.h"
 #include <immintrin.h>
+#include <stdint.h>
 #include <err.h>
 
 #pragma GCC target("avx2,fma")

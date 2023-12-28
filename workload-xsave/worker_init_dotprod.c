@@ -3,7 +3,7 @@
  * Copyright (c) 2022 Intel Corporation.
  * Len Brown <len.brown@intel.com>
  */
-
+#include <stdint.h>
 static int init(struct work_instance *wi)
 {
 	int i;
