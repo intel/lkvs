@@ -264,12 +264,12 @@ static void cmdline(int argc, char **argv)
 
 	progname = argv[0];
 
+	if (argc == 1)
+		help();
+
 	while ((opt = getopt_long_only(argc, argv, "h:w:r:b:f",
-	       long_options, &option_index)) != -1) {
+				       long_options, &option_index)) != -1) {
 		switch (opt) {
-		case 'h':
-			help();
-			break;
 		case 'w':
 			if (parse_work_cmd(optarg))
 				help();
@@ -284,6 +284,8 @@ static void cmdline(int argc, char **argv)
 		case 'f':
 			clfulsh = 1;
 			break;
+		case '?':
+		case 'h':
 		default:
 			help();
 		}

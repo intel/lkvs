@@ -13,6 +13,7 @@
 #include <sched.h>		/* CPU_SET */
 #include "yogini.h"
 #include <immintrin.h>
+#include <stdint.h>
 #include <err.h>
 
 #if __GNUC__ >= 11
