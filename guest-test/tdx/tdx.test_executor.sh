@@ -13,7 +13,6 @@
 
 ###################### Variables ######################
 ## common variables example ##
-local SCRIPT_DIR_LOCAL
 SCRIPT_DIR_LOCAL="$( cd "$( dirname "$0" )" && pwd )"
 echo "$SCRIPT_DIR_LOCAL"
 # get test scenario config for $FEATURE tdx test_executor
