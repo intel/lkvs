@@ -17,7 +17,7 @@ No multi-VMs test scenarios covered/supported.
 
 In any case of issue debugging, please refer to above test log with VM QEMU config info and launch VM and debug issues manually running test scripts/binaries.
 
-A prepared Guest OS Image (qcow2 or raw image format) is requried with preset root account and password, several values/parameters in qemu.config.json highly depend on Guest OS Image, please accomodate accordingly.
+A prepared Guest OS Image (qcow2 or raw image format) is requried with preset root account and password, several values/parameters in common.json highly depend on Guest OS Image, please accomodate accordingly.
 
 ## Usage
 ### common.json and qemu.config.json description
@@ -46,11 +46,11 @@ group "common" includes all configurable values to be passed to group "vm", "tdx
 group "vm" includes all legacy vm launch qemu config options, which can be used to launch legacy vm standalone or as base part to launch tdx vm
 
 group "vm" 2nd-level-keys could be bypassed if not provided (file not exists)
-"cfg_var_6" & "cfg_var_10"
+"cfg_var_6", "cfg_var_10" could be bypassed separately, "cfg_var_5" & "cfg_var_9" could be bypassed in pair
 
 group "tdx" includes tdx vm specific qemu config options, which is used to launch tdx vm (with group "vm" as base) or as a based part to launch tdxio vm
 
-group "tdxio" includes tdxio vm specific qemu config options, which is used to launch tdxio vm (with group "vm" + "tdx" as base)
+group "tdxio" includes tdxio/tdx-connect vm specific qemu config options, which is used to launch tdxio/tdx-connect vm (with group "vm" + "tdx" as base)
 
 note about qemu.config.json:
 - no changes allowed on 1st-level-keys hierarchy
@@ -64,14 +64,17 @@ main test entrance, with following key args can be passed to override the values
   - `-m` $MEM memory size in GB
   - `-d` $DEBUG debug on/off
   - `-t` $VM_TYPE vm_type legacy/tdx/tdxio
+  - `-f` $FEATURE feature sub-folder for new feature vm test extension
   - `-x` $TESTCASE testcase pass to test_executor
   - `-c` $CMDLINE guest kernel extra commandline
   - `-p` $PMU guest pmu off/on
   - `-g` $GCOV code coverage test mode off/on
+  - `-i` $JSON_C file path under guest-test to standalone common.json file
+  - `-j` $JSON_Q file path under guest-test to standalone qemu.config.json file
 
-above key args will be recorded in a fresh new test_params.py for further import/source purpose accross scripts
+above key args will be recorded in a fresh new test_params.py for further import/source purpose accross python and shell scripts
 
-by enter each test, qemu_get_config.py will be called to get following pre-set parameters from qemu.config.json
+by enter each test, qemu_get_config.py will be called to get following pre-set parameters from common.json
   - $KERNEL_IMG values passed by group "common" key "kernel_img"
   - $INITRD_IMG values passed by group "common" key "initrd_img"
   - $BIOS_IMG values passed by group "common" key "bios_img"
@@ -82,9 +85,9 @@ by enter each test, qemu_get_config.py will be called to get following pre-set p
   - $SSHPASS values passed by group "common" key "guest_root_passwd"
 
 call guest.qemu_runner.sh and wait for $BOOT_PATTERN (shows VM boot up completed and ready for login) during VM boot
-  - $BOOT_PATTERN selected based on following CentOS Stream 8/9 boot log example: "*Kernel*on*x86_64*"
+  - $BOOT_PATTERN is selected based on following CentOS Stream 8/9 boot log example: "*Kernel*on*an*x86_64*"
 
-  boot log quoted:
+  boot log example quoted:
   ```
     CentOS Stream 9
     Kernel 6.5.0-rc5-next-20230809-next-20230809 on an x86_64
@@ -100,12 +103,12 @@ if $ERR_STRx found, handle the error info accordingly (err_handlers)
 
 no matter what, in the end, pkill VM process to avoid any potential test step failures above
 
-Note: bydeault, $GCOV is off, if $GCOV is on, above VM life-cycles management logic will be bypassed to keep VM process alive for gcov code coverage data collection
+Note: by deault, $GCOV is off, if $GCOV is on, above VM life-cycles management logic will be bypassed to keep VM process alive for gcov code coverage data collection
 
 ### guest.qemu_runner description
 VM boot engine, with parames exported from qemu_get_config.py and test scenario config sourced from test_params.py
 
-before VM boot, for $VM_TYPE tdx or tdxio, tdx_pre_check will be called to make sure basic environment is ready for TDX/TDXIO launching
+before VM boot, for $VM_TYPE tdx or tdxio, tdx_pre_check and tdx_module_check will be called to make sure basic environment is ready for TDX/TDXIO launching
 
 VM boot is triggered by qemu_runner.py based on $VM_TYPE, with proper qemu config options applied
 
@@ -117,8 +120,10 @@ guest VM test execution basic framework implemented in guerst.test_executor.sh, 
   - guest_test_close, function based on sshpass to close VM
 
 ## How to add new feature test
-as described above, if simply add new TCs to run based on current qemu.config.json format, just need to implement it in test_executor with new $TESTCASE branch,
+as described above, if simply add new TCs to run based on current common.json and qemu.config.json format, just need to implement it in $FEATURE.test_executor.sh under guest-test/$FEATURE subfolder,
+please leverage reference code "common variables example" and "common works example" in tdx/tdx.test_executor.sh, further implement "$FEATURE specific Functions" and "$FEATURE specific code path",
+common functions of guest.test_executor.sh should be good enough to prepare/run/close new $FEATURE specific tests implemented in $FEATURE.test_executor.sh;
 
-common functions of test_executor should be good enough to prepare/run/close new $TESTCASE
+it's allowed to customize and pass $FEATURE standalone common.json and qemu.config.json, please refer to ### common.json and qemu.config.json description and ### guest.test_launcher description for quick rule reference
 
-if qemu.config.json format will be revised due to feature changes on QEMU implementation, please update qemu.config.json and qemu_get_config.py accordingly
+furthermore, if common.json and qemu.config.json format will be revised due to feature changes on QEMU implementation, please update qemu_get_config.py accordingly
