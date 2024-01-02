@@ -1,6 +1,7 @@
 # Release Notes for CPU Core Cstate cases
 
-The CPU Core C-state cases are designed for Intel® Architecture-based platforms.
+The CPU Core and Package cstate cases are designed for Intel® Architecture-based
+platforms. The cases are designed for intel_idle driver, not legacy acpi_idle driver.
 Considering Intel® Server and Client platforms have different Core C-states behavior.
 So created two tests files to distinguish the cases running on different test units:
 
