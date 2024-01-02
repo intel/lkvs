@@ -218,7 +218,7 @@ get_kconfig() {
 
   [[ -n "$value" ]] || value="n"
 
-  echo $value
+  echo "$value"
 }
 
 # Test if specified kconfig options and value matche on current system.
