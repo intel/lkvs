@@ -1,6 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (c) 2023 Intel Corporation
+# Author: Pengfei Xu <pengfei.xu@intel.com>
 # Description: Test script to verify Intel IFS(In Field SCAN) functionality
 
 cd "$(dirname "$0")" 2>/dev/null || exit 1
@@ -97,6 +98,8 @@ run_ifs_tests() {
       do_cmd "echo $BATCH_NUM > ${IFS_PATH}/${BATCH}"
       # Need to wait after boot up 1800s, then could test ifs
       wait_up_time
+      # At least sleep 2 for common situation
+      do_cmd "sleep 2"
       # Execute normal scan test in first round and need to wait cooling time
       test_print_trc "***** Will run 1st round normal scan: *****"
       init_log "${CASE_NORM}_${BATCH_NUM}"
