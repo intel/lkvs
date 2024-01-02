@@ -14,7 +14,7 @@ These instructions will help you get a copy of the Intel SIMD Instruction Microb
 
 ### Prerequisites
 * C/C++ compiler with support for the desired SIMD instruction sets.
-* Make installed.
+* CMake and make installed.
 
 ### Installation
 Clone the repository to your local machine:
@@ -25,7 +25,18 @@ Enter the project directory:
 ```
 cd workload-xsave
 ```
+#### CMake(Recommended)
+The CMakeLists.txt is capable of selecting the appropriate source files for compilation based on the instruction sets supported by the target CPU.
 Build the benchmarks using CMake:
+```
+mkdir build
+cd build
+cmake ..
+make
+```
+
+#### Make(Alternative)
+Build the benchmarks using Make:
 ```
 make
 ```
