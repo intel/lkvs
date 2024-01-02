@@ -9,6 +9,7 @@
 BIN_OUTPUT=""
 BIN_DMESG=""
 BIN_RET=""
+export LAST_DMESG_TIMESTAMP=""
 
 # Check whether current user is root, if not, exit directly
 root_check() {
@@ -361,7 +362,6 @@ dmesg_pattern_check() {
 last_dmesg_timestamp() {
   LAST_DMESG_TIMESTAMP=$(dmesg | tail -n1 | awk -F "]" '{print $1}' | tr -d "[]")
   test_print_trc "recorded dmesg timestamp: $LAST_DMESG_TIMESTAMP"
-  export LAST_DMESG_TIMESTAMP
 }
 
 # Extract dmesg generated since the recorded dmesg timestamp
@@ -394,8 +394,6 @@ extract_case_dmesg() {
   else
     grep -v "$LAST_DMESG_TIMESTAMP" <<< "$dmesg"
   fi
-
-  unset LAST_DMESG_TIMESTAMP
 }
 
 # Check specified pattern in dmesg
