@@ -1,6 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (c) 2023 Intel Corporation
+# Author: Pengfei Xu <pengfei.xu@intel.com>
 # Description: Test script for Intel IFS(In Field SCAN) common function
 
 cd "$(dirname "$0")" 2>/dev/null || exit 1
@@ -887,6 +888,7 @@ ifs_array_off_cpu_scan() {
   local key_word="cannot test on the offline cpu"
   local ret=""
 
+  last_dmesg_timestamp
   [[ -z "$off_cpus" ]] && skip_test "No off_cpus:$off_cpus"
   for off_cpu in $off_cpus; do
     do_cmd "echo 0 | sudo tee /sys/devices/system/cpu/cpu${off_cpu}/online"
