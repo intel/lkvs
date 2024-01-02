@@ -9,3 +9,4 @@ powermgr_cstate_tests.sh -t verify_client_pkg6_by_disabling_cc8
 powermgr_cstate_tests.sh -t verify_client_pkg8_by_disabling_cc10
 powermgr_cstate_tests.sh -t verify_cstate_list_by_perf
 powermgr_cstate_tests.sh -t verify_residency_latency_override
+powermgr_cstate_tests.sh -t verify_cpu_offline_online_stress
