@@ -9,8 +9,13 @@
 
 #ifndef YOGINI_H
 #define YOGINI_H
-#include<string.h>
+#include <string.h>
+#include <stdio.h>
 #include <pthread.h>
+
+#ifndef CMAKE_FLAG
+#define CMAKE_FLAG 1
+#endif
 
 struct work_instance {
 	struct work_instance *next;
@@ -55,13 +60,19 @@ extern unsigned int SIZE_1GB;
 
 #ifdef YOGINI_MAIN
 struct workload *(*all_register_routines[]) () = {
+#if MAVX_ENABLED || CMAKE_FLAG
 	register_AVX,
+#endif
+#if MAVX2_ENABLED || CMAKE_FLAG
 	register_AVX2,
+#endif
+#if MAVX512F_ENABLED || CMAKE_FLAG
 	register_AVX512,
-#if __GNUC__ >= 9
+#endif
+#if MVNNI512_ENABLED || CMAKE_FLAG
 	register_VNNI512,
 #endif
-#if __GNUC__ >= 11
+#if MVNNI_ENABLED || CMAKE_FLAG
 	register_VNNI,
 #endif
 	register_DOTPROD,
@@ -71,10 +82,14 @@ struct workload *(*all_register_routines[]) () = {
 	register_UMWAIT,
 #endif
 	register_RDTSC,
+#if MSSE_ENABLED || CMAKE_FLAG
 	register_SSE,
+#endif
 	register_MEM,
 	register_memcpy,
+#if MAMX_ENABLED || CMAKE_FLAG
 	register_AMX,
+#endif
 	NULL
 };
 #endif
