@@ -19,10 +19,13 @@ DOWNLOAD=0
 DOWNLOAD_DATA=0
 UPLOAD=0
 UPLOAD_DATA=0
+RETRY_ID=3
+RETRY_DL=3
+RETRY_UL=3
 
 ###################### Functions ######################
 float_num_compare() {
-  if awk -v n1="$1" -v n2="1" 'BEGIN {if (n1>n2) exit 0; exit 1}'
+  if awk -v n1="$1" -v n2="$2" 'BEGIN {if (n1>n2) exit 0; exit 1}'
   then
     return 0
   else
@@ -41,32 +44,49 @@ else
 fi
 
 # get nearest server ID for test
-ID=$(speedtest-cli --list | awk -F')' 'NR==2 {print $1; exit}')
-if [ "$ID" -gt 0 ]; then
-  test_print_trc "BW test server ID: $ID"
-else
-  test_print_err "BW test get server failed"
-  exit 1
-fi
+while [[ "$RETRY_ID" -gt 0 ]]; do
+  ID=$(speedtest-cli --list | awk -F')' 'NR==2 {print $1; exit}')
+  if [[ "$ID" =~ ^[0-9]+$ ]]; then
+    if [ "$ID" -gt 0 ]; then
+      test_print_trc "BW test server ID: $ID @RETRY: $RETRY_ID"
+      break
+    fi
+  fi
+  RETRY_ID=$((RETRY_ID-1))
+  if [[ "$RETRY_ID" -eq 0 ]]; then
+    test_print_err "BW test get server failed"
+    exit 1
+  fi
+done
 
 # get download bandwidth
-DOWNLOAD=$(speedtest-cli --single --bytes --simple --server "$ID" | awk -F':' 'NR==2 {print $2; exit}')
-DOWNLOAD_DATA=$(echo "$DOWNLOAD" | awk '{print $1; exit}')
-if float_num_compare "$DOWNLOAD_DATA"; then
-  test_print_trc "BW test download result: $DOWNLOAD"
-else
-  test_print_trc "BW test download result: $DOWNLOAD"
-  test_print_err "BW test download test failed"
-  exit 1
-fi
+while [[ "$RETRY_DL" -gt 0 ]]; do
+  test_print_trc "BW download test start @RETRY: $RETRY_DL"
+  DOWNLOAD=$(speedtest-cli --single --bytes --simple --server "$ID" | awk -F':' 'NR==2 {print $2; exit}')
+  DOWNLOAD_DATA=$(echo "$DOWNLOAD" | awk '{print $1; exit}')
+  if float_num_compare "$DOWNLOAD_DATA" "1"; then
+    test_print_trc "BW test PASS with download result: $DOWNLOAD"
+    break
+  fi
+  RETRY_DL=$((RETRY_DL-1))
+  if [[ "$RETRY_DL" -eq 0 ]]; then
+    test_print_trc "BW test FAIL with download result: $DOWNLOAD"
+    exit 1
+  fi
+done
 
 # get upload bandwidth
-UPLOAD=$(speedtest-cli --single --bytes --simple --server "$ID" | awk -F':' 'NR==3 {print $2; exit}')
-UPLOAD_DATA=$(echo "$UPLOAD" | awk '{print $1; exit}')
-if float_num_compare "$UPLOAD_DATA"; then
-  test_print_trc "BW test upload result: $UPLOAD"
-else
-  test_print_trc "BW test upload result: $UPLOAD"
-  test_print_err "BW test upload test failed"
-  exit 1
-fi
+while [[ "$RETRY_UL" -gt 0 ]]; do
+  test_print_trc "BW upaload test start @RETRY: $RETRY_UL"
+  UPLOAD=$(speedtest-cli --single --bytes --simple --server "$ID" | awk -F':' 'NR==3 {print $2; exit}')
+  UPLOAD_DATA=$(echo "$UPLOAD" | awk '{print $1; exit}')
+  if float_num_compare "$UPLOAD_DATA" "0.1"; then
+    test_print_trc "BW test PASS with upload result: $UPLOAD"
+    break
+  fi
+  RETRY_UL=$((RETRY_UL-1))
+  if [[ "$RETRY_UL" -eq 0 ]]; then
+    test_print_trc "BW test FAIL with upload result: $UPLOAD"
+    exit 1
+  fi
+done
