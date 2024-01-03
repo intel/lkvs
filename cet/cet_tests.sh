@@ -1,6 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (c) 2022 Intel Corporation
+# Author: Pengfei Xu <pengfei.xu@intel.com>
 # @Desc  Test script to verify Intel CET functionality
 
 cd "$(dirname "$0")" 2>/dev/null && source ../.env

@@ -4,6 +4,8 @@
 /*
  * xstate.c - tests XSAVE feature with fork and signal handling.
  *
+ * Author: Pengfei Xu <pengfei.xu@intel.com>
+ *
  * The XSAVE feature set supports the saving and restoring of state components.
  * It tests "FP, SSE(XMM), AVX2(YMM), AVX512_OPMASK/AVX512_ZMM_Hi256/
  * AVX512_Hi16_ZMM and PKRU parts" xstates with the following cases:

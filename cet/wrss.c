@@ -4,6 +4,8 @@
 /*
  * wrss.c: enable writable shadow stack and write value into shadow stack.
  *
+ * Author: Pengfei Xu <pengfei.xu@intel.com>
+ *
  * 1. Enable writable shadow stack via syscall "ARCH_CET_ENABLE and ARCH_SHSTK_WRSS"
  * 2. Write one incorrect value into shadow stack
  * 3. The expected SISEGV should be received after ret instruction

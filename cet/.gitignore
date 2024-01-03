@@ -1,4 +1,5 @@
 cet_app
+glibc_shstk_test
 glibc_supported_shstk_test
 quick_test
 shstk_alloc
