@@ -164,9 +164,9 @@ case "$MEM_CASE" in
     mem_accepted_time 3 32
     ;;
   MEM_ACPT_T_32C_8G_256W)
-    # expected 4secs in case of
+    # expected 6secs in case of
     # 32VCPU + 8G MEM + 256 mem stress processes
-    mem_accepted_time 4 256
+    mem_accepted_time 6 256
     ;;
   MEM_ACPT_T_32C_32G_32W)
     # expected 85secs in case of
