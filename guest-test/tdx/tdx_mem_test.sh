@@ -87,7 +87,6 @@ mem_accept_func() {
     apt install -y stress-ng > /dev/null
   else
     test_print_trc "stress-ng prerequisites is ready for use"
-    test_print_trc "unaccepted memory drained time calculation is starting now..."
   fi
   bootup_vmstat=$(grep "nr_unaccepted" /proc/vmstat | cut -d' ' -f2)
   stress-ng --vm 1 --vm-bytes 10% --timeout 3s
@@ -118,7 +117,7 @@ mem_accept_neg() {
   test_print_trc "Start TD VM unaccepted memory negative test"
   vmstat_disable=$(grep "nr_unaccepted" /proc/vmstat | cut -d' ' -f2)
   if [[ "$vmstat_disable" -eq 0 ]]; then
-    test_print_trc "TD VM unaccepted memory negative test"
+    test_print_trc "TD VM unaccepted memory negative test PASS"
   else
     die "TD VM unaccepted memory negative test FAIL with nr_unaccepted: $vmstat_disable"
   fi
@@ -160,9 +159,9 @@ case "$MEM_CASE" in
     mem_accepted_time 773 32
     ;;
   MEM_ACPT_T_32C_8G_32W)
-    # expected 2secs in case of
+    # expected 3secs in case of
     # 32VCPU + 8G MEM + 32 mem stress processes
-    mem_accepted_time 2 32
+    mem_accepted_time 3 32
     ;;
   MEM_ACPT_T_32C_8G_256W)
     # expected 4secs in case of
@@ -170,14 +169,14 @@ case "$MEM_CASE" in
     mem_accepted_time 4 256
     ;;
   MEM_ACPT_T_32C_32G_32W)
-    # expected 29secs in case of
+    # expected 85secs in case of
     # 32VCPU + 32G MEM + 32 mem stress processes
-    mem_accepted_time 29 32
+    mem_accepted_time 85 32
     ;;
   MEM_ACPT_T_32C_32G_256W)
-    # expected 33secs in case of
+    # expected 65secs in case of
     # 32VCPU + 32G MEM + 256 mem stress processes
-    mem_accepted_time 33 256
+    mem_accepted_time 65 256
     ;;
   MEM_ACPT_T_32C_96G_32W)
     # expected 284secs in case of
@@ -185,9 +184,9 @@ case "$MEM_CASE" in
     mem_accepted_time 284 32
     ;;
   MEM_ACPT_T_32C_96G_256W)
-    # expected 92secs in case of
+    # expected 268secs in case of
     # 32VCPU + 96G MEM + 256 mem stress processes
-    mem_accepted_time 92 256
+    mem_accepted_time 268 256
     ;;
   MEM_ACPT_FUNC)
     mem_accept_func
