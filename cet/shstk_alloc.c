@@ -2,6 +2,8 @@
 /*
  * shstk_alloc.c - allocate a new shadow stack buffer aligenment by instructions
  *
+ * Author: Pengfei Xu <pengfei.xu@intel.com>
+ *
  * 1. Test shstk buffer allocation for one new shstk buffer
  * 2. Test rstorssp, saveprevssp, rdsspq to load new shstk buffer
  * 3. Test rstorssp, saveprevssp to restore the previous shstk buffer

@@ -4,6 +4,8 @@
 /*
  * xstate_helpers.c - xstate helpers to prevent GCC from generating any FP code.
  *
+ * Author: Pengfei Xu <pengfei.xu@intel.com>
+ *
  * Because xstate like XMM will not be preserved across function calls, it uses
  * assembly instruction to call a system call of fork or raise signal, and uses
  * the "inline" keyword in test functions in this file.

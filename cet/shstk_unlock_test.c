@@ -2,6 +2,9 @@
 // Copyright (c) 2022 Intel Corporation.
 
 /*
+ *
+ * Author: Pengfei Xu <pengfei.xu@intel.com>
+ *
  * shstk_unlock_test.c: unlock child process shstk by ptrace and then tests
  *                      get/set shstk regsets and shstk status syscalls
  */

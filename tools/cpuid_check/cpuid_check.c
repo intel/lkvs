@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-only
 // Copyright (c) 2022 Intel Corporation.
+/*
+ * cpuid_check.c: one CPU ID check tool for script usage
+ *
+ * Author: Pengfei Xu <Pengfei.xu@intel.com>
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>

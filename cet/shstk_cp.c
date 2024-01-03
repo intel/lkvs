@@ -4,6 +4,9 @@
 /*
  * shstk_cp.c: enable shstk and then do shstk violation
  *             expected #CP should be triggered
+ *
+ * Author: Pengfei Xu <pengfei.xu@intel.com>
+ *
  */
 
 #include <sys/syscall.h>

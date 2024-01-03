@@ -4,6 +4,8 @@
 /*
  * cet_app.c
  *
+ * Author: Pengfei Xu <pengfei.xu@intel.com>
+ *
  * This file will test cet driver with parameters
  *      - Test CET driver app
  */

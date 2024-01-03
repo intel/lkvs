@@ -2,6 +2,9 @@
 // Copyright (c) 2022 Intel Corporation.
 /*
  *    glibc_shstk_test.c:
+ *
+ *    Author: Pengfei Xu <pengfei.xu@intel.com>
+ *
  *      - Test CET shadow stack function, should trigger #CP protection.
  *      - Some stack changes that don't affect sp should not trigger #CP.
  *      - Add more print to show stack address and content before and after
