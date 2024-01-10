@@ -50,7 +50,10 @@ if os.path.isfile(image_config["initrd_img"]):
   initrd_img = image_config["initrd_img"]
 else:
   initrd_img = "not_use"
-bios_img = image_config["bios_img"]
+if os.path.isfile(image_config["bios_img"]):
+  bios_img = image_config["bios_img"]
+else:
+  bios_img = "not_use"
 qemu_img = image_config["qemu_img"]
 guest_img = image_config["guest_img"]
 guest_img_format = image_config["guest_img_format"]
