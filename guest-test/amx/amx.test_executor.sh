@@ -48,7 +48,7 @@ case "$TESTCASE" in
     guest_test_prepare guest_test.sh
     guest_test_source_code test_source_code_dir_example test_binary_example
     guest_test_entry guest_test.sh "-t $TESTCASE" || \
-    die "Failed on $TESTCASE guest_test.sh -t $TESTCASE"
+      die "Failed on $TESTCASE guest_test.sh -t $TESTCASE"
     if [[ $GCOV == "off" ]]; then
       guest_test_close
     fi
@@ -56,9 +56,9 @@ case "$TESTCASE" in
   TMUL_1)
     guest_test_prepare
     guest_test_source_code "$SCRIPT_DIR/../state-components-validation-utilities/amx/tmul" tmul || \
-            die "Failed to prepare guest test source code for $TESTCASE"
+      die "Failed to prepare guest test source code for $TESTCASE"
     guest_test_entry tmul "-b 2 -t 10 -c 20 -i 1" || \
-            die "Failed on $TESTCASE"
+      die "Failed on $TESTCASE"
     if [[ $GCOV == "off" ]]; then
       guest_test_close
     fi
