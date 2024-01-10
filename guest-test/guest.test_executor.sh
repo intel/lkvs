@@ -32,25 +32,29 @@ guest_test_prepare() {
     mkdir $GUEST_TEST_DIR
 EOF
   sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no common.sh root@localhost:"$GUEST_TEST_DIR"
-  sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no "$1" root@localhost:"$GUEST_TEST_DIR"
+  if [ -f $1 ]; then
+    sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no "$1" root@localhost:"$GUEST_TEST_DIR"
+  fi
   test_print_trc "Guest VM test script prepare complete"
 }
 
 # function based on sshpass to scp $1 source_code_dir and compile $2 test_binary in Guest VM
 guest_test_source_code() {
+  BASE_DIR=$(basename $1)
+  SRC_DIR="$BASE_DIR"_temp
   sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
-    mkdir -p $GUEST_TEST_DIR/$1
+    mkdir -p $GUEST_TEST_DIR/$SRC_DIR
 EOF
-  sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no -r "$1"/* root@localhost:"$GUEST_TEST_DIR/$1"
+  sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no -r "$1"/* root@localhost:"$GUEST_TEST_DIR/$SRC_DIR"
   sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
     source $GUEST_TEST_DIR/common.sh
     cd $GUEST_TEST_DIR
-    cd $1
+    cd $SRC_DIR
     dnf list installed gcc || dnf install -y gcc > /dev/null 2>&1
     dnf list installed glibc-static || dnf install -y glibc-static > /dev/null 2>&1
     apt list installed gcc | grep "installed" || apt-get install -y gcc > /dev/null 2>&1
     apt list installed libc6-dev | grep "installed" || apt-get install -y libc6-dev > /dev/null 2>&1
-    make || die "Failed to compile source code $1"
+    make || die "Failed to compile source code in $SRC_DIR"
     if [ -f $2 ]; then
       chmod a+x $2
       cp $2 $GUEST_TEST_DIR
