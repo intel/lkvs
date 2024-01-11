@@ -67,5 +67,3 @@ This project is licensed under the GPL2.0.
 Mention any contributors or references you have used for this project.
 Contact
 For any questions or suggestions regarding the Intel SIMD Instruction Microbenchmark Suite, please contact [Yi Sun <yi.sun@intel.com>].
-
-Replace [your-email-address] with an appropriate contact email or remove this section if not necessary.
