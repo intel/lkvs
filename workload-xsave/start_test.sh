@@ -1,10 +1,11 @@
+#!/bin/bash
+
 # SPDX-License-Identifier: GPL-2.0-only
 #
 # Copyright (c) 2022 Intel Corporation.
 # Yi Sun <yi.sun@intel.com>
 # Dongcheng Yan <dongcheng.yan@intel.com>
 
-#!/bin/bash
 option=""
 result=""
 repeat=""
