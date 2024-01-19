@@ -233,6 +233,7 @@ while read -r line; do
       FEATURE: $FEATURE, TESTCASE: $TESTCASE, SECONDS: $SECONDS"
       EXEC_FLAG=0
       if ! ./guest.test_executor.sh; then EXEC_FLAG=1 && break; fi # break while read loop in case of guest.test_executor.sh test failure
+      if [[ "$GCOV" == "on" ]]; then break; fi # break in case of GCOV on and move to VM lifecycle management since VM keep alive
     # err_handlers string matching
     elif [[ "$line" == @($ERR_STR1) ]]; then
       test_print_err "There is $ERR_STR1, test is not fully PASS"
