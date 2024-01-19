@@ -10,6 +10,9 @@ As QEMU config parameters may vary from version to version. The current implemen
 
 The qemu.config.json and common test framework code need to change along with new QEMU update
 
+![image](https://github.com/intel/lkvs/assets/58062922/23152a3e-7255-4984-9a2d-c0a3f30efd6a)
+
+
 ## Limitaion
 Each test execution will launch a new VM and run specific test scripts/binaries in guest VM. Test log will be captured from QEMU launching VM to test scripts/binaries execution in guest VM, until VM launched being shutdown properly or pkilled on purpose in abnormal test status.
 
