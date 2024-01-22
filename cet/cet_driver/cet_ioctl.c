@@ -151,9 +151,10 @@ static int __init cet_ioctl_init(void)
 {
 	int ret;
 	struct device *dev_ret;
+	char mod_name[] = "cet_ioctl";
 
 	pr_info("Load cet_ioctl start\n");
-	ret = alloc_chrdev_region(&dev, FIRST_MINOR, MINOR_CNT, "cet_ioctl");
+	ret = alloc_chrdev_region(&dev, FIRST_MINOR, MINOR_CNT, mod_name);
 	if (ret < 0)
 		return ret;
 
@@ -163,7 +164,14 @@ static int __init cet_ioctl_init(void)
 	if (ret < 0)
 		return ret;
 
-	cl = class_create(THIS_MODULE, "char");
+	/*
+	 * From v6.3-rc1: dcfbb67e48a2becfce7990386e985b9c45098ee5,
+	 * there is no second parameter for class_create(const char *name).
+	 * If the host kernel version is lower than v6.3-rc1, please change
+	 * the code as follows:
+	 * cl = class_create(THIS_MODULE, "char");
+	 */
+	cl = class_create(mod_name);
 	if (IS_ERR(cl)) {
 		cdev_del(&c_dev);
 		unregister_chrdev_region(dev, MINOR_CNT);
