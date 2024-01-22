@@ -38,8 +38,8 @@ sysfs_verify() {
   if [[ "$TYPE" != "d" ]] && [[ "$TYPE" != "f" ]]; then
     TYPE="e"
   fi
-  test_print_trc "$path does exist"
-  return 0
+
+  test -$TYPE "$path" && test_print_trc "$path does exist"
 }
 
 ufs_unbind_bind() {
