@@ -68,7 +68,7 @@ case "$TESTCASE" in
   TD_BOOT)
     guest_test_prepare tdx_guest_boot_check.sh
     guest_test_entry tdx_guest_boot_check.sh "-v $VCPU -s $SOCKETS -m $MEM" || \
-    die "Failed on TD_BOOT test tdx_guest_boot_check.sh -v $VCPU -s $SOCKETS -m $MEM"
+      die "Failed on TD_BOOT test tdx_guest_boot_check.sh -v $VCPU -s $SOCKETS -m $MEM"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -77,53 +77,53 @@ case "$TESTCASE" in
     guest_test_prepare guest_test.sh
     guest_test_source_code test_source_code_dir_example test_binary_example
     guest_test_entry guest_test.sh "-t $TESTCASE" || \
-    die "Failed on $TESTCASE guest_test.sh -t $TESTCASE"
+      die "Failed on $TESTCASE guest_test.sh -t $TESTCASE"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
     ;;
   TD_ATTEST_VERIFY_REPORT)
     guest_attest_test "global.verify_report" || \
-    die "Failed on $TESTCASE"
+      die "Failed on $TESTCASE"
     ;;
   TD_ATTEST_VERITY_REPORTMAC)
     guest_attest_test "global.verify_reportmac" || \
-    die "Failed on $TESTCASE"
+      die "Failed on $TESTCASE"
     ;;
   TD_ATTEST_VERIFY_RTMR_EXTEND)
     guest_attest_test "global.verify_rtmr_extend" || \
-    die "Failed on $TESTCASE"
+      die "Failed on $TESTCASE"
     ;;
   TD_ATTEST_VERIFY_QUOTE)
     guest_attest_test "global.verify_quote" || \
-    die "Failed on $TESTCASE"
+      die "Failed on $TESTCASE"
     ;;
   TD_NET_SPEED)
     guest_test_prepare tdx_speed_test.sh
     guest_test_entry tdx_speed_test.sh || \
-    die "Failed on TD_NET_SPEED tdx_speed_test.sh"
+      die "Failed on TD_NET_SPEED tdx_speed_test.sh"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
     ;;
   TD_TSM_ATTEST_QUOTE_PRECHECK)
     guest_tsm_attest "tsm.get_quote.precheck" || \
-    die "Failed on $TESTCASE"
+      die "Failed on $TESTCASE"
     ;;
   TD_TSM_ATTEST_QUOTE)
     guest_tsm_attest "tsm.get_quote" || \
-    die "Failed on $TESTCASE"
+      die "Failed on $TESTCASE"
     ;;
   TD_TSM_ATTEST_QUOTE_NEG)
     guest_tsm_attest "tsm.get_quote.negative" || \
-    die "Failed on $TESTCASE"
+      die "Failed on $TESTCASE"
     ;;
   TD_MEM_EBIZZY_FUNC)
     guest_test_prepare tdx_mem_test.sh
     guest_test_source_code tdx_ebizzy_test_suite ebizzy || \
-    die "Failed to prepare guest test source code of tdx_ebizzy_test_suite"
+      die "Failed to prepare guest test source code of tdx_ebizzy_test_suite"
     guest_test_entry tdx_mem_test.sh "-t EBIZZY_FUNC" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t EBIZZY_FUNC"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t EBIZZY_FUNC"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -131,7 +131,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_T_1C_8G_1W)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_1C_8G_1W" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_8G_1W"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_8G_1W"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -139,7 +139,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_T_1C_8G_32W)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_1C_8G_32W" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_8G_32W"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_8G_32W"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -155,7 +155,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_T_1C_32G_32W)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_1C_32G_32W" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_32G_32W"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_32G_32W"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -163,7 +163,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_T_1C_96G_1W)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_1C_96G_1W" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_96G_1W"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_96G_1W"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -171,7 +171,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_T_1C_96G_32W)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_1C_96G_32W" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_96G_32W"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_1C_96G_32W"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -179,7 +179,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_T_32C_8G_32W)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_8G_32W" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_8G_32W"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_8G_32W"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -187,7 +187,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_T_32C_8G_256W)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_8G_256W" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_8G_256W"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_8G_256W"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -195,7 +195,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_T_32C_32G_32W)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_32G_32W" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_32G_32W"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_32G_32W"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -203,7 +203,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_T_32C_32G_256W)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_32G_256W" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_32G_256W"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_32G_256W"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -211,7 +211,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_T_32C_96G_32W)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_96G_32W" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_96G_32W"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_96G_32W"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -219,7 +219,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_T_32C_96G_256W)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_T_32C_96G_256W" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_96G_256W"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_T_32C_96G_256W"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -227,7 +227,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_FUNC)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_FUNC" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_FUNC"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_FUNC"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -235,7 +235,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_CAL)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_CAL" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_CAL"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_CAL"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -243,7 +243,7 @@ case "$TESTCASE" in
   TD_MEM_ACPT_NEG)
     guest_test_prepare tdx_mem_test.sh
     guest_test_entry tdx_mem_test.sh "-t MEM_ACPT_NEG" || \
-    die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_NEG"
+      die "Failed on $TESTCASE tdx_mem_test.sh -t MEM_ACPT_NEG"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -251,9 +251,9 @@ case "$TESTCASE" in
   TD_VE_HALT)
     guest_test_prepare tdx_test_module.sh
     guest_test_source_code tdx_halt_test_module halt_test || \
-    die "Failed to prepare guest test kernel module for $TESTCASE"
+      die "Failed to prepare guest test kernel module for $TESTCASE"
     guest_test_entry tdx_test_module.sh "halt_test" || \
-    die "Failed on $TESTCASE tdx_test_module.sh halt_test"
+      die "Failed on $TESTCASE tdx_test_module.sh halt_test"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -261,7 +261,7 @@ case "$TESTCASE" in
   TD_GUEST_CPUINFO)
     guest_test_prepare tdx_guest_bat_test.sh
     guest_test_entry tdx_guest_bat_test.sh "-t GUEST_CPUINFO" || \
-    die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_CPUINFO"
+      die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_CPUINFO"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -269,7 +269,7 @@ case "$TESTCASE" in
   TD_GUEST_KCONFIG)
     guest_test_prepare tdx_guest_bat_test.sh
     guest_test_entry tdx_guest_bat_test.sh "-t GUEST_KCONFIG" || \
-    die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_KCONFIG"
+      die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_KCONFIG"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -277,7 +277,7 @@ case "$TESTCASE" in
   TD_GUEST_DRIVER_KCONFIG)
     guest_test_prepare tdx_guest_bat_test.sh
     guest_test_entry tdx_guest_bat_test.sh "-t GUEST_DRIVER_KCONFIG" || \
-    die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_DRIVER_KCONFIG"
+      die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_DRIVER_KCONFIG"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -285,7 +285,7 @@ case "$TESTCASE" in
   TD_GUEST_LAZY_ACCEPT_KCONFIG)
     guest_test_prepare tdx_guest_bat_test.sh
     guest_test_entry tdx_guest_bat_test.sh "-t GUEST_LAZY_ACCEPT_KCONFIG" || \
-    die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_LAZY_ACCEPT_KCONFIG"
+      die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_LAZY_ACCEPT_KCONFIG"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -293,7 +293,7 @@ case "$TESTCASE" in
   TD_GUEST_TSM_REPORTS_KCONFIG)
     guest_test_prepare tdx_guest_bat_test.sh
     guest_test_entry tdx_guest_bat_test.sh "-t GUEST_TSM_REPORTS_KCONFIG" || \
-    die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_TSM_REPORTS_KCONFIG"
+      die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_TSM_REPORTS_KCONFIG"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
@@ -301,7 +301,31 @@ case "$TESTCASE" in
   TD_GUEST_ATTEST_DEV)
     guest_test_prepare tdx_guest_bat_test.sh
     guest_test_entry tdx_guest_bat_test.sh "-t GUEST_ATTEST_DEV" || \
-    die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_ATTEST_DEV"
+      die "Failed on $TESTCASE tdx_guest_bat_test.sh -t GUEST_ATTEST_DEV"
+    if [[ "$GCOV" == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
+  TD_ALLOW_ACPI)
+    guest_test_prepare tdx_device_filter_test.sh
+    guest_test_entry tdx_device_filter_test.sh "-t ALLOW_ACPI" || \
+      die "Failed on $TESTCASE tdx_device_filter_test.sh -t ALLOW_ACPI"
+    if [[ "$GCOV" == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
+  TD_BLOCK_ACPI)
+    guest_test_prepare tdx_device_filter_test.sh
+    guest_test_entry tdx_device_filter_test.sh "-t BLOCK_ACPI" || \
+      die "Failed on $TESTCASE tdx_device_filter_test.sh -t BLOCK_ACPI"
+    if [[ "$GCOV" == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
+  TD_NO_CCFILTER)
+    guest_test_prepare tdx_device_filter_test.sh
+    guest_test_entry tdx_device_filter_test.sh "-t NO_CCFILTER" || \
+      die "Failed on $TESTCASE tdx_device_filter_test.sh -t NO_CCFILTER"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
     fi
