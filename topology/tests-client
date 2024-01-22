@@ -5,3 +5,4 @@ cpu_topology.sh -t verify_thread_per_core
 cpu_topology.sh -t verify_cores_per_socket
 cpu_topology.sh -t verify_socket_num
 cpu_topology.sh -t verify_level_type
+cpu_topology.sh -t verify_sched_domain_names
