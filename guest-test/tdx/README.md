@@ -184,3 +184,17 @@
 ### case implemented by tdx_test_module.sh
 
 ### case implemented by tdx_guest_bat_test.sh
+
+### case implemented by tdx_device_filter_test.sh
+  - TD guest allow ACPI WAET table test by device filter kernel cmdline
+  ```
+    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_ALLOW_ACPI -c "tdx_allow_acpi=WAET" -p off
+  ```
+  - TD guest block ACPI WAET table test by default
+  ```
+    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_BLOCK_ACPI -c " " -p off
+  ```
+  - TD guest disable device filter test for debug purpose
+  ```
+    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_NO_CCFILTER -c "noccfilter" -p off
+  ```
