@@ -20,8 +20,9 @@ int usage(char *progname)
 	printf("  NUM2: input EBX value in hex\n");
 	printf("  NUM3: input ECX value in hex\n");
 	printf("  NUM4: input EDX value in hex\n");
-	printf("  CHAR5: a|b|c|d, which match with EAX|EBX|ECX|EDX output\n");
-	printf("  NUM6: bit number in decimal for output CHAR5 register which matched with SPEC\n");
+	printf("  CHAR5: a|b|c|d indicates the output matching EAX|EBX|ECX|EDX\n");
+	printf("  NUM6: the number of decimal bits in the output CHAR5 register that matches SPEC\n");
+	printf("CET SHSTK cpuid check example:\n# %s 7 0 0 0 c 7\n", progname);
 	exit(2);
 }
 
