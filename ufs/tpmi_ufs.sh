@@ -104,8 +104,10 @@ ufs_sysfs_attr() {
 }
 
 ufs_init_min_max_value() {
+  [[ -d "$UFS_SYSFS_PATH" ]] || die "$UFS_SYSFS_PATH does not exist"
   per_die_num=$(ls "$UFS_SYSFS_PATH" | grep -c uncore)
   test_print_trc "Uncore number: $per_die_num"
+  [[ "$per_die_num" = 0 ]] && block_test "Uncore number is 0"
   for ((i = 1; i <= per_die_num; i++)); do
     per_die=$(ls "$UFS_SYSFS_PATH" | grep uncore | sed -n "$i,1p")
     init_min=$(cat $UFS_SYSFS_PATH/"$per_die"/initial_min_freq_khz)
@@ -125,7 +127,10 @@ ufs_init_min_max_value() {
 min_equals_to_max() {
   # Test Uncore freq is based on per die, this function is to set
   # Min_freq_khz to the same value of initial_max_freq_khz
+  [[ -d "$UFS_SYSFS_PATH" ]] || die "$UFS_SYSFS_PATH does not exist"
   per_die_num=$(ls "$UFS_SYSFS_PATH" | grep -c uncore)
+  test_print_trc "Uncore number: $per_die_num"
+  [[ "$per_die_num" = 0 ]] && block_test "Uncore number is 0"
   for ((i = 1; i <= per_die_num; i++)); do
     per_die=$(ls "$UFS_SYSFS_PATH" | grep uncore | sed -n "$i,1p")
 
@@ -173,7 +178,10 @@ the max test freq $init_max khz"
 max_equals_to_min() {
   # Test Uncore freq is based on per die, this function is to set
   # Max_freq_khz to the same value of initial_min_freq_khz
+  [[ -d "$UFS_SYSFS_PATH" ]] || die "$UFS_SYSFS_PATH does not exist"
   per_die_num=$(ls "$UFS_SYSFS_PATH" | grep -c uncore)
+  test_print_trc "Uncore number: $per_die_num"
+  [[ "$per_die_num" = 0 ]] && block_test "Uncore number is 0"
   for ((i = 1; i <= per_die_num; i++)); do
     per_die=$(ls "$UFS_SYSFS_PATH" | grep uncore | sed -n "$i,1p")
 
@@ -223,7 +231,10 @@ min_max_dynamic() {
 
   # Test Uncore freq is based on per die, this function is to set test freq to
   # current_freq_khz value + 100000 khz
+  [[ -d "$UFS_SYSFS_PATH" ]] || die "$UFS_SYSFS_PATH does not exist"
   per_die_num=$(ls "$UFS_SYSFS_PATH" | grep -c uncore)
+  test_print_trc "Uncore number: $per_die_num"
+  [[ "$per_die_num" = 0 ]] && block_test "Uncore number is 0"
   for ((i = 1; i <= per_die_num; i++)); do
     per_die=$(ls "$UFS_SYSFS_PATH" | grep uncore | sed -n "$i,1p")
 
@@ -276,7 +287,10 @@ min and max test freq $test_freq khz"
 }
 
 pkg_max_min_freq_change() {
+  [[ -d "$UFS_SYSFS_PATH" ]] || die "$UFS_SYSFS_PATH does not exist"
   pkg_num=$(ls "$UFS_SYSFS_PATH" | grep -c package)
+  test_print_trc "Package number: $pkg_num"
+  [[ "$pkg_num" = 0 ]] && block_test "Package number is 0"
 
   # All the packages initial_max_freq_khz and initial_min_freq_khz are same at boot
   # So set test_max_freq and test_min_freq by referring any package
