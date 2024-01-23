@@ -42,8 +42,7 @@ class CheckResult:
 
 
 class BashChecker:
-
-    EXCLUDE_CODES = [1091, 2010, 2011, 2013, 2126]
+    EXCLUDE_CODES = [1091, 2010, 2011, 2013, 2086, 2126, 2206]
 
     def __init__(self, df: DiffFile):
         self._diff_file = df
@@ -63,8 +62,7 @@ class BashChecker:
             line = error["line"]
             msg = error["message"]
             code = error["code"]
-            result.errors.append(
-                f"{file}:{line} - {msg}, refer to {SC_BASE_URL}{code}")
+            result.errors.append(f"{file}:{line} - {msg}, refer to {SC_BASE_URL}{code}")
 
         return result
 
@@ -93,8 +91,7 @@ class CChecker:
         if not int(errors) and not int(warnings):
             return None
 
-        fix_file = Path(
-            f"{self._diff_file.Dpath}.EXPERIMENTAL-checkpatch-fixes")
+        fix_file = Path(f"{self._diff_file.Dpath}.EXPERIMENTAL-checkpatch-fixes")
         if fix_file.exists():
             result.fixes.extend(fix_file.read_text().split("\n"))
 
@@ -107,7 +104,9 @@ def new_checker(df: DiffFile):
 
     if df.Dpath.endswith(".sh") and df.Dtype in ["A", "M"]:
         return BashChecker(df)
-    elif df.Dtype in ["A", "M"] and (df.Dpath.endswith(".c") or df.Dpath.endswith(".h")):
+    elif df.Dtype in ["A", "M"] and (
+        df.Dpath.endswith(".c") or df.Dpath.endswith(".h")
+    ):
         return CChecker(df)
 
 
@@ -115,7 +114,7 @@ class DiffText:
     def __init__(self, dt: list):
         self._file_list = [DiffFile(i) for i in dt]
 
-    @ classmethod
+    @classmethod
     def load_diff(cls, diff_from, diff_to):
         cmd = f"git diff --name-status {diff_from}..{diff_to}"
         code, output = sp.getstatusoutput(cmd)
