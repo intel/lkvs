@@ -6,8 +6,6 @@ The purpose is to improve the quality of Intel-contributed Linux Kernel code. Fu
 More details please refer to following.
 
 ## Features
-
-  * [AMX(Advanced Matrix Extensions)](amx/README.md)
   * [cet(Control flow Enhancement Technology)](cet/README.md)
   * [cstate](cstate/README.md)
   * [Intel_TH(Trace Hub)](th/README.md)
@@ -15,19 +13,32 @@ More details please refer to following.
   * [UMIP(User-Mode Instruction Prevention)](umip/README.md)
   * [xsave](xsave/README.md)
   * [IFS(In Field Scan)](ifs/README.md)
+  * [FRED](fred/README.md) (in progress)
+  * [guest-test](guest-test/README.md)
+  * [IFS](ifs/README.md)
+  * [ISST](isst/README.md)
+  * [PMU](pmu/README.md)
+  * [RAPL](rapl/README.md)
+  * [SDSI](sdsi/README.md)
+  * [splitlock](splitlock/README.md)
+  * [tdx-compliance](tdx-compliance/README.md)
+  * [thermal](thermal/README.md)
+  * [topology](topology/README.md)
+  * [ufs](ufs/README.md)
+  * [workload-xsave](workload-xsave/README.md)
+  * [AMX](state-components-validation-utilities/amx/README.md)
 
 # Compile from sources
+## Compile the whole project (NOT recommended)
 
-## Compile the whole project
-
+Usually, it needs various dependencies if you're trying to compile the whole project locally.
 ```
 git clone https://github.com/intel/lkvs.git
 cd lkvs
 make
 ```
-Note. Usually, it needs various dependencies if you're trying to compile the whole project locally.
-Each sub-project should detail its particular way, if any. There are some known dependency issues.
 
+Each sub-project should detail its particular way, if any. There are some known dependency issues.
 ### Known dependency issue locally
 * Intel PT
 Cases of Intel PT need a 3rd part library libipt.
@@ -80,7 +91,6 @@ make
 ```
 
 ## Alternativly compile the whole project with Docker
-** This is the recommended way **
 ```
 make docker_image
 make docker_make
@@ -90,6 +100,7 @@ Note. If you're behind a proxy, please export the local env variable `https_prox
 export https_proxy=https://proxy-domain:port
 ```
 ## Compile a single test case
+** This is the recommended way **
 
 ```
 cd lkvs/<test>
