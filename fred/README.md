@@ -14,10 +14,8 @@ At the moment, it includes two tests:
 ```
 
 ## Usage
-$ make
-$ insmod fred_test_driver
-$ echo "fred_enable" > /dev/fred_test_device
-This will trigger the FRED enable checking test.
-$ echo "double_fault" > /dev/fred_test_device
-This will trigger double fault test and kernel will crash.
+make
+insmod fred_test_driver
+echo "fred_enable" > /dev/fred_test_device This will trigger the FRED enable checking test.
+echo "double_fault" > /dev/fred_test_device This will trigger double fault test and kernel will crash.
 ```
