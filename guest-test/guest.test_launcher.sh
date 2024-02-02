@@ -59,7 +59,8 @@ NOTE!! args passed here will override params in json config file
   -m memory size in GB
   -d debug on/off (resive to true/false in new qemu)
   -t vm_type legacy/tdx/tdxio
-  -f feature (subfolder) to test
+  -e feature specific path to feature.test_executor.sh
+  -f feature to test
   -x testcase pass to test_executor
   -c guest kernel extra commandline
   -p guest pmu off/on
@@ -112,7 +113,7 @@ echo PORT="$PORT" > "$SCRIPT_DIR"/test_params.py
 # used across test_launcher.sh, qemu_runner.py, test_executor.sh
 
 # get args for QEMU boot configurable parameters
-while getopts :v:s:m:d:t:f:x:c:p:g:i:j:h arg; do
+while getopts :v:s:m:d:t:e:f:x:c:p:g:i:j:h arg; do
   case $arg in
     v)
       VCPU=$OPTARG
@@ -133,6 +134,10 @@ while getopts :v:s:m:d:t:f:x:c:p:g:i:j:h arg; do
     t)
       VM_TYPE=$OPTARG
       echo VM_TYPE="\"$VM_TYPE\"" >> "$SCRIPT_DIR"/test_params.py
+      ;;
+    e)
+      FEATURE_PATH=$OPTARG
+      echo FEATURE_PATH="\"$FEATURE_PATH\"" >> "$SCRIPT_DIR"/test_params.py
       ;;
     f)
       FEATURE=$OPTARG
