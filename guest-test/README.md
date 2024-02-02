@@ -67,7 +67,8 @@ main test entrance, with following key args can be passed to override the values
   - `-m` $MEM memory size in GB
   - `-d` $DEBUG debug on/off
   - `-t` $VM_TYPE vm_type legacy/tdx/tdxio
-  - `-f` $FEATURE feature sub-folder for new feature vm test extension
+  - `-e` $FEATURE_PATH feature specific subfolder to address feature tests source BOMs to use in VM
+  - `-f` $FEATURE feature or sub-feature name to address feature specific $FEATURE.test_executor.sh
   - `-x` $TESTCASE testcase pass to test_executor
   - `-c` $CMDLINE guest kernel extra commandline
   - `-p` $PMU guest pmu off/on
@@ -123,8 +124,8 @@ guest VM test execution basic framework implemented in guerst.test_executor.sh, 
   - guest_test_close, function based on sshpass to close VM
 
 ## How to add new feature test
-as described above, if simply add new TCs to run based on current common.json and qemu.config.json format, just need to implement it in $FEATURE.test_executor.sh under guest-test/$FEATURE subfolder,
-please leverage reference code "common variables example" and "common works example" in tdx/tdx.test_executor.sh, further implement "$FEATURE specific Functions" and "$FEATURE specific code path",
+as described above, if simply add new TCs to run based on current common.json and qemu.config.json format, just need to implement it in $FEATURE.test_executor.sh under lkvs/$FEATURE subfolder,
+please leverage reference code "common variables example" and "common works example" in lkvs/tdx_guest/tdx.test_executor.sh, further implement "$FEATURE specific Functions" and "$FEATURE specific code path",
 common functions of guest.test_executor.sh should be good enough to prepare/run/close new $FEATURE specific tests implemented in $FEATURE.test_executor.sh;
 
 it's allowed to customize and pass $FEATURE standalone common.json and qemu.config.json, please refer to ### common.json and qemu.config.json description and ### guest.test_launcher description for quick rule reference
