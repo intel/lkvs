@@ -16,7 +16,7 @@
 SCRIPT_DIR_LOCAL="$( cd "$( dirname "$0" )" && pwd )"
 echo "$SCRIPT_DIR_LOCAL"
 # get test scenario config for $FEATURE tdx test_executor
-source "$SCRIPT_DIR_LOCAL"/../test_params.py
+source "$SCRIPT_DIR_LOCAL"/../guest-test/test_params.py
 ## end of common variables example ##
 
 ###################### Functions ######################
@@ -25,7 +25,7 @@ source "$SCRIPT_DIR_LOCAL"/../test_params.py
 ###################### Do Works ######################
 ## common works example ##
 cd "$(dirname "$0")" 2>/dev/null || exit 1
-source ../../.env
+source ../.env
 
 # get test_executor common functions:
 # function based on sshpass to scp common.sh and optional $1 test_script.sh to Guest VM

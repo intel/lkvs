@@ -1,0 +1,2 @@
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t legacy -e amx -f amx -x TMUL_1 -c " " -p off
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e amx -f amx -x TMUL_1 -c "accept_memory=lazy" -p off
