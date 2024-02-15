@@ -752,7 +752,7 @@ rapl_power_check() {
     # Skip this case if BIOS locked pkg or core power limit change
 
     if power_limit_unlock_check "$domain"; then
-      for ((pkg = 0; pkg <= NUM_CPU_PACKAGES; pkg++)); do
+      for ((pkg = 0; pkg < NUM_CPU_PACKAGES; pkg++)); do
         # Save the original power limit and time value
         get_domain_path "$pkg" "$domain"
         client_domain=$(cat "$DOMAIN_PATH"/name)
@@ -1059,11 +1059,11 @@ rapl_perf_energy_compare() {
     test_print_trc "The low energy error deviation is:$energy_low_j"
     energy_high_j=$(echo "scale=2; $sysfs_energy_delta_j+$energy_low_j" | bc)
     test_print_trc "The high energy error deviation is:$energy_high_j"
-    if [[ $(echo "$perf_energy_j_modify < $energy_high_j" | bc) -eq 1 ]] &&
-      [[ $(echo "$perf_energy_j_modify > $energy_low_j" | bc) -eq 1 ]]; then
+    if [[ $(echo "$perf_energy_j_modify < $energy_high_j" | bc -l) ]] &&
+      [[ $(echo "$perf_energy_j_modify > $energy_low_j" | bc -l) ]]; then
       test_print_trc "The domain $sysfs_name energy delta between sysfs and perf event \
 is within 20% of sysfs energy joules gap"
-    elif [[ $(echo "$perf_energy_j_modify == 0" | bc) -eq 1 ]]; then
+    elif [[ $(echo "$perf_energy_j_modify == 0" | bc -l) ]]; then
       test_print_trc "The domain $sysfs_name energy shows 0, if GFX related, it may be expected"
     else
       die "The domain $sysfs_name energy delta between sysfs and perf event is \
@@ -1223,11 +1223,11 @@ and turbostat tool is:$energy_delta_j"
     test_print_trc "The low energy error deviation is:$energy_low_j"
     energy_high_j=$(echo "scale=2; $sysfs_energy_delta_j+$energy_low_j" | bc)
     test_print_trc "The high energy error deviation is:$energy_high_j"
-    if [[ $(echo "$turbostat_joules < $energy_high_j" | bc) -eq 1 ]] &&
-      [[ $(echo "$turbostat_joules > $energy_low_j" | bc) -eq 1 ]]; then
+    if [[ $(echo "$turbostat_joules < $energy_high_j" | bc -l) ]] &&
+      [[ $(echo "$turbostat_joules > $energy_low_j" | bc -l) ]]; then
       test_print_trc "The domain $sysfs_name energy delta between sysfs and turbostat tool \
 is within 20% of sysfs energy joules gap"
-    elif [[ $(echo "$turbostat_joules == 0" | bc) -eq 1 ]]; then
+    elif [[ $(echo "$turbostat_joules == 0" | bc -l) ]]; then
       test_print_trc "The domain $sysfs_name energy shows 0, if GFX related, it may be expected"
     else
       die "The domain $sysfs_name energy delta between sysfs and turbostat tool is \
