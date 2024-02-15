@@ -39,6 +39,10 @@ fi
 numa_nodes_compare_with_package() {
   local numa_nodes
   local cpuinfo_nodes
+  local socket_num
+
+  socket_num=$(lscpu | grep "Socket(s)" | awk '{print $NF}')
+  test_print_trc "Sockets number:$socket_num"
 
   cpuinfo_nodes=$(lscpu | grep NUMA 2>&1)
   [[ -n $cpuinfo_nodes ]] || block_test "NUMA nodes info is not available from lscpu."
@@ -49,22 +53,106 @@ numa_nodes_compare_with_package() {
   test_print_trc "SUT NUMA nodes sysfs info: $numa_nodes"
   nodes_lines=$(grep . /sys/devices/system/node/node*/cpulist | wc -l 2>&1)
 
-  for ((i = 1; i <= nodes_lines; i++)); do
-    node_cpu_list=$(echo "$numa_nodes" | sed -n "$i, 1p" | awk -F ":" '{print $2}')
-    node_num=$(lscpu | grep "$node_cpu_list" | awk -F " " '{print $2}')
-    test_print_trc "node num: $node_num"
-    test_print_trc "NUMA $node_num sysfs show cpu list: $node_cpu_list"
-    cpu_num=$(echo "$node_cpu_list" | awk -F "-" '{print $1}')
-    test_print_trc "cpu num for pkg cpu list:$cpu_num"
-    pkg_cpu_list=$(grep . /sys/devices/system/cpu/cpu"$cpu_num"/topology/package_cpus_list)
-    [[ -n "$pkg_cpu_list" ]] || block_test "CPU Topology sysfs for package_cpus_list is not available."
-    test_print_trc "CPU$cpu_num located Package cpu list is: $pkg_cpu_list"
-    if [ "$node_cpu_list" = "$pkg_cpu_list" ]; then
-      test_print_trc "NUMA $node_num cpu list is aligned with package cpu list"
-    else
-      die "NUMA $node_num cpu list is NOT aligned with package cpu list"
+  if [[ $socket_num -eq $nodes_lines ]]; then
+    test_print_trc "SNC is disabled:"
+    for ((i = 1; i <= nodes_lines; i++)); do
+      node_cpu_list=$(echo "$numa_nodes" | sed -n "$i, 1p" | awk -F ":" '{print $2}')
+      node_num=$(lscpu | grep "$node_cpu_list" | awk -F " " '{print $2}')
+      test_print_trc "node num: $node_num"
+      test_print_trc "NUMA $node_num sysfs show cpu list: $node_cpu_list"
+      cpu_num=$(echo "$node_cpu_list" | awk -F "-" '{print $1}')
+      test_print_trc "cpu num for pkg cpu list:$cpu_num"
+      pkg_cpu_list=$(grep . /sys/devices/system/cpu/cpu"$cpu_num"/topology/package_cpus_list)
+      [[ -n "$pkg_cpu_list" ]] || block_test "CPU Topology sysfs for package_cpus_list is not available."
+      test_print_trc "CPU$cpu_num located Package cpu list is: $pkg_cpu_list"
+      if [ "$node_cpu_list" = "$pkg_cpu_list" ]; then
+        test_print_trc "NUMA $node_num cpu list is aligned with package cpu list"
+      else
+        die "NUMA $node_num cpu list is NOT aligned with package cpu list"
+      fi
+    done
+  else
+    test_print_trc "SNC is enabled:"
+    # Find how many nodes
+    nodes_lines=$(grep . /sys/devices/system/node/node*/distance | wc -l)
+    # Find which nodes are in the same package
+    # Assume there are two sockets only,
+    # If the SUT supports > 2 sockets, case cannot support temporarily.
+    if [[ $nodes_lines -gt 6 ]]; then
+      block_test "This SKU Nodes Topology is very special, case does not support."
     fi
-  done
+    nodes_per_pkg=$((nodes_lines / 2))
+    test_print_trc "There are $nodes_per_pkg NUMA nodes per package."
+    # Confirm if the CPUs on package0 have the same 21 columns
+    for ((i = 0; i < nodes_per_pkg; i++)); do
+      node_value=$(grep . /sys/devices/system/node/node*/distance |
+        awk -F " " '{print $(NF-'$i')}' | sed -n '1p')
+      if [[ "$node_value" -eq 21 ]]; then
+        test_print_trc "NUMA node$i distance is 21, Node$i is in package 0"
+      else
+        die "NUMA node$i is not in package 0"
+      fi
+    done
+    # Get pkg0 node and pkg0 topology cpuslist
+    pkg0_node_high=$((nodes_per_pkg - 1))
+    pkg0_node_cpu_low=$(grep . /sys/devices/system/node/node0/cpulist |
+      awk -F '-' '{print $1}')
+    test_print_trc "Pkg0_node_cpu_low: $pkg0_node_cpu_low"
+    pkg0_node_cpu_high=$(grep . /sys/devices/system/node/node"$pkg0_node_high"/cpulist |
+      awk -F '-' '{print $NF}')
+    test_print_trc "Pkg0_node_cpu_high: $pkg0_node_cpu_high"
+    pkg0_cpus_list_low=$(grep . /sys/devices/system/cpu/cpu0/topology/package_cpus_list |
+      awk -F '-' '{print $1}')
+    test_print_trc "Pkg0 cpus list low: $pkg0_cpus_list_low"
+    pkg0_cpus_list_high=$(grep . /sys/devices/system/cpu/cpu0/topology/package_cpus_list |
+      awk -F '-' '{print $NF}')
+    test_print_trc "Pkg0 cpus list high: $pkg0_cpus_list_high"
+    if [[ $pkg0_node_cpu_low -eq $pkg0_cpus_list_low ]] &&
+      [[ $pkg0_node_cpu_high -eq $pkg0_cpus_list_high ]]; then
+      test_print_trc "Package0 NUMA Nodes cpus list is aligned when SNC is enabled."
+    else
+      die "Package0 NUMA Nodes cpus list is not aligned when SNC is enabled."
+    fi
+
+    # Confirm if the CPUs on package1 have the same 21 columns
+    for ((i = nodes_per_pkg; i < nodes_lines; i++)); do
+      j=$((i + 1))
+      node_value=$(grep . /sys/devices/system/node/node*/distance | awk -F ":" '{print $2}' |
+        awk -F " " '{print $(NF-'$i')}' | sed -n "$j,1p")
+      test_print_trc "NUMA Node$i distance value: $node_value"
+      if [[ "$node_value" -eq 21 ]]; then
+        test_print_trc "NUMA Node$j distance is 21, Node$i is in package 1"
+      else
+        die "Node$i is not in package 1"
+      fi
+    done
+
+    # Get pkg1 node and pkg1 topology cpuslist
+    pkg1_node_high=$((nodes_lines - 1))
+    pkg1_node_cpu_low=$(grep . /sys/devices/system/node/node"$nodes_per_pkg"/cpulist |
+      awk -F '-' '{print $1}')
+    test_print_trc "Pkg1 node cpu low: $pkg1_node_cpu_low"
+    pkg1_node_cpu_high=$(grep . /sys/devices/system/node/node"$pkg1_node_high"/cpulist |
+      awk -F '-' '{print $NF}')
+    test_print_trc "Pkg1 node cpu high: $pkg1_node_cpu_high"
+
+    # Get the last cpu num from cpuid
+    pkg1_last_cpu=$(cpuid -l 0x1f -s 0 | tail -8 | grep -o 'CPU [0-9]*' | awk '{print $NF}')
+    test_print_trc "The last CPU is: $pkg1_last_cpu"
+    pkg1_cpus_list_low=$(grep . /sys/devices/system/cpu/cpu"$pkg1_last_cpu"/topology/package_cpus_list |
+      awk -F '-' '{print $1}')
+    test_print_trc "Pkg1 cpus list low: $pkg1_cpus_list_low"
+    pkg1_cpus_list_high=$(grep . /sys/devices/system/cpu/cpu"$pkg1_last_cpu"/topology/package_cpus_list |
+      awk -F '-' '{print $NF}')
+    test_print_trc "Pkg1 cpus list high: $pkg1_cpus_list_high"
+
+    if [[ $pkg1_node_cpu_low -eq $pkg1_cpus_list_low ]] &&
+      [[ $pkg1_node_cpu_high -eq $pkg1_cpus_list_high ]]; then
+      test_print_trc "Package1 Nodes cpus list is aligned when SNC is enabled."
+    else
+      die "Package1 Nodes cpus list is not aligned when SNC is enabled."
+    fi
+  fi
 }
 
 # Function to verify thread number per core
@@ -131,6 +219,12 @@ socket_num() {
     [[ $socket_num_topo_sysfs -eq $sockets_num_lspci ]] &&
     [[ $sockets_num_sys -eq $numa_num ]]; then
     test_print_trc "socket number is aligned between lspci and sysfs"
+  elif
+    snc_enabled_pkg_num_two=$((socket_num_topo_sysfs * 2))
+    snc_enabled_pkg_num_three=$((socket_num_topo_sysfs * 3))
+    [[ $numa_num -eq $snc_enabled_pkg_num_two ]] || [[ $numa_num -eq $snc_enabled_pkg_num_three ]]
+  then
+    test_print_trc "SNC is enabled, sockets and NUMA Nodes number is expected."
   else
     die "socket number is not aligned between lspci and sysfs"
   fi
@@ -174,9 +268,13 @@ level_type() {
     [[ $invalid_type_sub4 == invalid ]] && [[ $bit_width_index_2 -eq 1 ]] &&
     [[ $bit_width_index_3 -eq 1 ]]; then
     test_print_trc "CPUID: module and invalid level type are detected, and bit width are aligned."
+  elif [[ $module_type == die ]] && [[ $invalid_type_sub3 == invalid ]] &&
+    [[ $invalid_type_sub4 == invalid ]] && [[ $bit_width_index_2 -eq 1 ]] &&
+    [[ $bit_width_index_3 -eq 1 ]]; then
+    test_print_trc "CPUID: die and invalid level type are detected, and bit width are aligned."
   elif [[ $module_type == invalid ]] && [[ $invalid_type_sub3 == invalid ]] &&
     [[ $bit_width_index_3 -eq 1 ]]; then
-    test_print_trc "CPUID: platform does not support module, and invalid level type is detected,
+    test_print_trc "CPUID: platform does not support module nor die, and invalid level type is detected,
 bit width of level & previous levels are aligned."
   else
     die "CPUID: unexpected level type."
@@ -446,12 +544,12 @@ generic_sched_domain_names() {
             # Server SKU will not have PKG sched_domain name, but NUMA
             if [[ $name_j == NUMA ]] && [[ $HYBRID_VALUE == false ]] && [[ $DIE_VALUE == false ]]; then
               test_print_trc "CPU$i sched_domain$j name $name_j is expected on Server"
-            # SKU with multiple Dies will have sched_domain name: DIE
-            elif [[ $name_j == DIE ]] && [[ $HYBRID_VALUE == false ]] && [[ $DIE_VALUE == true ]] &&
+            # SKU with multiple Dies will have sched_domain name: PKG
+            elif [[ $name_j == PKG ]] && [[ $HYBRID_VALUE == false ]] && [[ $DIE_VALUE == true ]] &&
               [[ $SNC_VALUE == disabled ]]; then
               test_print_trc "CPU$i sched_domain$j name $name_j is expected on SNC disabled CBB topology Server"
-            # Server which have muliple LL3 per package will support DIE sched_domain
-            elif [[ $name_j == DIE ]] && [[ $HYBRID_VALUE == false ]] && [[ $LL3_PER_SOCKET == yes ]]; then
+            # Server which have multiple LL3 per package will support PKG sched_domain
+            elif [[ $name_j == PKG ]] && [[ $HYBRID_VALUE == false ]] && [[ $LL3_PER_SOCKET == yes ]]; then
               test_print_trc "CPU$i sched_domain$j name $name_j is expected on SNC disabled multiple LL3 SKU per package"
             # Client with hybrid SKU will support PKG sched_domain
             elif [[ $name_j == PKG ]] && [[ $HYBRID_VALUE == true ]]; then
