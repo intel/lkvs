@@ -19,16 +19,31 @@ CPU_SYSFS_PATH="/sys/devices/system/cpu"
 COLUMNS="Package,Core,CPU,Busy%,Bzy_MHz,PkgWatt"
 
 # Turbostat tool is required to run ISST cases
-turbostat sleep 1 1>/dev/null 2>&1 || block_test "Turbostat tool is required to \
-run ISST cases, please get it from latest upstream kernel-tools."
+if which turbostat 1>/dev/null 2>&1; then
+  turbostat sleep 1 1>/dev/null || block_test "Failed to run turbostat tool,
+please check turbostat tool error message."
+else
+  block_test "Turbostat tool is required to run ISST cases,
+please get it from latest upstream kernel-tools."
+fi
 
 # intel-speed-select tool is required to run ISST cases
-intel-speed-select --info 1>/dev/null 2>&1 || block_test "intel-speed-select tool is\
-required to run ISST cases, please get it from latest upstream kernel-tools."
+if which intel-speed-select 1>/dev/null 2>&1; then
+  intel-speed-select --info 1>/dev/null || block_test "Failed to run isst tool,
+please check isst tool error message."
+else
+  block_test "intel-speed-select tool is required to run ISST cases,
+please get it from latest upstream kernel-tools."
+fi
 
 # stress tool is required to run ISST cases
-stress --help 1>/dev/null 2>&1 || block_test "stress tool is\
-required to run ISST cases, please get it from latest upstream kernel-tools."
+if which stress 1>/dev/null 2>&1; then
+  stress --help 1>/dev/null || block_test "Failed to run stress tool,
+please check stress tool error message"
+else
+  block_test "stress tool is required to run ISST cases,
+please get it from latest upstream kernel-tools."
+fi
 
 : "${CASE_NAME:=""}"
 

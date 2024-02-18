@@ -31,16 +31,31 @@ GPU_LOAD_ARG="-display :1"
 declare -A CPU_TOPOLOGY
 
 # Turbostat tool is required to run RAPL cases
-turbostat sleep 1 1>/dev/null 2>&1 || block_test "Turbostat tool is required to \
-run RAPL cases, please get it from latest upstream kernel-tools."
+if which turbostat 1>/dev/null 2>&1; then
+  turbostat sleep 1 1>/dev/null || block_test "Failed to run turbostat tool,
+please check turbostat tool error message."
+else
+  block_test "Turbostat tool is required to run RAPL cases,
+please get it from latest upstream kernel-tools."
+fi
 
 # stress tool is required to run RAPL cases
-stress --help 1>/dev/null 2>&1 || block_test "stress tool is \
-required to run RAPL cases, please get it from latest upstream kernel-tools."
+if which stress 1>/dev/null 2>&1; then
+  stress --help 1>/dev/null || block_test "Failed to run stress tool,
+please check stress tool error message."
+else
+  block_test "stress tool is required to run RAPL cases,
+please get it from latest upstream kernel-tools."
+fi
 
 # perf tool is required to run RAPL cases
-perf list 1>/dev/null 2>&1 || block_test "perf tool is \
-required to run RAPL cases, please get it from latest upstream kernel-tools."
+if which perf 1>/dev/null 2>&1; then
+  perf list 1>/dev/null || block_test "Failed to run perf tool,
+please check perf tool error message."
+else
+  block_test "perf tool is required to run RAPL cases,
+please get it from latest upstream kernel-tools."
+fi
 
 # Read value from MSR
 # Input:

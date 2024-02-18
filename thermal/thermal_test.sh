@@ -13,12 +13,22 @@ THERMAL_PATH="/sys/class/thermal"
 NUM_CPUS=$(lscpu | grep "On-line CPU(s) list" | awk -F "-" '{print $NF}' 2>&1)
 
 # stress tool is required to run thermal cases
-stress --help 1>/dev/null 2>&1 || block_test "stress tool is\
-required to run thermal cases, please get it from latest upstream kernel-tools."
+if which stress 1>/dev/null 2>&1; then
+  stress --help 1>/dev/null || block_test "Failed to run stress tool,
+please check stress tool error message."
+else
+  block_test "stress tool is required to run ISST cases,
+please get it from latest upstream kernel-tools."
+fi
 
 # taskset tool is required to run thermal cases
-taskset --help 1>/dev/null 2>&1 || block_test "taskset tool is\
-required to run thermal cases, please get it from latest upstream kernel-tools."
+if which taskset 1>/dev/null 2>&1; then
+  taskset --help 1>/dev/null || block_test "Failed to run taskset tool,
+please check tool error message."
+else
+  block_test "taskset tool is required to run thermal cases,
+please get it from latest upstream kernel-tools."
+fi
 
 # Function to check x86_pkg_temp_thermal throttling case
 thermal_throttling() {

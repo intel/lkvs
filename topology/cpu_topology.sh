@@ -26,9 +26,13 @@ __EOF
 }
 
 # cpuid tool is required to run cases
-cpuid 1>/dev/null 2>&1 || block_test "cpuid tool is required to \
-run cases, please install it by command: sudo apt install cpuid or \
-sudo dnf install cpuid."
+if which cpuid 1>/dev/null 2>&1; then
+  cpuid 1>/dev/null || block_test "Failed to run cpuid tool,
+please check tool error message."
+else
+  block_test "cpuid tool is required to run cases,
+please install it by command: sudo apt install cpuid or sudo dnf install cpuid."
+fi
 
 # Function to check numa nodes align with packages
 # This is for server platform only
