@@ -17,8 +17,13 @@ UFS_ATTR="current_freq_khz  initial_max_freq_khz domain_id fabric_cluster_id
 initial_min_freq_khz  max_freq_khz  min_freq_khz package_id"
 
 # stress tool is required to run TPMI UFS cases
-stress --help 1>/dev/null 2>&1 || block_test "stress tool is\
-required to run UFS cases, please get it from latest upstream kernel-tools."
+if which stress 1>/dev/null 2>&1; then
+  stress --help 1>/dev/null || block_test "Failed to run stress tool,
+please check stress tool error message."
+else
+  block_test "stress tool is required to run UFS cases,
+please get it from latest upstream kernel-tools."
+fi
 
 : "${CASE_NAME:=""}"
 

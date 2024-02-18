@@ -47,9 +47,13 @@ sdsi_driver_interface() {
 }
 
 # intel_sdsi user space tool is required to run cases
-intel_sdsi -l 1>/dev/null 2>&1 || block_test "intel_sdsi tool is required to \
-run cases, please get it from latest upstream kernel tools: \
-tools/arch/x86/intel_sdsi/intel_sdsi.c"
+if which intel_sdsi 1>/dev/null 2>&1; then
+  intel_sdsi -l 1>/dev/null || block_test "Failed to run intel_sdsi tool,
+please check tool error message."
+else
+  block_test "intel_sdsi tool is required to run cases,
+please get it from latest upstream kernel tools: tools/arch/x86/intel_sdsi/intel_sdsi.c"
+fi
 
 # Hex read SDSi sysfs attribute files:registers,state_certificate
 # Meter_telemetry feature only supports on GNR and further platforms

@@ -15,11 +15,22 @@ CPU_IDLE_SYSFS_PATH="/sys/devices/system/cpu/cpuidle"
 current_cpuidle_driver=$(cat "$CPU_IDLE_SYSFS_PATH"/current_driver)
 
 # Turbostat tool is required to run core cstate cases
-turbostat sleep 1 1>/dev/null 2>&1 || block_test "Turbostat tool is required to \
-to run CPU core cstate cases, please get it from latest upstream kernel-tools."
+if which turbostat 1>/dev/null 2>&1; then
+  turbostat sleep 1 1>/dev/null || block_test "Failed to run turbostat tool,
+please check turbostat tool error message."
+else
+  block_test "Turbostat tool is required to run CSTATE cases,
+please get it from latest upstream kernel-tools."
+fi
 
 # Perf tool is required to run this cstate perf cases
-perf list 1>/dev/null 2>&1 || block_test "perf tool is required to run cstate perf cases"
+if which perf 1>/dev/null 2>&1; then
+  perf list 1>/dev/null || block_test "Failed to run perf tool,
+please check perf tool error message."
+else
+  block_test "perf tool is required to run CSTATE cases,
+please get it from latest upstream kernel-tools."
+fi
 
 # Function to verify if Intel_idle driver refer to BIOS _CST table
 test_cstate_table_name() {
