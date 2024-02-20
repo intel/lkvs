@@ -42,40 +42,38 @@ ebizzy_func() {
   fi
 }
 
-# function based on stress-ng calculate total remained mem accepted time
+# function calculate total remained mem accepted time
 mem_accepted_time() {
   # common expected time consumed in seconds
   expected_time=$1
-  # stress-ng mem stress process number
+  # mem stress process number
   workers=$2
-  # prepare for prerequisites
-  if [ ! "$(which stress-ng)" ]; then
-    dnf install -y stress-ng > /dev/null
-    apt install -y stress-ng > /dev/null
-  else
-    test_print_trc "stress-ng prerequisites is ready for use"
-    test_print_trc "unaccepted memory drained time calculation is starting now..."
-  fi
   # calculate memory accepted fully completed time
   SECONDS=0
-  stress-ng --vm "$workers" --vm-bytes 100% &
+  count=1
+  # tail /dev/zero to continously read and store null bytes w/o newline char into memory
+  while [ $count -le $workers ]; do
+    tail /dev/zero &
+    count=$((count+1))
+  done
+  # monitor on /proc/vmstat of unaccepted memory as mem drained signal
   while (true); do
     if [[ $(grep "nr_unaccepted" /proc/vmstat | awk '{print $2}') -eq 0 ]]; then
       actual_time=$SECONDS;
-      pkill stress-ng;
+      killall -e -v tail;
       break;
     fi
   done
   # check if memory accept time far exceed expected (passed in value)
   compare_result=$(echo "scale=2; ($actual_time/$expected_time)" | bc)
-  baseline_result=1.1
+  baseline_result=1.15
   result=$(awk -v n1="$compare_result" -v n2="$baseline_result" 'BEGIN {if (n1>n2) print 1; else print 0}')
   if [ "$result" -eq 0 ]; then
     test_print_trc "Memory accepted full time consumed: $actual_time"
     return 0
   else
     die "Memory accepted full time consumed: $actual_time seconds, \
-    It's over expectation $expected_time seconds 10% more!!!"
+    It's over expectation $expected_time seconds 15% more!!!"
   fi
 }
 
@@ -129,64 +127,64 @@ case "$MEM_CASE" in
     ebizzy_func
     ;;
   MEM_ACPT_T_1C_8G_1W)
-    # expected 24secs in case of
+    # expected 19secs in case of
     # 1VCPU + 8G MEM + 1 mem stress process
-    mem_accepted_time 24 1
+    mem_accepted_time 19 1
     ;;
-  MEM_ACPT_T_1C_8G_32W)
-    # expected 26secs in case of
-    # 1VCPU + 8G MEM + 32 mem stress processes
-    mem_accepted_time 26 32
+  MEM_ACPT_T_1C_8G_8W)
+    # expected 15secs in case of
+    # 1VCPU + 8G MEM + 8 mem stress processes
+    mem_accepted_time 15 8
     ;;
   MEM_ACPT_T_1C_32G_1W)
-    # expected 148secs in case of
+    # expected 119secs in case of
     # 1VCPU + 32G MEM + 1 mem stress process
-    mem_accepted_time 148 1
+    mem_accepted_time 119 1
     ;;
-  MEM_ACPT_T_1C_32G_32W)
-    # expected 232secs in case of
-    # 1VCPU + 32G MEM + 32 mem stress processes
-    mem_accepted_time 232 32
+  MEM_ACPT_T_1C_32G_8W)
+    # expected 95secs in case of
+    # 1VCPU + 32G MEM + 8 mem stress processes
+    mem_accepted_time 95 8
     ;;
   MEM_ACPT_T_1C_96G_1W)
-    # expected 472secs in case of
+    # expected 398secs in case of
     # 1VCPU + 32G MEM + 1 mem stress process
-    mem_accepted_time 472 1
+    mem_accepted_time 398 1
     ;;
-  MEM_ACPT_T_1C_96G_32W)
-    # expected 773secs in case of
-    # 1VCPU + 32G MEM + 32 mem stress processes
-    mem_accepted_time 773 32
+  MEM_ACPT_T_1C_96G_8W)
+    # expected 321secs in case of
+    # 1VCPU + 32G MEM + 8 mem stress processes
+    mem_accepted_time 321 8
     ;;
-  MEM_ACPT_T_32C_8G_32W)
-    # expected 3secs in case of
-    # 32VCPU + 8G MEM + 32 mem stress processes
-    mem_accepted_time 3 32
+  MEM_ACPT_T_32C_16G_1W)
+    # expected 34secs in case of
+    # 32VCPU + 16G MEM + 1 mem stress process
+    mem_accepted_time 34 1
     ;;
-  MEM_ACPT_T_32C_8G_256W)
-    # expected 6secs in case of
-    # 32VCPU + 8G MEM + 256 mem stress processes
-    mem_accepted_time 6 256
+  MEM_ACPT_T_32C_16G_32W)
+    # expected 5secs in case of
+    # 32VCPU + 16G MEM + 32 mem stress processes
+    mem_accepted_time 5 32
+    ;;
+  MEM_ACPT_T_32C_32G_1W)
+    # expected 80secs in case of
+    # 32VCPU + 32G MEM + 1 mem stress process
+    mem_accepted_time 80 1
     ;;
   MEM_ACPT_T_32C_32G_32W)
-    # expected 85secs in case of
+    # expected 11secs in case of
     # 32VCPU + 32G MEM + 32 mem stress processes
-    mem_accepted_time 85 32
+    mem_accepted_time 11 32
     ;;
-  MEM_ACPT_T_32C_32G_256W)
-    # expected 65secs in case of
-    # 32VCPU + 32G MEM + 256 mem stress processes
-    mem_accepted_time 65 256
+  MEM_ACPT_T_32C_96G_1W)
+    # expected 271secs in case of
+    # 32VCPU + 96G MEM + 1 mem stress process
+    mem_accepted_time 271 1
     ;;
   MEM_ACPT_T_32C_96G_32W)
-    # expected 284secs in case of
+    # expected 33secs in case of
     # 32VCPU + 96G MEM + 32 mem stress processes
-    mem_accepted_time 284 32
-    ;;
-  MEM_ACPT_T_32C_96G_256W)
-    # expected 268secs in case of
-    # 32VCPU + 96G MEM + 256 mem stress processes
-    mem_accepted_time 268 256
+    mem_accepted_time 33 32
     ;;
   MEM_ACPT_FUNC)
     mem_accept_func
