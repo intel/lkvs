@@ -140,8 +140,22 @@ Submit an [issue](https://github.com/intel/lkvs/issues) or initiate a discussion
 
 # Contribute rule
 
+## Coding style
 Any pull request are welcomed, the canonical patch format please refer to the Kernel [patches submitting](https://www.kernel.org/doc/html/latest/process/submitting-patches.html)
 
-# License
+## Naming Rules
+### Feature Names
+The folders located in the root directory are referred to as "features." When naming a feature, please follow the following rule:
+* Use a unified format for the feature name: <lowercase>-<info>
+e.g. :cet, cstate, tdx-compliance, tdx-osv-sanity.
 
+### Tests File:
+* Use the file name 'tests' for default `tests` if only one tests is needed.
+* Use the filename 'guest-tests' for guest tests.
+
+### Entry Point of Guest Tests
+Use feature.guest_test_executor.sh as the entry point for guest tests.
+
+
+# License
 See [LICENSE](https://github.com/intel/lkvs/blob/main/LICENSE) for details.
