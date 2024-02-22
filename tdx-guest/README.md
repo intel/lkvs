@@ -65,57 +65,57 @@
     ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -f tdx -x TD_NET_SPEED -c "accept_memory=lazy" -p off
   ```
 ### case implemented by tdx_mem_test.sh
-  - Use ebizzy benchmark to validate TDX guest
+  - Use ebizzy benchmark to validate TDX guest memory allocation basic function
   ```
     ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -f tdx -x TD_MEM_EBIZZY_FUNC -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 8G memory size with 1 stress-ng worker
+  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 8GB memory size with 1 stress worker
   ```
-    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 8 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_1C_8G_1W -c "accept_memory=lazy" -p off
+    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 8 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_8G_1W -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 8G memory size with 32 stress-ng workers
+  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 8GB memory size with 8 stress workers
   ```
-    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 8 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_1C_8G_32W -c "accept_memory=lazy" -p off
+    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 8 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_8G_8W -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 32G memory size with 1 stress-ng worker
+  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 32GB memory size with 1 stress worker
   ```
-    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 32 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_1C_32G_1W -c "accept_memory=lazy" -p off
+    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 32 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_32G_1W -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 32G memory size with 32 stress-ng workers
+  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 32GB memory size with 8 stress workers
   ```
-    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 32 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_1C_32G_32W -c "accept_memory=lazy" -p off
+    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 32 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_32G_8W -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 96G memory size with 1 stress-ng worker
+  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 96GB memory size with 1 stress worker
   ```
-    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 96 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_1C_96G_1W -c "accept_memory=lazy" -p off
+    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_96G_1W -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 96G memory size with 32 stress-ng workers
+  - Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 96GB memory size with 8 stress workers
   ```
-    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 96 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_1C_96G_32W -c "accept_memory=lazy" -p of
+    ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_96G_8W -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 8G memory size with 32 stress-ng workers
+  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 16GB memory size with 1 stress worker
   ```
-    ./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 8 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_32C_8G_32W -c "accept_memory=lazy" -p off
+    ./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_16G_1W -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 8G memory size with 256 stress-ng workers
+  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 16GB memory size with 32 stress workers
   ```
-    ./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 8 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_32C_8G_256W -c "accept_memory=lazy" -p off
+    ../guest-test/guest.test_launcher.sh -v 32 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_16G_32W -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 32G memory size with 32 stress-ng workers
+  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 32GB memory size with 1 stress worker
   ```
-    ./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 32 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_32C_32G_32W -c "accept_memory=lazy" -p off
+    ./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 32 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_32G_1W -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 32G memory size with 256 stress-ng workers
+  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 32GB memory size with 32 stress workers
   ```
-    ./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 32 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_32C_32G_256W -c "accept_memory=lazy" -p off
+    ./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 32 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_32G_32W -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 96G memory size with 32 stress-ng workers
+  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 96GB memory size with 1 stress worker
   ```
-    ./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 96 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_32C_96G_32W -c "accept_memory=lazy" -p off
+    ./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_96G_1W -c "accept_memory=lazy" -p off
   ```
-  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 96G memory size with 256 stress-ng workers
+  - Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 96GB memory size with 32 stress workers
   ```
-    ./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 96 -d on -t tdx -f tdx -x TD_MEM_ACPT_T_32C_96G_256W -c "accept_memory=lazy" -p off
+    ./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_96G_32W -c "accept_memory=lazy" -p off
   ```
   - Check TDX guest functional accepting memory dynamically as requested
   ```

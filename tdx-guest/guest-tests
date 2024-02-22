@@ -1,0 +1,95 @@
+# case implemented by tdx-guest_boot_check.sh
+# case info: TD VM booting test with vcpu 1 sockets 1 and memory size 1 GB
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 1 sockets 1 and memory size 16 GB
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 4 sockets 1 and memory size 4 GB
+./guest-test/guest.test_launcher.sh -v 4 -s 1 -m 4 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 4 sockets 2 and memory size 4 GB
+./guest-test/guest.test_launcher.sh -v 4 -s 2 -m 4 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 4 sockets 2 and memory size 96 GB
+./guest-test/guest.test_launcher.sh -v 4 -s 2 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 64 sockets 8 and memory size 96 GB
+./guest-test/guest.test_launcher.sh -v 64 -s 8 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 288 sockets 1 and memory size 1 GB
+./guest-test/guest.test_launcher.sh -v 288 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 288 sockets 8 and memory size 96 GB
+./guest-test/guest.test_launcher.sh -v 288 -s 8 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 1 sockets 1 and memory size 16 GB and debug off
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d off -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: Check if TDX guest kernel can boot in legacy VM configuration 1 VCPU 1 Socket 1GB Memory
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t legacy -e tdx-guest -f tdx -x TD_BOOT -c " " -p off
+# case implemented by tdx_attest_check.sh
+# case info: Check TDX Guest Attestation TD_REPORT Generation in ioctl design
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_ATTEST_VERIFY_REPORT -c "accept_memory=lazy" -p off
+# case info: [NA for upstream kernel] TD attestation - verify report mac in ioctl design
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_ATTEST_VERITY_REPORTMAC -c "accept_memory=lazy" -p off
+# case info: [NA for upstream kernel] Check TD guest can extend the RTMR to include measurement registers at run-time in ioctl design
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_ATTEST_VERIFY_RTMR_EXTEND -c "accept_memory=lazy" -p off
+# case info: [NA for upstream kernel] Check TDX Guest Attestation Quote Generation in ioctl design
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_ATTEST_VERIFY_QUOTE -c "accept_memory=lazy" -p off
+# case info: TDX remote attestation TSM based Quote, ConfigFS attributes pre-check
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_TSM_ATTEST_QUOTE_PRECHECK -c "accept_memory=lazy" -p off
+# case info: TDX remote attestation TSM based Quote generation basic check, independent from QGS or other attestation support service
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_TSM_ATTEST_QUOTE -c "accept_memory=lazy" -p off
+# case info: TDX remote attestation TSM based Quote generation negative scenario check, no quote generated due to invalid arguments is expected
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_TSM_ATTEST_QUOTE_NEG -c "accept_memory=lazy" -p off
+# case implemented by tdx_speed_test.sh
+# case info: Check network speed based on speedtest-cli, report error in case of very low network speed in TDVM
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_NET_SPEED -c "accept_memory=lazy" -p off
+# case implemented by tdx_mem_test.sh
+# case info: Use ebizzy benchmark to validate TDX guest memory allocation basic function
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_EBIZZY_FUNC -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 8GB memory size with 1 stress worker
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 8 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_8G_1W -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 8GB memory size with 8 stress workers
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 8 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_8G_8W -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 32GB memory size with 1 stress worker
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 32 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_32G_1W -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 32GB memory size with 8 stress workers
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 32 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_32G_8W -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 96GB memory size with 1 stress worker
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_96G_1W -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 1VCPU 1SOCKET 96GB memory size with 8 stress workers
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_1C_96G_8W -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 16GB memory size with 1 stress worker
+./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_16G_1W -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 16GB memory size with 32 stress workers
+./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_16G_32W -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 32GB memory size with 1 stress worker
+./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 32 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_32G_1W -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 32GB memory size with 32 stress workers
+./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 32 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_32G_32W -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 96GB memory size with 1 stress worker
+./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_96G_1W -c "accept_memory=lazy" -p off
+# case info: Check lazy accept remained memory being fully accepted time consumed under 32VCPU 1SOCKET 96GB memory size with 32 stress workers
+./guest-test/guest.test_launcher.sh -v 32 -s 1 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_T_32C_96G_32W -c "accept_memory=lazy" -p off
+# case info: Check TDX guest can accept remained memory dynamically as requested
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_FUNC -c "accept_memory=lazy" -p off
+# case info: Calculate based on nr_unaccepted in /proc/vmstat and Unaccepted in /proc/meminfo for correct unaccepted memory info mapping
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_CAL -c "accept_memory=lazy" -p off
+# case info: Check TD guest boot with lazy_accept disabled (accept_memory=eager) and nr_unaccpeted in /proc/vmstat is 0
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_MEM_ACPT_NEG -c "accept_memory=eager" -p off
+# case implemented by tdx_test_module.sh
+# case info: Execute hlt instruction to excersize #VE handler kernel space EXIT_REASON_HLT code path
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_VE_HALT -c "accept_memory=lazy" -p off
+# case implemented by tdx-guest_bat_test.sh
+# case info: Check cpu_info of TD guest contains tdx_guest
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_GUEST_CPUINFO -c "accept_memory=lazy" -p off
+# case info: Check TD guest kernel kconfig contains CONFIG_INTEL_TDX_GUEST=y
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_GUEST_KCONFIG -c "accept_memory=lazy" -p off
+# case info: Check TD guest kernel kconfig contains CONFIG_TDX_GUEST_DRIVER=y or m
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_GUEST_DRIVER_KCONFIG -c "accept_memory=lazy" -p off
+# case info: Check TD guest kernel kconfig contains CONFIG_UNACCEPTED_MEMORY=y
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_GUEST_LAZY_ACCEPT_KCONFIG -c "accept_memory=lazy" -p off
+# case info: Check TD guest kernel kconfig contains CONFIG_TSM_REPORTS=y or m
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_GUEST_TSM_REPORTS_KCONFIG -c "accept_memory=lazy" -p off
+# case info: Check TD guest kernel has ioctl based attestation device /dev/tdx_guest
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_GUEST_ATTEST_DEV -c "accept_memory=lazy" -p off
+# case implemented by tdx_device_filter_test.sh
+# case info: [NA for upstream kernel] TD guest booting with allow ACPI WAET table test by device filter kernel cmdline
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_ALLOW_ACPI -c "tdx_allow_acpi=WAET" -p off
+# case info: [NA for upstream kernel] TD guest booting with block ACPI WAET table test by default
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_BLOCK_ACPI -c " " -p off
+# case info: [NA for upstream kernel] TD guest booting with disable device filter test for debug purpose
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_NO_CCFILTER -c "noccfilter" -p off
