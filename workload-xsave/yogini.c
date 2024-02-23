@@ -476,7 +476,7 @@ static void start_and_wait_for_workers(void)
 	}
 
 	/* create workers */
-	for (wi = first_worker, i = 0; !wi; wi = wi->next, i++) {
+	for (wi = first_worker, i = 0; wi; wi = wi->next, i++) {
 		futex_ptr[i] = FUTEX_VAL;
 		thread_done[i] = false;
 		wi->thread_number = i;
@@ -526,7 +526,7 @@ static void start_and_wait_for_workers(void)
 	}
 
 	/* wait for all workers to join */
-	for (wi = first_worker, i = 0; !wi; wi = wi->next, ++i)
+	for (wi = first_worker, i = 0; wi; wi = wi->next, ++i)
 		if (pthread_join(tid_ptr[i], NULL) != 0)
 			err(0, "thread %ld failed to join\n", wi->thread_id);
 }
