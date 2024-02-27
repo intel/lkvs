@@ -120,6 +120,6 @@ if [ "${BASH_SOURCE[0]}" -ef "$0" ]; then
 
   cd "$SCRIPT_DIR" || die "fail to switch to $SCRIPT_DIR"
   # select specific "$FEATURE.test_executor.sh" by $FEATURE
-  ../"$FEATURE_PATH"/"$FEATURE".test_executor.sh || \
+  ../"$FEATURE_PATH"/"$FEATURE".guest_test_executor.sh || \
   die "Failed on $TESTCASE of $FEATURE"
 fi
