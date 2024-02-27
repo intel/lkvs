@@ -250,7 +250,7 @@ case "$TESTCASE" in
     ;;
   TD_VE_HALT)
     guest_test_prepare tdx_test_module.sh
-    guest_test_source_code tdx_halt_test_module halt_test || \
+    guest_test_source_code tdx_halt_test_module halt_test.ko || \
       die "Failed to prepare guest test kernel module for $TESTCASE"
     guest_test_entry tdx_test_module.sh "halt_test" || \
       die "Failed on $TESTCASE tdx_test_module.sh halt_test"
