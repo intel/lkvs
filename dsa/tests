@@ -1,0 +1,7 @@
+# This file collects the DSA feature tests on
+# Intel® Architecture-based platforms.
+
+# DSA basic tests, it works on SPR(Sapphire Rapids) platform and future server
+dsa_user.sh -t check_dsa_driver
+dsa_user.sh -t check_dsa0_device
+dsa_user.sh -t check_shared_mode
