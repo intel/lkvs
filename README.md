@@ -27,6 +27,7 @@ More details please refer to following.
   * [ufs](ufs/README.md)
   * [workload-xsave](workload-xsave/README.md)
   * [AMX](state-components-validation-utilities/amx/README.md)
+  * [DSA](dsa/README.md)
 
 # Compile from sources
 ## Compile the whole project (NOT recommended)
