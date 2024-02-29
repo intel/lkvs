@@ -304,7 +304,9 @@ void initial_cpuid(void)
 	EXP_CPUID_RES_BITS(0x7, 0x1, ecx, 0, 31, VER1_0 | VER1_5 | VER2_0);	//Reserved
 
 	/* CPUID(0x7, 0x1).EDX */
-	EXP_CPUID_RES_BITS(0x7, 0x1, edx, 0, 31, VER1_0 | VER1_5 | VER2_0);	//Reserved
+	EXP_CPUID_RES_BITS(0x7, 0x1, edx, 0, 31, VER2_0);	//Reserved
+	EXP_CPUID_BIT(0x7, 0x1, edx, 4, 1, VER1_5);
+	EXP_CPUID_BIT(0x7, 0x1, edx, 5, 1, VER1_5);
 
 	/* CPUID(0x7, 0x2).EAX */
 	EXP_CPUID_RES_BITS(0x7, 0x2, eax, 0, 31, VER1_5);	//Reserved
