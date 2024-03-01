@@ -1,0 +1,5 @@
+{
+  "qemu_img": "/usr/libexec/qemu-kvm",
+  "boot_pattern": "*Kernel*on*an*x86_64*",
+  "guest_root_passwd": "123456"
+}
