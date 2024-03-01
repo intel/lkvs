@@ -1,0 +1,4 @@
+./intr.host_test.sh -m dedicated -i 10 -t 1
+./intr.host_test.sh -m shared -i 10 -t 1
+./intr.host_test.sh -m dedicated -i 1000000 -t 1
+./intr.host_test.sh -m shared -i 1000000 -t 1
