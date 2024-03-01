@@ -1,0 +1,2 @@
+./intr.guest_test.sh -x INTR_PT_DSA_DWQ_1 -r /home/rex/gnr-bkc-centos-stream-9-coreserver-6.6-9.3-15.img
+./intr.guest_test.sh -x INTR_PT_DSA_SWQ_1 -r /home/rex/gnr-bkc-centos-stream-9-coreserver-6.6-9.3-15.img
