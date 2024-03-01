@@ -23,7 +23,8 @@ GUEST_TEST_DIR="/root/guest_test/"
 ###################### Functions ######################
 # Common functions to be leveraged by $FEATURE/$FEATURE.test_executor.sh
 
-# function based on sshpass to scp common.sh and $1 test_script.sh to Guest VM
+# function based on sshpass to scp common.sh, $1 test_script.sh and $2 rpm file to Guest VM
+# $1 test script file and $2 rpm file are both optional
 guest_test_prepare() {
   rm -rf common.sh
   wget https://raw.githubusercontent.com/intel/lkvs/main/common/common.sh
@@ -34,6 +35,10 @@ EOF
   sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no common.sh root@localhost:"$GUEST_TEST_DIR"
   if [ -f "$1" ]; then
     sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no "$1" root@localhost:"$GUEST_TEST_DIR"
+  fi
+
+  if [ -f "$2" ]; then
+    sshpass -e scp -P "$PORT" -o StrictHostKeyChecking=no "$2" root@localhost:"$GUEST_TEST_DIR"
   fi
   test_print_trc "Guest VM test script prepare complete"
 }
