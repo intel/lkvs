@@ -67,6 +67,7 @@ NOTE!! args passed here will override params in json config file
   -g [optional, default off] code coverage test mode off/on
   -i [optional] path under guest-test to standalone common.json file
   -j [optional] path under guest-test to standalone qemu.config.json file
+  -r [optioanl] abs. path to single rpm file: kernel-img, kernel-devel or kernel-headers
   -h HELP info
 EOF
 }
@@ -113,7 +114,7 @@ echo PORT="$PORT" > "$SCRIPT_DIR"/test_params.py
 # used across test_launcher.sh, qemu_runner.py, test_executor.sh
 
 # get args for QEMU boot configurable parameters
-while getopts :v:s:m:d:t:e:f:x:c:p:g:i:j:h arg; do
+while getopts :v:s:m:d:t:e:f:x:c:p:g:i:j:r:h arg; do
   case $arg in
     v)
       VCPU=$OPTARG
@@ -166,6 +167,10 @@ while getopts :v:s:m:d:t:e:f:x:c:p:g:i:j:h arg; do
     j)
       JSON_Q=$OPTARG
       echo JSON_Q="\"$JSON_Q\"" >> "$SCRIPT_DIR"/test_params.py
+      ;;
+    r)
+      RPM=$OPTARG
+      echo RPM="\"$RPM\"" >> "$SCRIPT_DIR"/test_params.py
       ;;
     h)
       usage && exit 0
