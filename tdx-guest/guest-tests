@@ -93,3 +93,22 @@
 ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_BLOCK_ACPI -c " " -p off
 # case info: [NA for upstream kernel] TD guest booting with disable device filter test for debug purpose
 ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_NO_CCFILTER -c "noccfilter" -p off
+# case implemented by tdx_kdump_test_entry.sh
+# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 1 sockets 1 and memory size 1 GB
+./tdx-guest/tdx_kdump_test_entry.sh -v 1 -m 1 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 1 sockets 1 and memory size 32 GB
+./tdx-guest/tdx_kdump_test_entry.sh -v 1 -m 32 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 1 sockets 1 and memory size 96 GB
+./tdx-guest/tdx_kdump_test_entry.sh -v 1 -m 96 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 32 sockets 1 and memory size 1 GB
+./tdx-guest/tdx_kdump_test_entry.sh -v 32 -m 1 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 32 sockets 1 and memory size 32 GB
+./tdx-guest/tdx_kdump_test_entry.sh -v 32 -m 32 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 32 sockets 1 and memory size 96 GB
+./tdx-guest/tdx_kdump_test_entry.sh -v 32 -m 96 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 128 sockets 1 and memory size 4 GB
+./tdx-guest/tdx_kdump_test_entry.sh -v 128 -m 4 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 128 sockets 1 and memory size 32 GB
+./tdx-guest/tdx_kdump_test_entry.sh -v 128 -m 32 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 128 sockets 1 and memory size 96 GB
+./tdx-guest/tdx_kdump_test_entry.sh -v 128 -m 96 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
