@@ -90,8 +90,8 @@ function cmd_config_device() {
 
   ARGS=$(getopt -o l:e: \
 --long read-buffer-limit:,event-log-size: -n "$0" -- "$@")
-
-  if [ $? != 0 ]; then
+  rtn=$?
+  if [ $rtn != 0 ]; then
     echo "Terminating..."
     exit 1
   fi
@@ -148,8 +148,8 @@ function cmd_config_group() {
 --long read-buffers-reserved:,read-buffers-allowed:,\
 use-read-buffer-limit:,traffic-class-a:,traffic-class-b:,\
 desc-progress-limit:,batch-progress-limit: -n "$0" -- "$@")
-
-  if [ $? != 0 ]; then
+  rtn=$?
+  if [ $rtn != 0 ]; then
     echo "Terminating..."
     exit 1
   fi
@@ -248,8 +248,8 @@ function cmd_config_wq() {
 --long group-id:,wq-size:,priority:,block-on-fault:,prs-disable:,\
 threshold:,type:,name:,driver-name:,op-config:,mode:,max-batch-size:,\
 max-transfer-size:,ats-disable: -n "$0" -- "$@")
-
-  if [ $? != 0 ]; then
+  rtn=$?
+  if [ $rtn != 0 ]; then
     echo "Terminating..."
     exit 1
   fi
@@ -382,8 +382,8 @@ function cmd_config_engine() {
   eng_group_id=""
 
   ARGS=$(getopt -o g: --long group-id: -n "$0" -- "$@")
-
-  if [ $? != 0 ]; then
+  rtn=$?
+  if [ $rtn != 0 ]; then
     echo "Terminating..."
     exit 1
   fi
