@@ -20,7 +20,6 @@ source "$SCRIPT_DIR_LOCAL"/../guest-test/test_params.py
 ###################### Do Works ######################
 ## common works example ##
 cd "$(dirname "$0")" 2>/dev/null || exit 1
-# shellcheck source=../.env
 source ../.env
 source ../common/common.sh
 
