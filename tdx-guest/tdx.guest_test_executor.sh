@@ -330,6 +330,32 @@ case "$TESTCASE" in
       guest_test_close
     fi
     ;;
+  # general TC to install kernel related rpm package on guest OS
+  TD_RPM_INSTALL)
+    if [ -f "$RPM" ]; then
+      guest_test_prepare tdx_rpm_install.sh "$RPM"
+      RPM_FILE="${RPM##*/}"
+      guest_test_entry tdx_rpm_install.sh "$RPM_FILE" || \
+        die "Failed on $TESTCASE tdx_rpm_install.sh $RPM_FILE"
+      if [[ "$GCOV" == "off" ]]; then
+        guest_test_close
+      fi
+    fi
+    ;;
+  TD_KDUMP_START)
+    guest_test_prepare tdx_guest_kdump_test.sh
+    guest_test_entry tdx_guest_kdump_test.sh "-t KDUMP_S" || \
+      die "Failed on $TESTCASE tdx_kdump_test.sh -t KDUMP_S"
+    # no need to do guest_test_close as kdump/kexec trigger reboot
+    ;;
+  TD_KDUMP_CHECK)
+    guest_test_prepare tdx_guest_kdump_test.sh
+    guest_test_entry tdx_guest_kdump_test.sh "-t KDUMP_C" || \
+      die "Failed on $TESTCASE tdx_kdump_test.sh -t KDUMP_C"
+    if [[ "$GCOV" == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
   :)
     test_print_err "Must specify the test scenario option by [-t]"
     usage && exit 1
