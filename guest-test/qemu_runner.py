@@ -42,3 +42,8 @@ if vm_type == "tdx":
 if vm_type == "tdxio":
   command = '{} {} {} {}'.format(qemu_img, vm_cfg, tdx_cfg, tdxio_cfg)
   sp.run(command, shell=True)
+
+# launch vfio_pt vm based on vm_type config
+if vm_type == "vfio_pt":
+  command = '{} {}'.format(qemu_img, vm_cfg)
+  sp.run(command, shell=True)

@@ -98,7 +98,7 @@ guest_test_close() {
   sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
     source $GUEST_TEST_DIR/common.sh
     test_print_trc "guest test complete, close VM now"
-    if [[ "$VM_TYPE" = "legacy" ]]; then
+    if [[ "$VM_TYPE" != "tdx" ]] && [[ "$VM_TYPE" != "tdxio" ]]; then
       shutdown now
     else
       systemctl reboot --reboot-argument=now
