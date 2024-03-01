@@ -25,16 +25,24 @@ import argparse
 # read from qemu.config.json format for all raw qemu vm config
 cwd = Path(os.getcwd())
 if cwd.stem == "guest-test":
-  try:
-    JSON
-  except NameError:
-    # default qemu.config.json under guest-test
-    common_config = Path(f"{os.getcwd()}/common.json").read_text()
-    raw_config = Path(f"{os.getcwd()}/qemu.config.json").read_text()
+  if 'JSON_C' in globals():
+      common_config = Path(os.path.join(f"{os.getcwd()}/", JSON_C)).read_text()
   else:
+      common_config = Path(f"{os.getcwd()}/common.json").read_text()
+  if 'JSON_Q' in globals():
+      raw_config = Path(os.path.join(f"{os.getcwd()}/", JSON_Q)).read_text()
+  else:
+      raw_config = Path(f"{os.getcwd()}/qemu.config.json").read_text()
+#  try:
+#    JSON
+#  except NameError:
+    # default qemu.config.json under guest-test
+#    common_config = Path(f"{os.getcwd()}/common.json").read_text()
+#    raw_config = Path(f"{os.getcwd()}/qemu.config.json").read_text()
+#  else:
     # customized qemu.confg.xxx.json located by JSON under guest-test folder
-    common_config = Path(os.path.join(f"{os.getcwd()}/", JSON_C)).read_text()
-    raw_config = Path(os.path.join(f"{os.getcwd()}/", JSON_Q)).read_text()
+#    common_config = Path(os.path.join(f"{os.getcwd()}/", JSON_C)).read_text()
+#    raw_config = Path(os.path.join(f"{os.getcwd()}/", JSON_Q)).read_text()
 else:
   exit(1)
 
@@ -42,23 +50,38 @@ image_config = json.loads(common_config)
 qemu_config = json.loads(raw_config)
 
 # pre-config G-list variables' values confirmed by common.json
-if os.path.isfile(image_config["kernel_img"]):
+if "kernel_img" in image_config and os.path.isfile(image_config["kernel_img"]):
   kernel_img = image_config["kernel_img"]
 else:
   kernel_img = "not_use"
-if os.path.isfile(image_config["initrd_img"]):
+if "initrd_img" in image_config and os.path.isfile(image_config["initrd_img"]):
   initrd_img = image_config["initrd_img"]
 else:
   initrd_img = "not_use"
-if os.path.isfile(image_config["bios_img"]):
+if "bios_img" in image_config and os.path.isfile(image_config["bios_img"]):
   bios_img = image_config["bios_img"]
 else:
   bios_img = "not_use"
-qemu_img = image_config["qemu_img"]
-guest_img = image_config["guest_img"]
-guest_img_format = image_config["guest_img_format"]
-boot_pattern = image_config["boot_pattern"]
-guest_root_passwd = image_config["guest_root_passwd"]
+if "qemu_img" in image_config:
+  qemu_img = image_config["qemu_img"]
+else:
+  qemu_img = "not_use"
+if "guest_img" in image_config:
+  guest_img = image_config["guest_img"]
+else:
+  guest_img = "not_use"
+if "guest_img_format" in image_config:
+  guest_img_format = image_config["guest_img_format"]
+else:
+  guest_img_format = "not_use"
+if "boot_pattern" in image_config:
+  boot_pattern = image_config["boot_pattern"]
+else:
+  boot_pattern = "not_use"
+if "guest_root_passwd" in image_config:
+  guest_root_passwd = image_config["guest_root_passwd"]
+else:
+  guest_root_passwd = "not_use"
 port = PORT
 port_tel = port - 1000
 
@@ -75,37 +98,44 @@ print(kernel_img, initrd_img, bios_img, qemu_img, guest_img, guest_img_format, b
 if 'VM_TYPE' in dir():
   vm_type = VM_TYPE
 else:
-  vm_type = qemu_config["common"]["vm_type"]
+  if "vm_type" in qemu_config["common"]:
+    vm_type = qemu_config["common"]["vm_type"]
 
 if 'PMU' in dir():
   pmu = PMU
 else:
-  pmu = qemu_config["common"]["pmu"]
+  if "pmu" in qemu_config["common"]:
+    pmu = qemu_config["common"]["pmu"]
 
 if 'VCPU' in dir():
   cpus = VCPU
 else:
-  cpus = qemu_config["common"]["cpus"]
+  if "cpus" in qemu_config["common"]:
+    cpus = qemu_config["common"]["cpus"]
 
 if 'SOCKETS' in dir():
   sockets = SOCKETS
 else:
-  sockets = qemu_config["common"]["sockets"]
+  if "sockets" in qemu_config["common"]:
+    sockets = qemu_config["common"]["sockets"]
 
 if 'MEM' in dir():
   mem = MEM
 else:
-  mem = qemu_config["common"]["mem"]
+  if "mem" in qemu_config["common"]:
+    mem = qemu_config["common"]["mem"]
 
 if 'CMDLINE' in dir():
   cmdline = CMDLINE
 else:
-  cmdline = qemu_config["common"]["cmdline"]
+  if "cmdline" in qemu_config["common"]:
+    cmdline = qemu_config["common"]["cmdline"]
 
 if 'DEBUG' in dir():
   debug = DEBUG
 else:
-  debug = qemu_config["common"]["debug"]
+  if "debug" in qemu_config["common"]:
+    debug = qemu_config["common"]["debug"]
 
 if 'TESTCASE' in dir():
   testcase = TESTCASE
@@ -152,41 +182,52 @@ if args.testcase is not None:
   testcase = args.testcase
 
 # end of O-list variables handling
-
 # update all cfg_var_x with G-list variables (default values from qemu.config.json) and O-list variables (could be override by passed in value)
 # NOTICE!! in case of any cfg_var_x update in qemu.config.json, need to revise following code accordingly
-qemu_config["vm"]["cfg_var_1"] = qemu_config["vm"]["cfg_var_1"].replace("$VM_TYPE", vm_type).replace("$PORT", str(port))
-qemu_config["vm"]["cfg_var_2"] = qemu_config["vm"]["cfg_var_2"].replace("$PMU", pmu)
-qemu_config["vm"]["cfg_var_3"] = qemu_config["vm"]["cfg_var_3"].replace("$VCPU", str(cpus)).replace("$SOCKETS", str(sockets))
-qemu_config["vm"]["cfg_var_4"] = qemu_config["vm"]["cfg_var_4"].replace("$MEM", str(mem))
+if "$VM_TYPE" in qemu_config["vm"]["cfg_var_1"]:
+  qemu_config["vm"]["cfg_var_1"] = qemu_config["vm"]["cfg_var_1"].replace("$VM_TYPE", vm_type)
+if "$PORT" in qemu_config["vm"]["cfg_var_1"]:
+  qemu_config["vm"]["cfg_var_1"] = qemu_config["vm"]["cfg_var_1"].replace("$PORT", str(port))
+if "$PMU" in qemu_config["vm"]["cfg_var_2"]:
+  qemu_config["vm"]["cfg_var_2"] = qemu_config["vm"]["cfg_var_2"].replace("$PMU", pmu)
+if "$VCPU" in qemu_config["vm"]["cfg_var_3"]:
+  qemu_config["vm"]["cfg_var_3"] = qemu_config["vm"]["cfg_var_3"].replace("$VCPU", str(cpus))
+if "$SOCKETS" in qemu_config["vm"]["cfg_var_3"]:
+  qemu_config["vm"]["cfg_var_3"] = qemu_config["vm"]["cfg_var_3"].replace("$SOCKETS", str(sockets))
+if "$MEM" in qemu_config["vm"]["cfg_var_4"]:
+  qemu_config["vm"]["cfg_var_4"] = qemu_config["vm"]["cfg_var_4"].replace("$MEM", str(mem))
 # bypass -kernel config option in case it's not provided
-if os.path.isfile(kernel_img):
+if "$KERNEL_IMG" in qemu_config["vm"]["cfg_var_5"] and os.path.isfile(kernel_img):
   qemu_config["vm"]["cfg_var_5"] = qemu_config["vm"]["cfg_var_5"].replace("$KERNEL_IMG", kernel_img)
 else:
   qemu_config["vm"]["cfg_var_5"] = ""
 # bypass -initrd config option in case it's not provided
-if os.path.isfile(initrd_img):
+if "$INITRD_IMG" in qemu_config["vm"]["cfg_var_6"] and os.path.isfile(initrd_img):
   qemu_config["vm"]["cfg_var_6"] = qemu_config["vm"]["cfg_var_6"].replace("$INITRD_IMG", initrd_img)
 else:
   qemu_config["vm"]["cfg_var_6"] = ""
-
-qemu_config["vm"]["cfg_var_7"] = qemu_config["vm"]["cfg_var_7"].replace("$PORT", str(port))
-qemu_config["vm"]["cfg_var_8"] = qemu_config["vm"]["cfg_var_8"].replace("$GUEST_IMG", guest_img).replace("$IMG_FORMAT", guest_img_format)
+if "$PORT" in qemu_config["vm"]["cfg_var_7"]:
+  qemu_config["vm"]["cfg_var_7"] = qemu_config["vm"]["cfg_var_7"].replace("$PORT", str(port))
+if "$GUEST_IMG" in qemu_config["vm"]["cfg_var_8"]:
+  qemu_config["vm"]["cfg_var_8"] = qemu_config["vm"]["cfg_var_8"].replace("$GUEST_IMG", guest_img)
+if "$IMG_FORMAT" in qemu_config["vm"]["cfg_var_8"]:
+  qemu_config["vm"]["cfg_var_8"] = qemu_config["vm"]["cfg_var_8"].replace("$IMG_FORMAT", guest_img_format)
 # bypass -append config option in case -kernel option not used
-if os.path.isfile(kernel_img):
+if "$CMDLINE" in qemu_config["vm"]["cfg_var_9"] and os.path.isfile(kernel_img):
   qemu_config["vm"]["cfg_var_9"] = qemu_config["vm"]["cfg_var_9"].replace("$CMDLINE", cmdline)
 else:
   qemu_config["vm"]["cfg_var_9"] = ""
 # bypass -bios config option in case it's not provided, default seabios to use
-if os.path.isfile(bios_img):
+if "$BIOS_IMG" in qemu_config["vm"]["cfg_var_10"] and os.path.isfile(bios_img):
   qemu_config["vm"]["cfg_var_10"] = qemu_config["vm"]["cfg_var_10"].replace("$BIOS_IMG", bios_img)
 else:
   qemu_config["vm"]["cfg_var_10"] = ""
-
-qemu_config["vm"]["cfg_var_11"] = qemu_config["vm"]["cfg_var_11"].replace("$PORT_TEL", str(port_tel))
-
-qemu_config["tdx"]["cfg_var_1"] = qemu_config["tdx"]["cfg_var_1"].replace("$DEBUG", debug)
-qemu_config["tdx"]["cfg_var_2"] = qemu_config["tdx"]["cfg_var_2"].replace("$MEM", str(mem))
+if "$PORT_TEL" in qemu_config["vm"]["cfg_var_11"]:
+  qemu_config["vm"]["cfg_var_11"] = qemu_config["vm"]["cfg_var_11"].replace("$PORT_TEL", str(port_tel))
+if "$DEBUG" in qemu_config["tdx"]["cfg_var_1"]:
+  qemu_config["tdx"]["cfg_var_1"] = qemu_config["tdx"]["cfg_var_1"].replace("$DEBUG", debug)
+if "$MEM" in qemu_config["tdx"]["cfg_var_2"]:
+  qemu_config["tdx"]["cfg_var_2"] = qemu_config["tdx"]["cfg_var_2"].replace("$MEM", str(mem))
 
 # end of all cfg_var_x update handling
 
@@ -223,6 +264,7 @@ def get_sub_cfgs(l, key, result=""):
 vm_keys = list(get_sub_keys(qemu_config, "vm"))
 tdx_keys = list(get_sub_keys(qemu_config, "tdx"))
 tdxio_keys = list(get_sub_keys(qemu_config, "tdxio"))
+vfio_pt_keys = list(get_sub_keys(qemu_config, "vfio_pt"))
 
 #print_sub_keys(vm_keys, "vm")
 if vm_type == "legacy":
@@ -253,3 +295,9 @@ if vm_type == "tdxio":
   print(tdx_cfg)
   print("#### qemu config option, part 3 ####")
   print(tdxio_cfg)
+print("11111111111111111111111111111111111111111111111111111");
+if vm_type == "vfio_pt":
+  vm_cfg = get_sub_cfgs(vm_keys, "vm")
+  print("HERE're all the configs to launch vfio passthrough vm:")
+  print("#### qemu config option, part 1 ####")
+  print(vm_cfg)
