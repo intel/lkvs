@@ -71,7 +71,7 @@ case "$FILTER_CASE" in
     exit 1
     ;;
   \?)
-    test_print_err "Input test case option $MEM_CASE is not supported"
+    test_print_err "Input test case option $FILTER_CASE is not supported"
     exit 1
     ;;
 esac
