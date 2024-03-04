@@ -343,14 +343,14 @@ case "$TESTCASE" in
     fi
     ;;
   TD_KDUMP_START)
-    guest_test_prepare tdx_guest_kdump_test.sh
-    guest_test_entry tdx_guest_kdump_test.sh "-t KDUMP_S" || \
+    guest_test_prepare tdx_kdump_test.sh
+    guest_test_entry tdx_kdump_test.sh "-t KDUMP_S" || \
       die "Failed on $TESTCASE tdx_kdump_test.sh -t KDUMP_S"
     # no need to do guest_test_close as kdump/kexec trigger reboot
     ;;
   TD_KDUMP_CHECK)
-    guest_test_prepare tdx_guest_kdump_test.sh
-    guest_test_entry tdx_guest_kdump_test.sh "-t KDUMP_C" || \
+    guest_test_prepare tdx_kdump_test.sh
+    guest_test_entry tdx_kdump_test.sh "-t KDUMP_C" || \
       die "Failed on $TESTCASE tdx_kdump_test.sh -t KDUMP_C"
     if [[ "$GCOV" == "off" ]]; then
       guest_test_close
