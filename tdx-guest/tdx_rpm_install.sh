@@ -17,6 +17,11 @@ RPM_FILE=$1
 
 ###################### Do Works ######################
 # check rpm file type: kernel image, kernel devel or kernel headers
+if [[ -f "$RPM_FILE" ]]; then
+  test_print_trc "rpm file for test: $RPM_FILE"
+else
+  die "no rpm file for test"
+fi
 
 # for kernel-devel rpm, remove old devel package and install new one
 if grep "\-devel\-" "$RPM_FILE" > /dev/null; then

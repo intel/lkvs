@@ -340,6 +340,8 @@ case "$TESTCASE" in
       if [[ "$GCOV" == "off" ]]; then
         guest_test_close
       fi
+    else
+      die "rpm file not accessible: $RPM"
     fi
     ;;
   TD_KDUMP_START)
