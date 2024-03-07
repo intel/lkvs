@@ -112,3 +112,12 @@
 ./tdx-guest/tdx_kdump_test_entry.sh -v 128 -m 32 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
 # case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 128 sockets 1 and memory size 96 GB
 ./tdx-guest/tdx_kdump_test_entry.sh -v 128 -m 96 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case implemented by tdx_stress_test.sh
+# case info: In TDVM, stress test on memory with stress-ng memrate stressor under config of 1VCPU + 16G MEM + 8 stressors
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_STRESS_MEMRATE_1C_16G_8W -c "accept_memory=lazy" -p off
+# case info: In TDVM, stress test on memory with stress-ng memrate stressor under config of 1VCPU + 96G MEM + 48 stressors
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_STRESS_MEMRATE_1C_96G_48W -c "accept_memory=lazy" -p off
+# case info: In TDVM, stress test on memory with stress-ng network socket + iomix stressor under config of 1VCPU + 16G MEM + 8 stressors
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_STRESS_SOCK_IOMIX_1C_16G_8W -c "accept_memory=lazy" -p off
+# case info: In TDVM, stress test on memory with stress-ng network socket + iomix stressor under config of 1VCPU + 96G MEM + 48 stressors
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_STRESS_SOCK_IOMIX_1C_96G_48W -c "accept_memory=lazy" -p off
