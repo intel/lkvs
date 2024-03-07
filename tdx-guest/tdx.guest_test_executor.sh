@@ -358,6 +358,38 @@ case "$TESTCASE" in
       guest_test_close
     fi
     ;;
+  TD_STRESS_MEMRATE_1C_16G_8W)
+    guest_test_prepare tdx_stress_test.sh
+    guest_test_entry tdx_stress_test.sh "-t STRESS_MEMRATE -w 8" || \
+      die "Failed on $TESTCASE tdx_stress_test.sh -t STRESS_MEMRATE -w 8"
+    if [[ "$GCOV" == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
+  TD_STRESS_MEMRATE_1C_96G_48W)
+    guest_test_prepare tdx_stress_test.sh
+    guest_test_entry tdx_stress_test.sh "-t STRESS_MEMRATE -w 48" || \
+      die "Failed on $TESTCASE tdx_stress_test.sh -t STRESS_MEMRATE -w 48"
+    if [[ "$GCOV" == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
+  TD_STRESS_SOCK_IOMIX_1C_16G_8W)
+    guest_test_prepare tdx_stress_test.sh
+    guest_test_entry tdx_stress_test.sh "-t STRESS_SOCK_IOMIX -w 4" || \
+      die "Failed on $TESTCASE tdx_stress_test.sh -t STRESS_SOCK_IOMIX -w 4"
+    if [[ "$GCOV" == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
+  TD_STRESS_SOCK_IOMIX_1C_96G_48W)
+    guest_test_prepare tdx_stress_test.sh
+    guest_test_entry tdx_stress_test.sh "-t STRESS_SOCK_IOMIX -w 24" || \
+      die "Failed on $TESTCASE tdx_stress_test.sh -t STRESS_SOCK_IOMIX -w 24"
+    if [[ "$GCOV" == "off" ]]; then
+      guest_test_close
+    fi
+    ;;
   :)
     test_print_err "Must specify the test scenario option by [-t]"
     usage && exit 1
