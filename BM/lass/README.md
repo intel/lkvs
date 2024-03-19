@@ -9,8 +9,8 @@ LASS achieves this by preventing memory loads/stores to user space memory in sup
 ```
 make
 # To run a specific case
-./lam -t <testcase_id>
-(for example, cpuid) ./lass m
+./lass <Case ID>
+(for example, add maps) ./lass m
 ```
 Test results (PASS or FAIL) will be printed out. 
 

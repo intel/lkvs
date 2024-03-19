@@ -1,9 +1,17 @@
 # This file collects the LASS cases
-lass m  # Test get vsyscall address maps.[negative]
-lass d  # Test execute vsyscall addr 0xffffffffff600000.[negative]
-lass g  # Test call vsyscall
-lass t  # Test call vsyscall api gettimeofday
-lass r  # Test read vsyscall 0xffffffffff600000.[negative]
-lass i  # Test read random kernel space.[negative]
-lass v  # Test process_vm_readv read address 0xffffffffff600000.[negative]
-lass e  # Test vsyscall emulation.
+# Test get vsyscall address maps.[negative]
+lass m
+# Test execute vsyscall addr 0xffffffffff600000.[negative]
+lass d
+# Test call vsyscall
+lass g
+# Test call vsyscall api gettimeofday
+lass t
+# Test read vsyscall 0xffffffffff600000.[negative]
+lass r
+# Test read random kernel space.[negative]
+lass i
+# Test process_vm_readv read address 0xffffffffff600000.[negative]
+lass v
+# Test vsyscall emulation.
+lass e
