@@ -48,10 +48,10 @@ numa_nodes_compare_with_package() {
   [[ -n $cpuinfo_nodes ]] || block_test "NUMA nodes info is not available from lscpu."
   test_print_trc "SUT NUMA nodes info from lscpu shows: $cpuinfo_nodes"
 
-  numa_nodes=$(grep . /sys/devices/system/node/node*/cpulist 2>&1)
+  numa_nodes=$(grep -H . /sys/devices/system/node/node*/cpulist 2>&1)
   [[ -n $numa_nodes ]] || block_test "NUMA nodes sysfs files is not available."
   test_print_trc "SUT NUMA nodes sysfs info: $numa_nodes"
-  nodes_lines=$(grep . /sys/devices/system/node/node*/cpulist | wc -l 2>&1)
+  nodes_lines=$(grep -H . /sys/devices/system/node/node*/cpulist | wc -l 2>&1)
 
   if [[ $socket_num -eq $nodes_lines ]]; then
     test_print_trc "SNC is disabled:"
