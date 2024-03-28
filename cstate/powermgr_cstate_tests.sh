@@ -11,6 +11,9 @@ source ../.env
 CPU_SYSFS_PATH="/sys/devices/system/cpu"
 CPU_BUS_SYSFS_PATH="/sys/bus/cpu/devices/"
 CPU_IDLE_SYSFS_PATH="/sys/devices/system/cpu/cpuidle"
+PKG_CST_CTL="0xe2"
+MSR_PKG2="0x60d"
+MSR_PKG6="0x3f9"
 
 current_cpuidle_driver=$(cat "$CPU_IDLE_SYSFS_PATH"/current_driver)
 
@@ -419,6 +422,124 @@ perf_server_cstat_update() {
   fi
 }
 
+# Function to check if the server platform can enter the runtime PC2 state
+# by reading the data using the turbostat tool
+runtime_pc2_entry() {
+  local pc2_val=""
+  local time_to_enter_pc2=10
+  local pkg_limit=""
+
+  # Judge if the deeper pkg cstate is supported
+  do_cmd "turbostat --debug -o tc.out sleep 1"
+  pkg_limit=$(grep "pkg-cstate-limit=0" tc.out)
+
+  if [[ -n $pkg_limit ]]; then
+    block_test "The platform does not support deeper pkg cstate."
+  fi
+
+  pkg_cst_ctl=$(rdmsr -a $PKG_CST_CTL 2>/dev/null)
+
+  msr_pkg2_before=$(rdmsr -a $MSR_PKG2 2>/dev/null)
+  test_print_trc "MSR_PKG_C2_RESIDENCY before: $msr_pkg2_before"
+
+  sleep $time_to_enter_pc2
+
+  columns="Core,CPU,CPU%c1,CPU%c6,Pkg%pc2,Pkg%pc6"
+  turbostat_output=$(turbostat -i 10 --quiet --show $columns sleep 10 2>&1)
+  test_print_trc "turbostat log: $turbostat_output"
+
+  pc2_val=$(echo "$turbostat_output" | awk '/^-/{print $5}')
+  msr_pkg2_after=$(rdmsr -a $MSR_PKG2 2>/dev/null)
+  test_print_trc "MSR_PKG_C2_RESIDENCY after: $msr_pkg2_after"
+
+  [[ -n $pc2_val ]] || block_test "PC2 was not detected by the turbostat tool.
+Please check the turbostat tool version or if the BIOS has disabled Pkg cstate."
+  test_print_trc "PC2 residency for all CPUs: $pc2_val"
+  test_print_trc "MSR_PKG_CST_CONFIG_CONTROL: $pkg_cst_ctl"
+
+  if [ "$(echo "scale=2; $pc2_val > 0.01" | bc)" -eq 1 ]; then
+    test_print_trc "The system successfully enters the runtime PC2 state."
+  else
+    die "The system fails to enter the runtime PC2 state."
+  fi
+}
+
+# Function to check if the server platform can enter the runtime PC6 state
+# by reading the data using the turbostat tool
+runtime_pc6_entry() {
+  local pc6_residency=""
+  local time_to_enter_pc6=10
+  local pkg_limit=""
+
+  # Judge if the deeper pkg cstate is supported
+  do_cmd "turbostat --debug -o tc.out sleep 1"
+  pkg_limit=$(grep "pkg-cstate-limit=0" tc.out)
+
+  if [[ -n $pkg_limit ]]; then
+    block_test "The platform does not support deeper pkg cstate."
+  fi
+
+  # Read MSR_PKG_CST_CONFIG_CONTROL: 0xe2
+  pkg_cst_ctl=$(rdmsr -a $PKG_CST_CTL 2>/dev/null)
+
+  # Read MSR_PKG_C6_RESIDENCY: 0x3f9
+  msr_pkg6_before=$(rdmsr -a $MSR_PKG6 2>/dev/null)
+  test_print_trc "MSR_PKG_C6_RESIDENCY before: $msr_pkg6_before"
+
+  sleep $time_to_enter_pc6
+
+  # Check PC6 residency after idling for the specified time
+  columns="Core,CPU,CPU%c1,CPU%c6,Pkg%pc2,Pkg%pc6"
+  turbostat_output=$(turbostat -i 10 --quiet --show $columns sleep 10 2>&1)
+  test_print_trc "turbostat log: $turbostat_output"
+  pc6_residency=$(echo "$turbostat_output" | grep -E "^-" | awk '{print $6}')
+  msr_pkg6_after=$(rdmsr -a $MSR_PKG6 2>/dev/null)
+  test_print_trc "MSR_PKG_C6_RESIDENCY after: $msr_pkg6_after"
+
+  [ -z "$pc6_residency" ] && die "Did not receive PC6 data from the turbostat tool.
+Please check the turbostat tool version or if the BIOS has disabled Pkg cstate."
+  test_print_trc "PC6 residency for all CPUs: $pc6_residency"
+  test_print_trc "MSR_PKG_CST_CONFIG_CONTROL: $pkg_cst_ctl"
+
+  if [ "$(echo "scale=2; $pc6_residency > 0.01" | bc)" -eq 1 ]; then
+    test_print_trc "The system has entered the runtime PC6 state."
+  else
+    die "The system has failed to enter the runtime PC6 state."
+  fi
+}
+
+# Function to check runtime PC6 residency and stability
+runtime_pc6_residency() {
+  local pkg_limit=""
+
+  # Judge if the deeper pkg cstate is supported
+  do_cmd "turbostat --debug -o tc.out sleep 1"
+  pkg_limit=$(grep "pkg-cstate-limit=0" tc.out)
+
+  if [[ -n $pkg_limit ]]; then
+    block_test "The platform does not support deeper pkg cstate."
+  fi
+
+  pkg_cst_ctl=$(rdmsr -a $PKG_CST_CTL 2>/dev/null)
+
+  for ((i = 1; i <= 10; i++)); do
+    columns="Core,CPU,CPU%c1,CPU%c6,Pkg%pc2,Pkg%pc6"
+    turbostat_output=$(turbostat -i 10 --quiet --show $columns sleep 10 2>&1)
+    test_print_trc "turbostat log: $turbostat_output"
+    pc6_res=$(echo "$turbostat_output" | awk '/^-/{print $6}')
+
+    if (($(echo "$pc6_res > 90.01" | bc -l))); then
+      test_print_trc "Cycle $i: The system enters runtime PC6 state with good residency (>90%)"
+    elif (($(echo "$pc6_res > 70.01" | bc -l))); then
+      test_print_trc "Cycle $i: The system enters runtime PC6 state but with less than 90% residency"
+    elif (($(echo "$pc6_res > 5.01" | bc -l))); then
+      die "Cycle $i: The system enters runtime PC6 state with low residency"
+    else
+      die "Cycle $i: The system fails to enter runtime PC6 state or the residency is extremely low"
+    fi
+  done
+}
+
 # Function to do CPU offline and online short stress
 cpu_off_on_stress() {
   local cycle=$1
@@ -508,6 +629,15 @@ core_cstate_test() {
     ;;
   verify_server_perf_pkg_cstat_update)
     perf_server_cstat_update cstate_pkg
+    ;;
+  verify_server_pc2_entry)
+    runtime_pc2_entry
+    ;;
+  verify_server_pc6_entry)
+    runtime_pc6_entry
+    ;;
+  verify_server_pc6_residency)
+    runtime_pc6_residency
     ;;
   verify_cpu_offline_online_stress)
     cpu_off_on_stress 5
