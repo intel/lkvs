@@ -1,22 +1,45 @@
-#It will run perf_tests.sh for some basic tests for PT
+#This file collects the basic test cases for Intel® Processor Trace feature
 
+# Verify to filter MTC (Mini Time Counter) and TSC (Time-Stamp Counter) package
 perf_tests.sh -t fp
+# Verify control flow packages when branch disable
 perf_tests.sh -t disablebranch
+# Verify control flow packages when branch and PT both disable
 perf_tests.sh -t pt
+# Verify power event trace
 perf_tests.sh -t pwr_evt
+# Verify power event trace when branch is disabled
 perf_tests.sh -t pwr_evt_branch
+# Verify if power event trace with itrace information is aligned
 perf_tests.sh -t pwr_evt_itrace
+# Verify PT generated trace packages in user space
 perf_tests.sh -t user
+# Verify PT generated trace packages in kernel space
 perf_tests.sh -t kernel
+# Verify if the CYC (cycle count) package is supported and detected
 perf_tests.sh -t cyc
+# Verify if the CYC (cycle count) will be disabled
+# if MTC(mini time counter) is disabled in perf
 perf_tests.sh -t mtc
+# Record and filter PT's branch events, cycles, and instructions
 perf_tests.sh -t pebs
+# Verify Intel PT's last branch recorded stack information
 perf_tests.sh -t lbr
+# Verify Intel PT's multiple table of physical address entries
 perf_tests.sh -t mtopa
+# Verify Intel PT's auxiliary samples specified to the branch misses events
 perf_tests.sh -t sample
+# Verify Intel PT's user events by perf tool with multiple cycles
+perf_tests.sh -t user_m
+# Verify Intel PT's kernel events by perf tool with multiple cycles
 perf_tests.sh -t kernel_m
+# Verify the miss frequency of specified events
 perf_tests.sh -t miss_frequency
+# Verify the virtual LBR (Last Branch Record)
 perf_tests.sh -t virtual_lbr
+# Verify if there is data lost during perf record
 perf_tests.sh -t lost_data
+# Verify if not get TNT(Taken/Not-taken) when TNT is disabled
 perf_tests.sh -t notnt
+# Verify if the event trace is supported and detected
 perf_tests.sh -t event_trace
