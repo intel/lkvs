@@ -141,6 +141,10 @@ feature_list = {
         "cpuid": ['7', '0', '1', '0', 'a', '4'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
     },
+    "LASS": {
+        "cpuid": ['7', '0', '1', '0', 'a', '6'],
+        "platforms": {"SRF", "CWF"}
+    },
     "CMPCCXADD": {
         "cpuid": ['7', '0', '1', '0', 'a', '7'],
         "platforms": {"SRF", "CWF"}
@@ -159,6 +163,10 @@ feature_list = {
     },
     "AVX_IFMA": {
         "cpuid": ['7', '0', '1', '0', 'a', '23'],
+        "platforms": {"SRF", "CWF"}
+    },
+    "LAM": {
+        "cpuid": ['7', '0', '1', '0', 'a', '26'],
         "platforms": {"SRF", "CWF"}
     },
     "AVX_VNNI_INT8": {
