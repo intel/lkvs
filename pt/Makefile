@@ -3,7 +3,7 @@
 
 CC       ?= "${CC}" -g -Wall
 CFLAGS += -DMAINLINE -I./
-BIN	 = cpl branch psb nonroot_test negative_test
+BIN	 = cpl branch psb nonroot_test negative_test sort_test
 LFLAGS	= -L./ -lipt
 
 
@@ -23,6 +23,9 @@ nonroot_test:
 	$(CC)	-o  $@ $@.c utils.c ${CFLAGS} ${LFLAGS}
 
 negative_test:
+	$(CC)	-o  $@ $@.c utils.c ${CFLAGS} ${LFLAGS}
+
+sort_test:
 	$(CC)	-o  $@ $@.c utils.c ${CFLAGS} ${LFLAGS}
 
 clean:

@@ -26,6 +26,15 @@ __EOF
 perf_log="perf_record.log"
 temp_log="perf.log"
 
+# Perf tool is required to run this processor trace cases
+if which perf 1>/dev/null 2>&1; then
+  perf list 1>/dev/null || block_test "Failed to run perf tool,
+please check perf tool error message."
+else
+  block_test "perf tool is required to run processor trace cases,
+please get it from latest upstream kernel-tools."
+fi
+
 result_check() {
   grep lost $perf_log
   [[ $? -eq 1 ]] || die "Data loss occurs during the perf record!"
@@ -305,6 +314,26 @@ the CYC package will be disabled if MTC is disabled!"
   rm -f $temp_log
 }
 
+# Function to check if the CYC package is disabled by default
+time_full_test() {
+  local cyc
+  cyc=$(cat /sys/bus/event_source/devices/intel_pt/caps/psb_cyc)
+  [[ $cyc -eq 0 ]] && block_test "Platform does not support Cycle Counter package"
+  if [[ $cyc -eq 1 ]]; then
+    test_print_trc "Platform supports CYC, will check if CYC package is disabled by default"
+    do_cmd "perf record -e intel_pt//u sleep 1 >& $perf_log"
+    result_check
+    sleep 1
+    sync
+    sync
+    do_cmd "perf script -D > $temp_log"
+    should_fail "grep \"CYC 0x\" $temp_log"
+    ##TODO will add more logic after confirming with Adrian
+  fi
+  rm -f $perf_log
+  rm -f $temp_log
+}
+
 # PEBS: Precise Event-Based Sampling
 # Function to record and filter PT's branch events, cycles, and instructions
 # while executing uname command
@@ -488,6 +517,58 @@ event_trace_test() {
   rm -f $temp_log
 }
 
+# Function to check if tracestop is supported and detected.
+tracestop_test() {
+  local path
+  path=$(pwd)
+  path=$path"/sort_test"
+  do_cmd "perf record -e intel_pt//u '--filter=tracestop main @ $path' sort_test >& $perf_log"
+  result_check
+  rm -f $perf_log
+}
+
+# Function to check trace filter with main count
+tracefilter_test() {
+  local path
+  path=$(pwd)
+  path=$path"/sort_test"
+  do_cmd "perf record -e intel_pt//u '--filter=filter main @ $path' sort_test >& $perf_log"
+  result_check
+  sleep 1
+  sync
+  sync
+  do_cmd "perf script --itrace=ibxwe | tail > $temp_log"
+  count_e=$(grep -c main $temp_log)
+  count_cbr=$(grep -c "cbr" $temp_log)
+  count_p=$(grep -c "branch" $temp_log)
+  test_print_trc "count_e=$count_e, count_cbr=$count_cbr, count_p=$count_p"
+  [[ $count_e -eq $count_p ]] || die "main count is not right, trace filter with main is failed!"
+  should_fail "sed -n $count_p'p' $temp_log | grep unknown"
+  rm -f $perf_log
+  rm -f $temp_log
+}
+
+# Function to check if trace filter with __sched for kernel is supported and detected.
+filter_kernel_cpu_test() {
+  rm perfdata -rf
+  do_cmd "perf record --kcore -e intel_pt// --filter 'filter __schedule / __schedule' -a  -- sleep 1 >& $perf_log"
+  result_check
+  sleep 1
+  sync
+  sync
+  do_cmd "perf script --itrace=ibxwpe | tail > $temp_log"
+  count_e=$(grep -c "__sched" $temp_log)
+  count_cbr=$(grep -c "cbr" $temp_log)
+  count_p=$(awk 'END{print NR}' $temp_log)
+  test_print_trc "count_e = $count_e count_cbr=$count_cbr count_p=$count_p"
+
+  [[ $count_e -eq $count_p ]] || die "__sched count is not right, trace filter with __sched for kernel is failed!"
+  should_fail "sed -n $count_p'p' $temp_log | grep unknown"
+  rm perfdata -rf
+  rm -f $perf_log
+  rm -f $temp_log
+}
+
 perftest() {
   case $TEST_SCENARIO in
   fp)
@@ -519,6 +600,9 @@ perftest() {
     ;;
   mtc)
     time_mtc_test
+    ;;
+  time_full)
+    time_full_test
     ;;
   pebs)
     pebs_test
@@ -552,6 +636,15 @@ perftest() {
     ;;
   event_trace)
     event_trace_test
+    ;;
+  trace_stop)
+    tracestop_test
+    ;;
+  trace_filter)
+    tracefilter_test
+    ;;
+  trace_filter_kernel_cpu)
+    filter_kernel_cpu_test
     ;;
   esac
   return 0

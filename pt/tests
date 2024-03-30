@@ -21,6 +21,8 @@ perf_tests.sh -t cyc
 # Verify if the CYC (cycle count) will be disabled
 # if MTC(mini time counter) is disabled in perf
 perf_tests.sh -t mtc
+# Verify if the CYC package is disabled by default
+perf_tests.sh -t time_full
 # Record and filter PT's branch events, cycles, and instructions
 perf_tests.sh -t pebs
 # Verify Intel PT's last branch recorded stack information
@@ -43,3 +45,37 @@ perf_tests.sh -t lost_data
 perf_tests.sh -t notnt
 # Verify if the event trace is supported and detected
 perf_tests.sh -t event_trace
+# Verify if the tracestop is supported and detected
+perf_tests.sh -t trace_stop
+# Verify the trace filter with main count
+perf_tests.sh -t trace_filter
+# Verify if trace filter with __sched for kernel is supported and detected
+perf_tests.sh -t trace_filter_kernel_cpu
+
+# Below cases are designed with C program
+# Disable branch and check if TIP/FUP/TNT packages are disabled
+# TIP: (Target IP Package)
+# FUP: (Flow Update Package)
+# TNT: (Take/Not-taken)
+branch
+
+# User mode trace check for current privilege level
+# CPL: Current Privilege Level
+cpl 1
+
+# Kernel mode trace check for current privilege level
+cpl 2
+
+# Verify if the psb package is available
+# PSB: Package Stream Boundary
+psb
+
+# Check if the reserved bit cannot be set.
+negative_test
+
+# Doing the full trace check with non root user
+nonroot_test 1
+
+# Doing snapshot trace check with non root user
+nonroot_test 2
+
