@@ -14,7 +14,8 @@ IS_KER_SRC = $(shell  [ -d $(KER_SRC) ] && echo true)
 
 ifeq ($(GCC_GE_8),true)
 BIN := shstk_alloc test_shadow_stack quick_test wrss shstk_huge_page \
-       shstk_unlock_test shstk_cp cet_app glibc_shstk_test
+       shstk_unlock_test shstk_cp cet_app glibc_shstk_test shstk_cpu \
+       shstk_cpu_legacy
 
 $(info GCC major version: ${GCC_VER_MAJOR})
 else
@@ -56,6 +57,12 @@ cet_app:
 
 glibc_shstk_test: glibc_shstk_test.c
 	gcc $(CETFLAGS) $^ -o $@
+
+shstk_cpu: shstk_cpu.c
+	gcc $(NOCETFLAGS) $^ -o $@
+
+shstk_cpu_legacy: shstk_cpu_legacy.c
+	gcc $(NOCETFLAGS) $^ -o $@
 
 cet_ioctl:
 	$(MAKE) -C $(KER_SRC) M=$(DRIVER_PATH) modules
