@@ -35,6 +35,7 @@ readonly OFFLINE_FILE="/sys/devices/system/cpu/offline"
 readonly ARRAY="array"
 
 export INTEL_FW="/lib/firmware/intel"
+export OFFLINE_CPUS=""
 
 # New sysfsfile IFS_PATH will be updated in entry script: ifs_tests.sh
 # Sample: /sys/devices/virtual/misc/intel_ifs_0|1|2 folder.
@@ -100,6 +101,11 @@ ifs_teardown() {
       echo 1 | sudo tee /sys/devices/system/cpu/cpu"$cpu"/online
     done
   }
+
+  [[ -z "$OFFLINE_CPUS" ]] || {
+    set_cpus_on_off "$OFFLINE_CPUS" || test_print_err "Set offline $OFFLINE_CPUS"
+  }
+
   test_print_trc "cat $OFFLINE_FILE"
   cat $OFFLINE_FILE
 
@@ -108,44 +114,6 @@ ifs_teardown() {
       echo "cp -rf ${BATCH_FILE}_origin $BATCH_FILE"
       cp -rf "${BATCH_FILE}_origin" "$BATCH_FILE"
     }
-  fi
-}
-
-online_all_cpu() {
-   echo "online all cpu"
-  local off_cpu=""
-  local cpu=""
-  # cpu start
-  local cpu_s=""
-  # cpu end
-  local cpu_e=""
-  local i=""
-
-  off_cpu=$(cat "$OFFLINE_FILE")
-  if [[ -z "$off_cpu" ]]; then
-    test_print_trc "No cpu offline:$off_cpu"
-  else
-    for cpu in $(echo "$off_cpu" | tr ',' ' '); do
-      if [[ "$cpu" == *"-"* ]]; then
-        cpu_s=""
-        cpu_e=""
-        i=""
-        cpu_s=$(echo "$cpu" | cut -d "-" -f 1)
-        cpu_e=$(echo "$cpu" | cut -d "-" -f 2)
-        for((i=cpu_s;i<=cpu_e;i++)); do
-          do_cmd "echo 1 | sudo tee /sys/devices/system/cpu/cpu${i}/online"
-        done
-      else
-        do_cmd "echo 1 | sudo tee /sys/devices/system/cpu/cpu${cpu}/online"
-      fi
-    done
-    off_cpu=""
-    off_cpu=$(cat "$OFFLINE_FILE")
-    if [[ -z "$off_cpu" ]]; then
-      test_print_trc "No offline cpu:$off_cpu after online all cpu"
-    else
-      block_test "There is offline cpu:$off_cpu after online all cpu!"
-    fi
   fi
 }
 
@@ -286,10 +254,9 @@ cpu_full_load() {
 
   do_cmd "taskset -c $cpu dd if=/dev/zero of=/dev/null &"
 
-  # pgrep could not get the target process
-  pid_dd=$(ps -ef | grep dd | grep if \
-                  | grep zero | grep of | grep dev \
-                  | awk -F " " '{print $2}')
+  pid_dd=$(pgrep -U root -a | grep " dd" | grep "zero" \
+          | grep "null"| awk -F " " '{print $1}')
+  [[ -z "$pid_dd" ]] && die "No dd process found!"
 
   test_print_trc "pid_dd:$pid_dd"
   # Not use do_cmd for sleep, because do_cmd show 2 lines print, too much print
@@ -397,14 +364,16 @@ get_depend_sibling_cpus() {
   local atom=""
   local server=""
   local remove_cpu=""
+  local all_cpus=""
 
   REMOVE_LIST=""
   online_all_cpu
   cpu_num=$(grep -c processor /proc/cpuinfo)
 
-  # Show all cpu list in one line, reason:echo could make them in 1 line!
   # Will use the ALL_CPUS to remove SIBLINGS cpu
-  ALL_CPUS=$(echo $(seq 0 $((cpu_num - 1))))
+  all_cpus=$(seq 0 $((cpu_num - 1)))
+  # Show all cpu list in one line, reason:echo could make them in 1 line!
+  ALL_CPUS=$all_cpus
   ALL_CPUS=" $ALL_CPUS "
   echo "$ALL_CPUS" > $SIBLINGS
   # atom used "-" and server used "," to isolate
@@ -950,8 +919,8 @@ array_int_test() {
 
   # Create one child pid to do sleep 30 for kill
   do_cmd "taskset -c $cpu sleep $sec &"
-  # Need ps -ef not pgrep!
-  cpid=$(ps -ef | grep -v "grep" | grep  "sleep $sec" | awk -F " " '{print $2}')
+  cpid=$(pgrep -U root -a | grep "sleep $sec" \
+        | grep -v grep | awk -F " " '{print $1}')
   for pid in $cpid; do
     test_print_trc "Will echo $cpu > ${IFS_PATH}/${RUN_TEST}; kill -INT $pid"
     # Will not use do_cmd, because the scan time is very short(<10ms)!
