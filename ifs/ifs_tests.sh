@@ -244,6 +244,8 @@ test_ifs() {
       ;;
   esac
 
+  # It's for teardown: restore previous offline CPUs to offline after test
+  OFFLINE_CPUS=$(cat "${CPU_SYSFS_FOLDER}/offline")
   list_cpus "$PROCESSOR"
 
   case $NAME in
