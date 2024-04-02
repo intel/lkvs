@@ -11,6 +11,8 @@ BIN_DMESG=""
 BIN_RET=""
 export LAST_DMESG_TIMESTAMP=""
 
+readonly CPU_SYSFS_FOLDER="/sys/devices/system/cpu"
+
 # Check whether current user is root, if not, exit directly
 root_check() {
   local user=""
@@ -393,6 +395,99 @@ extract_case_dmesg() {
     echo "$tempfile"
   else
     grep -v "$LAST_DMESG_TIMESTAMP" <<< "$dmesg"
+  fi
+}
+
+# Set specific CPU online or offline
+# $1: 0|1, 0 means online cpu, 1 means offline cpu
+# $2: cpu_num, it should be in the range of 0 - max_cpu
+set_specific_cpu_on_off()
+{
+  local on_off=$1
+  local cpu_num=$2
+  local max_cpu=""
+  local cpu_state=""
+
+  # Consider the CPU offline situation for max_cpu
+  max_cpu=$(cut -d "-" -f 2 "${CPU_SYSFS_FOLDER}/present")
+
+  # v6.4-rc2: e59e74dc48a309cb8: x86/topology: Remove CPU0 hotplug option
+  [[ "$cpu_num" -eq 0 ]] && {
+    test_print_trc "v6.4-rc2: e59e74dc48a309cb8: Remove CPU0 hotplug option, skip cpu0 action"
+    return 0
+  }
+
+  [[ "$cpu_num" -lt 0 || "$cpu_num" -gt "$max_cpu" ]] && {
+    block_test "Invalid cpu_num:$cpu_num, it's not in the range: 0 - $max_cpu"
+  }
+
+  if [[ "$on_off" == "1" || "$on_off" == "0"  ]]; then
+    test_print_trc "echo $on_off > ${CPU_SYSFS_FOLDER}/cpu${cpu_num}/online"
+    echo "$on_off" > "$CPU_SYSFS_FOLDER"/cpu"$cpu_num"/online
+    ret=$?
+    [[ "$ret" -eq 0 ]] || {
+      test_print_err "Failed to set cpu$cpu_num to $on_off, ret:$ret not 0"
+      return $ret
+    }
+    cpu_state=$(cat "$CPU_SYSFS_FOLDER"/cpu"$cpu_num"/online)
+    if [[ "$cpu_state" != "$on_off" ]]; then
+      test_print_err "Failed to set cpu$cpu_num to $on_off, cpu state:$cpu_state"
+      return 2
+    fi
+  else
+    test_print_err "Invalid on_off:$on_off, it should be 0 or 1"
+    return 2
+  fi
+
+  return 0
+}
+
+# Set specific CPU online or offline
+# $1: 0|1, 0 means online cpu, 1 means offline cpu
+# $2: cpus: sample: 11,22-27,114 same format in /sys/devices/system/cpu/offline 
+set_cpus_on_off()
+{
+  local on_off=$1
+  local target_cpus=$2
+  local cpu=""
+  local cpu_start=""
+  local cpu_end=""
+  local i=""
+
+  if [[ -n "$target_cpus" ]]; then
+    for cpu in $(echo "$target_cpus" | tr ',' ' '); do
+      if [[ "$cpu" == *"-"* ]]; then
+        cpu_start=""
+        cpu_end=""
+        i=""
+        cpu_start=$(echo "$cpu" | cut -d "-" -f 1)
+        cpu_end=$(echo "$cpu" | cut -d "-" -f 2)
+        for((i=cpu_start;i<=cpu_end;i++)); do
+          set_specific_cpu_on_off "$on_off" "$i" || return $?
+        done
+      else
+        set_specific_cpu_on_off "$on_off" "$cpu" || return $?
+      fi
+    done
+  fi
+
+  return 0
+}
+
+online_all_cpu()
+{
+  local off_cpus=""
+
+  test_print_trc "Online all CPUs:"
+  off_cpus=$(cat "${CPU_SYSFS_FOLDER}/offline")
+  set_cpus_on_off "1" "$off_cpus" || {
+    block_test "Online all CPUs with ret:$? not 0!" 
+  }
+  off_cpus=$(cat "${CPU_SYSFS_FOLDER}/offline")
+  if [[ -z "$off_cpus" ]]; then
+    test_print_trc "All CPUs are online."
+  else
+    block_test "There is offline cpu:$off_cpus after online all cpu!"
   fi
 }
 
