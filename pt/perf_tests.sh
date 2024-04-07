@@ -281,9 +281,11 @@ time_cyc_test() {
     sleep 1
     sync
     sync
-    do_cmd "perf script -D > $temp_log"
-    do_cmd "grep \"CYC 0x\" $temp_log"
-    ##TODO will add more logic after confirming with Adrian
+    if [[ $(perf report -D | grep -c 'CYC 0x') -eq 0 ]]; then
+      die "CYC package is not found!"
+    else
+      test_print_trc "CYC package is detected."
+    fi
   fi
   rm -f $perf_log
   rm -f $temp_log
@@ -477,19 +479,18 @@ lost_data_test() {
 # control flow: TNT (Taken/Not-taken) package
 # Expect to not get TNT when TNT is disabled
 notnt_test() {
-  local notnt=0
+  touch nontnt.log
+  local notnt=""
 
-  notnt=$(cat /sys/bus/event_source/devices/intel_pt/caps/tnt_disable)
+  do_cmd "notnt=$(cat /sys/bus/event_source/devices/intel_pt/caps/tnt_disable)"
   [[ $notnt -eq 0 ]] && block_test "tnt_disable is not supported in this platform"
-  perfdata="notnt.log"
-  do_cmd "perf record -e intel_pt/notnt/u uname >& $perf_log"
-  perf report -D -i $perfdata
-  if [[ -s $perfdata ]]; then
-    if [[ $(grep -c TNT $perfdata) -eq 0 ]]; then
-      die "Still get TNT when TNT is disabled!"
-    fi
+
+  do_cmd "perf record -o nontnt.log -e intel_pt/notnt/u uname >& $perf_log"
+
+  if [[ $(perf report -D -i nontnt.log | grep -c "TNT") -ne 0 ]]; then
+    die "Still get TNT package when tnt is disabled!"
   else
-    test_print_trc "$perfdata is empty"
+    test_print_trc "Did not get TNT package when tnt is disabled."
   fi
 }
 
