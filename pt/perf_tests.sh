@@ -419,9 +419,9 @@ sample_test() {
 # by perf tool for multiple cycles
 # Note: the -m option is making the buffers small, case may fail with data is lost.
 user_m_test() {
-  do_cmd "perf record -e intel_pt//u -m1,256 uname >& $perf_log"
+  do_cmd "perf record -e intel_pt//u -m,256 uname >& $perf_log"
   result_check
-  do_cmd "perf record -e intel_pt//u -m1,256 uname >& $perf_log"
+  do_cmd "perf record -e intel_pt//u -m,256 uname >& $perf_log"
   result_check
 }
 
@@ -429,9 +429,9 @@ user_m_test() {
 # by perf tool for multiple cycles
 # Note: the -m option is making the buffers small, case may fail with data is lost.
 kernel_m_test() {
-  do_cmd "perf record -e intel_pt//k -m1,256 uname >& $perf_log"
+  do_cmd "perf record -e intel_pt//k -m,256 uname >& $perf_log"
   result_check
-  do_cmd "perf record -e intel_pt//k -m1,256 uname >& $perf_log"
+  do_cmd "perf record -e intel_pt//k -m,256 uname >& $perf_log"
   result_check
 }
 
