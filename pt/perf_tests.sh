@@ -549,6 +549,20 @@ tracefilter_test() {
   rm -f $temp_log
 }
 
+# Function to check kernel level trace filter with __sched samples
+filter_kernel_test() {
+  do_cmd "perf record --kcore -e intel_pt//k --filter 'filter __schedule' -a  -- sleep 0.1 >& $perf_log"
+  result_check
+  do_cmd "perf script --itrace=b | tail > $temp_log"
+  cat $temp_log
+  count_e=$(grep -c "__schedule" "$temp_log")
+  count_p=$(wc -l <"$temp_log")
+  test_print_trc "count_e = $count_e count_p=$count_p"
+  [[ $count_e -eq $count_p ]] || die "__sched count is not right, trace filter with __schedule for kernel is failed!"
+  rm -f "$perf_log"
+  rm -f "$temp_log"
+}
+
 # Function to check if trace filter with __sched for kernel is supported and detected.
 filter_kernel_cpu_test() {
   rm perfdata -rf
@@ -643,6 +657,9 @@ perftest() {
     ;;
   trace_filter)
     tracefilter_test
+    ;;
+  trace_filter_kernel)
+    filter_kernel_test
     ;;
   trace_filter_kernel_cpu)
     filter_kernel_cpu_test

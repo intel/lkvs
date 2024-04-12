@@ -49,6 +49,8 @@ perf_tests.sh -t event_trace
 perf_tests.sh -t trace_stop
 # Verify the trace filter with main count
 perf_tests.sh -t trace_filter
+# Verify the kernel level trace filter with _sched samples
+perf_tests.sh -t trace_filter_kernel
 # Verify if trace filter with __sched for kernel is supported and detected
 perf_tests.sh -t trace_filter_kernel_cpu
 
