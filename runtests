@@ -152,7 +152,7 @@ test_all() {
   local test_file_type=$1
 
   # Don't quote */, otherwise it could not list all folders.
-  SUB_FOLDERS=$(ls -1 -d */)
+  SUB_FOLDERS=$(ls -1 -d -- */)
 
   prepare_files_list "$test_file_type"
   CMDFILES="$TEST_FILES"
