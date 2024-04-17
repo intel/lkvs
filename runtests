@@ -2,12 +2,18 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (c) 2022 Intel Corporation.
 
+# shellcheck source=/dev/null
 source .env
 
 readonly PASS_CODE=0
 readonly BLOCK_CODE=2
 readonly SKIP_CODE=4
 readonly NA_CODE=32
+PASS="PASS"
+BLOCK="BLOCK"
+SKIP="SKIP"
+FAIL="FAIL"
+NA="NA"
 
 START_TIME=""
 SUMMRY_LOG=""
@@ -19,10 +25,14 @@ TEST_LIST_FILE="/tmp/tests"
 OLD_IFS=""
 
 # For dependence check parameters, set skip for unknow staus as default
+readonly MARK_HW_DEP="@hw_dep"
+readonly MARK_OTHER_DEP="@other_dep"
+readonly MARK_WARN_DEP="@other_warn"
 export HW_DEP="$SKIP_CODE"
-export KERNEL_DEP="$SKIP_CODE"
 export OTHER_DEP="$SKIP_CODE"
 export OTHER_WARN="$SKIP_CODE"
+REASON=""
+DEP_LOG="/tmp/lkvs_dependence.log"
 
 usage() {
   cat << _EOF
@@ -57,6 +67,150 @@ append_log() {
 err() {
   echo -e "\n$*" >&2
   exit 1
+}
+
+check_test_file_legal() {
+  local cmdfile=$1
+
+  if [[ ! -f "$cmdfile" ]]; then
+    append_log "WARNING: $cmdfile not found!" "$LOGFILE"
+    return "$NA_CODE"
+  fi
+
+  [[ $(which file) ]] && {
+    file_type=""
+    file_type=$(file "$cmdfile")
+    [[ "$file_type" == *"text"* ]] || {
+      append_log "WARNING: -f $cmdfile is not a text type, it's real type:|$file_type|" "$LOGFILE"
+      append_log "Please choose the correct tests file." "$LOGFILE"
+      return "$NA_CODE"
+    }
+  }
+
+  return 0
+}
+
+init_dep_log() {
+  local dep_log=$1
+
+  cat /dev/null > "$dep_log"
+  {
+    echo "-----------------------------------------------------------------"
+    printf "%-16s%-13s%-16s%-13s%-20s\n" "Feature" "|HW_support" "|Other_support" \
+      "|Other_WARN" "|Reason"
+    printf "%-16s%-13s%-16s%-13s%-20s\n" "-------" "-----------" "--------------" \
+      "-----------" "-------"
+  } >> "$dep_log"
+}
+
+check_dep_cmd() {
+  local dep_info=$1
+  local dep=$2
+  local dep_cmd dep_reason
+
+  dep_cmd=$(echo "$dep_info" | awk -F "@" '{print $1}')
+  dep_reason=$(echo "$dep_info" | awk -F "@" '{print $2}')
+
+  # Execute ret not zero, will return below error code as failed
+  eval "$dep_cmd" 1>/dev/null || {
+    if [[ -z "$dep_reason" ]]; then
+      REASON="$dep:$dep_cmd failed"
+    else
+      REASON="$dep:$dep_reason"
+    fi
+    return "$BLOCK_CODE"
+  }
+
+  return 0
+}
+
+check_dep_info() {
+  local dep_infos=$1
+  local subfolder=$2
+  local dep=$3
+  local ret=""
+
+  if [[ -z "$dep_infos" ]]; then
+    REASON="No dependence check for $subfolder"
+    return "$SKIP_CODE"
+  fi
+
+  IFS=$'\n'
+  for dep_info in $dep_infos; do
+    check_dep_cmd "$dep_info" "$dep" || {
+      ret=$?
+      IFS="$(printf ' \t\n')"
+      return "$ret"
+    }
+  done
+  IFS="$(printf ' \t\n')"
+}
+
+# Don't input any other echo in it
+get_ret_status() {
+  local ret=$1
+
+  case $ret in
+    "$PASS_CODE") #0
+      echo "$PASS"
+      ;;
+    "$BLOCK_CODE") #2
+      echo "$BLOCK"
+      ;;
+    "$SKIP_CODE") #4
+      echo "$SKIP"
+      ;;
+    *)
+      echo "$NA"
+      ;;
+  esac
+}
+
+check_dep_feature() {
+  local cmdfile=$1
+  local subfolder=""
+  local hw_dep_info other_dep_info other_warn_info
+  local hw_sta other_sta warn_sta
+
+  if [[ "$cmdfile" == *"/"* ]]; then
+    subfolder=${cmdfile%/*}
+  else
+    append_log "cmdfile:$cmdfile(no '/') is not in a subfolder, skip dependence check!" "$LOGFILE"
+    return "$SKIP_CODE"
+  fi
+
+  hw_dep_info=$(grep "$MARK_HW_DEP" "$cmdfile" | awk -F: '{print $2}' | sed -e 's/^ *//g')
+  other_dep_info=$(grep "$MARK_OTHER_DEP" "$cmdfile" | awk -F: '{print $2}' | sed -e 's/^ *//g')
+  other_warn_info=$(grep "$MARK_WARN_DEP" "$cmdfile" | awk -F: '{print $2}' | sed -e 's/^ *//g')
+
+  check_dep_info "$hw_dep_info" "$subfolder" "$MARK_HW_DEP"
+  ret=$?
+  hw_sta=$(get_ret_status "$ret")
+  [[ "$ret" == "$NA_CODE" || "$ret" == "$BLOCK_CODE" ]] && {
+    printf "%-16s%-13s%-16s%-13s%-20s\n" "$subfolder" "|$hw_sta" "|$SKIP" "|$SKIP" \
+      "|$REASON" >> "$DEP_LOG"
+    return "$ret"
+  }
+
+  check_dep_info "$other_dep_info" "$subfolder" "$MARK_OTHER_DEP"
+  ret=$?
+  other_sta=$(get_ret_status "$ret")
+  [[ "$ret" == "$NA_CODE" || "$ret" == "$BLOCK_CODE" ]] && {
+    printf "%-16s%-13s%-16s%-13s%-20s\n" "$subfolder" "|$hw_sta" "|$other_sta" "|$SKIP" \
+      "|$REASON" >> "$DEP_LOG"
+    return "$ret"
+  }
+
+  # It's a warning, will not block the subfolder test cases
+  check_dep_info "$other_warn_info" "$subfolder" "$MARK_WARN_DEP"
+  ret=$?
+  warn_sta=$(get_ret_status "$ret")
+  # warn_sta does not set the block, just NA to fail in some cases of this feature
+  [[ "$ret" == "$BLOCK_CODE" ]] && warn_sta="$NA"
+
+  printf "%-16s%-13s%-16s%-13s%-20s\n" "$subfolder" "|$hw_sta" "|$other_sta" "|$warn_sta" \
+    "|$REASON" >> "$DEP_LOG"
+  return 0
 }
 
 runtest() {
@@ -96,21 +250,22 @@ runtest() {
 
   case $code in
     "$PASS_CODE")
-      result="PASS"
+      result="$PASS"
       ;;
     "$BLOCK_CODE")
-      result="BLOCK"
+      result="$BLOCK"
       ;;
     "$NA_CODE")
-      result="NA"
+      result="$NA"
       ;;
     *)
-      result="FAIL"
+      result="$FAIL"
       ;;
   esac
 
   append_log "<<<test end, result: $result, duration: ${duration}s>>\n" "$logfile"
-  case_result=$(printf "[RESULT]%-68s%-11s%-12s%-8s" "[$cmdline]" " [$result]" "[$code]" "[${duration}s]")
+  case_result=$(printf "[RESULT]%-68s%-11s%-12s%-8s" "[$cmdline]" " [$result]" "[$code]" \
+    "[${duration}s]")
   echo "$case_result" >> "$SUMMRY_LOG"
 }
 
@@ -187,10 +342,19 @@ while getopts ":o:d:f:c:h" opt; do
       LOGFILE=$OPTARG
       ;;
     d)
+      init_dep_log "$DEP_LOG"
       CMDFILES=$OPTARG
       [[ "$CMDFILES" == "$TESTS_CLIENT" ]] && test_all "$TESTS_CLIENT"
       [[ "$CMDFILES" == "$TESTS_SERVER" ]] && test_all "$TESTS_SERVER"
-      #check_dep_for_tests "$TEST_FILES"
+      for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
+        check_test_file_legal "$cmdfile"
+
+        check_dep_feature "$cmdfile" || {
+          append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
+          continue
+        }
+      done
+      cat "$DEP_LOG"
       exit 0
       ;;
     f)
@@ -232,21 +396,14 @@ echo "Test Start Time: $START_TIME" > "$SUMMRY_LOG"
   printf "%-76s%-11s%-12s%-8s\n" "--------" "------" "----------" "--------"
 } >> "$SUMMRY_LOG"
 
-for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
-  if [[ ! -f "$cmdfile" ]]; then
-    append_log "WARNING: $cmdfile not found!" "$LOGFILE"
-    continue
-  fi
+init_dep_log "$DEP_LOG"
 
-  [[ $(which file) ]] && {
-    file_type=""
-    file_type=$(file "$cmdfile")
-    [[ "$file_type" == *"text"* ]] || {
-      append_log "WARNING: -f $cmdfile is not a text type, it's real type:|$file_type|" "$LOGFILE"
-      append_log "Please choose the correct tests file." "$LOGFILE"
-      usage
-      continue
-    }
+for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
+  check_test_file_legal "$cmdfile" || continue
+
+  check_dep_feature "$cmdfile" || {
+    append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
+    continue
   }
 
   runcmdfile "$cmdfile" "$LOGFILE"
@@ -261,3 +418,4 @@ echo "--------------------------------------------------------" >> "$SUMMRY_LOG"
 
 [[ -z "$LOGFILE" ]] || cat "$SUMMRY_LOG" >> "$LOGFILE"
 cat "$SUMMRY_LOG"
+echo "Please check dependence info in $DEP_LOG"
