@@ -4,6 +4,11 @@
 
 source .env
 
+readonly PASS_CODE=0
+readonly BLOCK_CODE=2
+readonly SKIP_CODE=4
+readonly NA_CODE=32
+
 START_TIME=""
 SUMMRY_LOG=""
 TESTS_CLIENT="tests-client"
@@ -13,10 +18,17 @@ SUB_FOLDERS=""
 TEST_LIST_FILE="/tmp/tests"
 OLD_IFS=""
 
+# For dependence check parameters, set skip for unknow staus as default
+export HW_DEP="$SKIP_CODE"
+export KERNEL_DEP="$SKIP_CODE"
+export OTHER_DEP="$SKIP_CODE"
+export OTHER_WARN="$SKIP_CODE"
+
 usage() {
   cat << _EOF
 Usage: ${0##*/} [-f CMDFILES] [-c CMDLINE] [-o LOGFILE]
   -f CMDFILES   execute user defined list of tests in files separated by ','
+  -d DEPENDENCE_FILE check dependence for specified feature tests
   -c CMDLINE    execute test case
   -o LOGFILE    redirect output of tests to file
 
@@ -26,7 +38,20 @@ Examples:
   ./runtests -f tests-client  // exeucte tests-client/tests for all subfolders
   ./runtests -f tests-server  // exeucte tests-server/tests for all subfolders
   ./runtests -c ./cet/quick_test -o cet_quick_test.log
+  ./runtests -d cet/tests     // check cet dependence
+  ./runtests -d tests-server  // check tests-server/tests for all subfolders dependence
 _EOF
+}
+
+append_log() {
+  local info=$1
+  local log_file=$2
+
+  if [[ -z "$log_file" ]]; then
+    echo -e "$info"
+  else
+    echo -e "$info" | tee -a "$log_file"
+  fi
 }
 
 err() {
@@ -45,11 +70,7 @@ runtest() {
   local result
   local case_result=""
 
-  if [[ -n "$logfile" ]]; then
-    echo "<<<test start - '$cmdline'>>" | tee -a "$logfile"
-  else
-    echo "<<<test start - '$cmdline'>>"
-  fi
+  append_log "<<<test start - '$cmdline'>>" "$logfile"
 
   if [[ -z "$subfolder" ]]; then
     echo "LKVS tests: $cmdline" >> /dev/kmsg
@@ -74,13 +95,13 @@ runtest() {
   set +o pipefail
 
   case $code in
-    0)
+    "$PASS_CODE")
       result="PASS"
       ;;
-    2)
+    "$BLOCK_CODE")
       result="BLOCK"
       ;;
-    32)
+    "$NA_CODE")
       result="NA"
       ;;
     *)
@@ -88,11 +109,7 @@ runtest() {
       ;;
   esac
 
-  if [[ -n "$logfile" ]]; then
-    echo -e "<<<test end, result: $result, duration: $duration>>\n" | tee -a "$logfile"
-  else
-    echo -e "<<<test end, result: $result, duration: ${duration}s>>\n"
-  fi
+  append_log "<<<test end, result: $result, duration: ${duration}s>>\n" "$logfile"
   case_result=$(printf "[RESULT]%-68s%-11s%-12s%-8s" "[$cmdline]" " [$result]" "[$code]" "[${duration}s]")
   echo "$case_result" >> "$SUMMRY_LOG"
 }
@@ -108,7 +125,7 @@ runcmdfile() {
   if [[ "$cmdfile" == *"/"* ]]; then
     subfolder=${cmdfile%/*}
   else
-    echo "cmdfile:$cmdfile(no '/') is not in a subfolder!"
+    append_log "cmdfile:$cmdfile(no '/') is not in a subfolder!" "$logfile"
   fi
 
   grep -v "^#.*" "$cmdfile" | grep -v "^$" > "$TEST_LIST_FILE"
@@ -126,9 +143,9 @@ prepare_files_list() {
   local sub_folder=""
 
   for sub_folder in $SUB_FOLDERS; do
-    # Remov the / in the end
+    # Remove the / in the end
     sub_folder="${sub_folder%/}"
-    [[ "$sub_folder" == "common" ]] && continue
+    [[ "$sub_folder" == "common" || "$sub_folder" == "tools" ]] && continue
 
     if [[ -e "${sub_folder}/${test_file_type}" ]]; then
       if [[ -z "$TEST_FILES" ]]; then
@@ -143,7 +160,7 @@ prepare_files_list() {
         TEST_FILES="${TEST_FILES},${sub_folder}/tests"
       fi
     else
-      echo "WARNING: No $test_file_type or tests file under $sub_folder folder."
+      append_log "WARNING: No $test_file_type or tests file under $sub_folder folder." "$LOGFILE"
     fi
   done
 }
@@ -156,11 +173,7 @@ test_all() {
 
   prepare_files_list "$test_file_type"
   CMDFILES="$TEST_FILES"
-  if [[ -z "$LOGFILE" ]]; then
-    echo "Test files: $CMDFILES"
-  else
-    echo "Test files: $CMDFILES" | tee "$LOGFILE"
-  fi
+  append_log "Test files: $CMDFILES" "$LOGFILE"
 }
 
 # Default value
@@ -168,10 +181,17 @@ test_all() {
 : CMDFILES=""
 : CMDLINE=""
 
-while getopts ":o:f:c:h" opt; do
+while getopts ":o:d:f:c:h" opt; do
   case "$opt" in
     o)
       LOGFILE=$OPTARG
+      ;;
+    d)
+      CMDFILES=$OPTARG
+      [[ "$CMDFILES" == "$TESTS_CLIENT" ]] && test_all "$TESTS_CLIENT"
+      [[ "$CMDFILES" == "$TESTS_SERVER" ]] && test_all "$TESTS_SERVER"
+      #check_dep_for_tests "$TEST_FILES"
+      exit 0
       ;;
     f)
       CMDFILES=$OPTARG
@@ -201,6 +221,8 @@ if [[ -z "$CMDFILES" ]] && [[ -z "$CMDLINE" ]]; then
   err "no test to run!"
 fi
 
+cat /dev/null > "$LOGFILE"
+
 START_TIME="$(date +%Y-%m-%d_%H-%M-%S)"
 SUMMRY_LOG="/tmp/lkvs_${START_TIME}_summary.log"
 echo "Test Start Time: $START_TIME" > "$SUMMRY_LOG"
@@ -212,7 +234,7 @@ echo "Test Start Time: $START_TIME" > "$SUMMRY_LOG"
 
 for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
   if [[ ! -f "$cmdfile" ]]; then
-    echo "WARNING: $cmdfile not found!"
+    append_log "WARNING: $cmdfile not found!" "$LOGFILE"
     continue
   fi
 
@@ -220,8 +242,8 @@ for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
     file_type=""
     file_type=$(file "$cmdfile")
     [[ "$file_type" == *"text"* ]] || {
-      echo "WARNING: -f $cmdfile is not a text type file, it's real type:|$file_type|"
-      echo "Please choose the correct tests file."
+      append_log "WARNING: -f $cmdfile is not a text type, it's real type:|$file_type|" "$LOGFILE"
+      append_log "Please choose the correct tests file." "$LOGFILE"
       usage
       continue
     }
