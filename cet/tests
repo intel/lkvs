@@ -1,5 +1,8 @@
 # This file collects the CET(Control-flow Enforcement Technology) tests on
 # Intel® Architecture-based platforms.
+# @hw_dep: cpuid_check 7 0 0 0 c 7 @ HW cpuid could not support CET SHSTK
+# @other_dep:
+# @other_warn: quick_test @ Glibc could not support CET
 
 # User space SHSTK tests without SHSTK Glibc supported
 cet_tests.sh -t cp_test -n shstk_cp -k "control protection"
