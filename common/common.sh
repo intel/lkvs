@@ -236,7 +236,7 @@ test_kconfig() {
   local name="$2"
 
   if [[ ! "$value" =~ [ymn] ]]; then
-    test_print_err "Invalid koption value!"
+    test_print_err "Invalid koption value:$value"
     return 1
   fi
 

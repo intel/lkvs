@@ -131,7 +131,7 @@ check_dep_info() {
   local ret=""
 
   if [[ -z "$dep_infos" ]]; then
-    REASON="No dependence check for $subfolder"
+    REASON="No dependence for $subfolder"
     return "$SKIP_CODE"
   fi
 
@@ -208,6 +208,7 @@ check_dep_feature() {
   # warn_sta does not set the block, just NA to fail in some cases of this feature
   [[ "$ret" == "$BLOCK_CODE" ]] && warn_sta="$NA"
 
+  [[ -z "$REASON" ]] && REASON="No dependence for $subfolder"
   printf "%-16s%-13s%-16s%-13s%-20s\n" "$subfolder" "|$hw_sta" "|$other_sta" "|$warn_sta" \
     "|$REASON" >> "$DEP_LOG"
   return 0
