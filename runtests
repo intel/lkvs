@@ -25,9 +25,9 @@ TEST_LIST_FILE="/tmp/tests"
 OLD_IFS=""
 
 # For dependence check parameters, set skip for unknow staus as default
-readonly MARK_HW_DEP="@hw_dep"
-readonly MARK_OTHER_DEP="@other_dep"
-readonly MARK_WARN_DEP="@other_warn"
+readonly MARK_HW_DEP="@hw_dep:"
+readonly MARK_OTHER_DEP="@other_dep:"
+readonly MARK_WARN_DEP="@other_warn:"
 export HW_DEP="$SKIP_CODE"
 export OTHER_DEP="$SKIP_CODE"
 export OTHER_WARN="$SKIP_CODE"
@@ -114,9 +114,9 @@ check_dep_cmd() {
   # Execute ret not zero, will return below error code as failed
   eval "$dep_cmd" 1>/dev/null || {
     if [[ -z "$dep_reason" ]]; then
-      REASON="$dep:$dep_cmd failed"
+      REASON="${dep} ${dep_cmd} failed"
     else
-      REASON="$dep:$dep_reason"
+      REASON="${dep}${dep_reason}"
     fi
     return "$BLOCK_CODE"
   }
@@ -179,9 +179,9 @@ check_dep_feature() {
     return "$SKIP_CODE"
   fi
 
-  hw_dep_info=$(grep "$MARK_HW_DEP" "$cmdfile" | awk -F: '{print $2}' | sed -e 's/^ *//g')
-  other_dep_info=$(grep "$MARK_OTHER_DEP" "$cmdfile" | awk -F: '{print $2}' | sed -e 's/^ *//g')
-  other_warn_info=$(grep "$MARK_WARN_DEP" "$cmdfile" | awk -F: '{print $2}' | sed -e 's/^ *//g')
+  hw_dep_info=$(grep "$MARK_HW_DEP" "$cmdfile" | awk -F "$MARK_HW_DEP" '{print $2}' | sed -e 's/^ *//g')
+  other_dep_info=$(grep "$MARK_OTHER_DEP" "$cmdfile" | awk -F "$MARK_OTHER_DEP" '{print $2}' | sed -e 's/^ *//g')
+  other_warn_info=$(grep "$MARK_WARN_DEP" "$cmdfile" | awk -F "$MARK_WARN_DEP" '{print $2}' | sed -e 's/^ *//g')
 
   check_dep_info "$hw_dep_info" "$subfolder" "$MARK_HW_DEP"
   ret=$?

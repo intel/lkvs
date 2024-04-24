@@ -29,6 +29,12 @@ general_test() {
     fms)
       #TODO, will add the fms check function
       ;;
+    dmesg)
+      key1=$(echo "$KEYWORD" | awk -F '&' '{print $1}')
+      key2=$(echo "$KEYWORD" | awk -F '&' '{print $2}')\
+      key3=$(echo "$KEYWORD" | awk -F '&' '{print $3}')
+      full_dmesg_check "$PARM" "$key1" "$key2" "$key3" || return $?
+      ;;
     *)
       die "Invalid TYPE:$TYPE"
       ;;
@@ -41,8 +47,7 @@ while getopts :t:p:k:h arg; do
       TYPE=$OPTARG
       ;;
     p)
-      # TODO, will add more function to use PARM
-      # PARM=$OPTARG
+      PARM=$OPTARG
       ;;
     k)
       KEYWORD=$OPTARG
