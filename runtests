@@ -332,6 +332,56 @@ test_all() {
   append_log "Test files: $CMDFILES" "$LOGFILE"
 }
 
+show_result() {
+  # Add the following print for the end of the case summary.
+  echo "--------------------------------------------------------" >> "$SUMMRY_LOG"
+
+  [[ -z "$LOGFILE" ]] || cat "$SUMMRY_LOG" >> "$LOGFILE"
+  cat "$SUMMRY_LOG"
+  echo "Dependence info in $DEP_LOG and runtests log in $LOGFILE"
+}
+
+# runtests_cleanup to show test result. TODO: restore the env if needed
+runtests_cleanup() {
+  show_result
+  exit 0
+}
+
+run_tests() {
+  if [[ -z "$CMDFILES" ]] && [[ -z "$CMDLINE" ]]; then
+    usage
+    err "no test to run!"
+  fi
+
+  cat /dev/null > "$LOGFILE"
+
+  START_TIME="$(date +%Y-%m-%d_%H-%M-%S)"
+  SUMMRY_LOG="/tmp/lkvs_${START_TIME}_summary.log"
+  echo "Test Start Time: $START_TIME" > "$SUMMRY_LOG"
+  {
+    echo "--------------------------------------------------------"
+    printf "%-76s%-11s%-12s%-8s\n" "Testcase" "Result" "Exit Value" "Duration"
+    printf "%-76s%-11s%-12s%-8s\n" "--------" "------" "----------" "--------"
+  } >> "$SUMMRY_LOG"
+
+  init_dep_log "$DEP_LOG"
+
+  for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
+    check_test_file_legal "$cmdfile" || continue
+
+    check_dep_feature "$cmdfile" || {
+      append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
+      continue
+    }
+
+    runcmdfile "$cmdfile" "$LOGFILE"
+  done
+
+  if [[ -n "$CMDLINE" ]]; then
+    runtest "$CMDLINE" "$LOGFILE"
+  fi
+}
+
 # Default value
 : "${LOGFILE:="./lkvs.log"}"
 : CMDFILES=""
@@ -381,42 +431,6 @@ while getopts ":o:d:f:c:h" opt; do
   esac
 done
 
-if [[ -z "$CMDFILES" ]] && [[ -z "$CMDLINE" ]]; then
-  usage
-  err "no test to run!"
-fi
-
-cat /dev/null > "$LOGFILE"
-
-START_TIME="$(date +%Y-%m-%d_%H-%M-%S)"
-SUMMRY_LOG="/tmp/lkvs_${START_TIME}_summary.log"
-echo "Test Start Time: $START_TIME" > "$SUMMRY_LOG"
-{
-  echo "--------------------------------------------------------"
-  printf "%-76s%-11s%-12s%-8s\n" "Testcase" "Result" "Exit Value" "Duration"
-  printf "%-76s%-11s%-12s%-8s\n" "--------" "------" "----------" "--------"
-} >> "$SUMMRY_LOG"
-
-init_dep_log "$DEP_LOG"
-
-for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
-  check_test_file_legal "$cmdfile" || continue
-
-  check_dep_feature "$cmdfile" || {
-    append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
-    continue
-  }
-
-  runcmdfile "$cmdfile" "$LOGFILE"
-done
-
-if [[ -n "$CMDLINE" ]]; then
-  runtest "$CMDLINE" "$LOGFILE"
-fi
-
-# Add the following print for the end of the case summary.
-echo "--------------------------------------------------------" >> "$SUMMRY_LOG"
-
-[[ -z "$LOGFILE" ]] || cat "$SUMMRY_LOG" >> "$LOGFILE"
-cat "$SUMMRY_LOG"
-echo "Please check dependence info in $DEP_LOG"
+trap runtests_cleanup SIGTERM SIGINT
+run_tests
+runtests_cleanup
