@@ -1,6 +1,8 @@
 # This file collects Intel IFS(In Field SCAN) tests on
 # Intel® Architecture-based platforms.
-
+# @hw_dep:
+# @other_dep: general_test.sh -t kconfig -k "CONFIG_INTEL_IFS=m"
+# @other_warn: general_test.sh -t dmesg -p "contain" -k "sgx_init&returned 0" @ check if SGX is enabled in BIOS as IFS relies on enabled SGX
 # ifs_0 scan test cases, it works on SPR(Sapphire Rapids) platform and future server
 ifs_tests.sh -m 0 -p all -n load_ifs
 ifs_tests.sh -m 0 -p all -b 1 -n ifs_batch

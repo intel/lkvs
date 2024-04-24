@@ -242,7 +242,7 @@ test_kconfig() {
 
   # For each expression between '|' separators
   if [[ $(get_kconfig "$name") != "$value" ]]; then
-    test_print_err "$name does not match $value!"
+    test_print_trc "$name does not match $value!"
     return 1
   else
     test_print_trc "$name matches with expect $value"
@@ -357,6 +357,52 @@ dmesg_pattern_check() {
   [[ -z "$lines" ]] || return 0
 
   return 1
+}
+
+# Check whole dmesg, which should contain key words
+# Input $1: key word
+# Output: 0 for true, otherwise false or die
+full_dmesg_check() {
+  local type=$1
+  local keyword1=$2
+  local keyword2=$3
+  local keyword3=$4
+  local null="null"
+  local contain="contain"
+  local dmesg_head=""
+  local check_log=""
+
+  dmesg_head=$(dmesg | grep "\[    0.000000\]" | head -n 1)
+  [[ -n $dmesg_head ]] \
+    || test_print_wrg "Dmesg is not started from 0.000000!"
+  check_log=$(dmesg | grep -v "dmesg" | grep -i "$keyword1" \
+              | grep -i "$keyword2" \
+              | grep -i "$keyword3")
+
+  case $type in
+    "$contain")
+      if [[ -n "$check_log" ]]; then
+        test_print_trc "Dmesg contains $keyword1 $keyword2:$check_log, pass"
+      else
+        test_print_wrg "Dmesg doesn't contain $keyword1 $keyword2:$check_log, fail"
+        return 1
+      fi
+      ;;
+    "$null")
+      if [[ -z "$check_log" ]]; then
+        test_print_trc "Dmesg doesn't contain $keyword1 $keyword2:$check_log, pass"
+      else
+        test_print_wrg "Dmesg contains $keyword1 $keyword2:$check_log, fail"
+        return 1
+      fi
+      ;;
+    *)
+      test_print_wrg "Invalid type:$type"
+      return 2
+      ;;
+  esac
+
+  return 0
 }
 
 # Record last timestamp in dmesg and store the value in variable
