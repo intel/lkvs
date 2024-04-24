@@ -5,8 +5,9 @@
 # Description: Test script to verify Intel IFS(In Field SCAN) functionality
 
 cd "$(dirname "$0")" 2>/dev/null || exit 1
+# shellcheck source=/dev/null
 source ../.env
-
+# shellcheck source=/dev/null
 source "ifs_common.sh"
 
 basic_usage() {
@@ -56,7 +57,6 @@ run_ifs_tests() {
       check_file_content "${IFS_PATH}/${BATCH}" "none" "$CONTAIN"
       check_file_content "${IFS_PATH}/${VERSION}" "none" "$CONTAIN"
       init_log "$NAME"
-      dump_ifs_test "$NAME"
       ;;
     ifs_batch)
       modprobe -r "$IFS_NAME"
@@ -70,9 +70,9 @@ run_ifs_tests() {
         check_file_content "${IFS_PATH}/${VERSION}" "none" "$NE"
       else
         test_print_wrg "No ${IFS_PATH}/${BATCH} file, is it 5.15 or old ifs kernel?"
+        return 2
       fi
       init_log "$NAME"
-      dump_ifs_test "$NAME"
       ;;
     "$IMG_VERSION")
       modprobe -r "$IFS_NAME"
