@@ -41,6 +41,9 @@ make
 
 Each sub-project should detail its particular way, if any. There are some known dependency issues.
 ### Known dependency issue locally
+* Overall general dependence check
+Please check the "Run Tests" section -d functionality below for general dependency checks on hardware, etc. (like kernel support, BIOS setting, Glibc support...).
+
 * Intel PT
 Cases of Intel PT need a 3rd part library libipt.
 ```
@@ -120,9 +123,11 @@ Normally, there're one or more executable binaries or scirpts in a sub-project, 
 
 **runtests** is a straightforward test runner that can execute a single or a set of test cases and redirect the log.
 
-There are 2 ways to pass test to **runtests**:
+There are 2 ways to pass test to **runtests**, add point 3 and 4 for general dependence check:
   1. `-c`: Pass test cmdline.
   2. `-f <component/tests*>`: the `tests*` file under each component folder records the detailed test cmd lines.
+  3. `-d <compoent/tests*>`: the `tests*` file under each component folder records the detailed test cmd lines.
+  4. `-d <tests-server|tests-client>`: tests-server or tests-client for all features dependence
 
 Output of tests can be saved in a file using `-o` option.
 
@@ -133,6 +138,8 @@ $ ./runtests -f <cmdfile>
 $ ./runtests -f <cmdfile> -o <logfile>
 $ ./runtests -c <cmdline>
 $ ./runtests -c <cmdline> -o <logfile>
+$ ./runtests -d <cmdfile>
+$ ./runtests -d <tests-server|tests-client>
 ```
 
 # Report a problem
@@ -154,6 +161,24 @@ e.g. :cet, cstate, tdx-compliance, tdx-osv-sanity.
 * Use the file name 'tests' for default `tests` if only one tests is needed.
 * Use the filename 'guest-tests' for guest tests.
 
+tests|tests-server|tests-client file sample:
+```
+# @hw_dep: test dependence command @ the reason if the test command fails(optional)
+# @other_dep:
+# @other_warn:
+```
+
+```
+For example:
+# @hw_dep: cpuid_check 7 0 0 0 c 7
+or
+# @hw_dep: cpuid_check 7 0 0 0 c 7 @ CPU doesn't support CET SHSTK CPUID.(EAX=07H,ECX=01H):ECX[bit 7]
+```
+
+```
+Failure of the @hw_dep and @other_dep test dependency commands will prevent this feature (folder) testing.
+@other_warn the dependency check does not prevent testing of this feature, it just does some dependency checks and gives the reason why the feature partially fails due to some dependencies.
+```
 ### Entry Point of Guest Tests
 Use feature.guest_test_executor.sh as the entry point for guest tests.
 
