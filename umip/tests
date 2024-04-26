@@ -1,5 +1,8 @@
 # This file collects the UMIP(User Mode Instruction Prevention) tests on
 # Intel® Architecture-based platforms.
+# @hw_dep: cpuid_check 7 0 0 0 c 2
+# @other_dep: general_test.sh -t kconfig -k "CONFIG_X86_INTEL_UMIP|CONFIG_X86_UMIP=y"
+# @other_warn:
 
 umip_exceptions_32 a
 umip_exceptions_64 a
