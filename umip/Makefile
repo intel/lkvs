@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (c) 2022 Intel Corporation.
 
-BIN := umip_exceptions_64
+BIN := umip_exceptions_64 umip_test_basic_64
 SUPPORT_GCC_32BIT = $(shell gcc -no-pie -c umip_utils.c -m32 -o umip_utils_32.o 2>/dev/null || echo false)
 
 ifeq ($(SUPPORT_GCC_32BIT),false)
@@ -15,6 +15,9 @@ all: $(BIN)
 umip_exceptions_64: umip_exceptions.c
 	$(CC) -no-pie -c umip_utils.c -o umip_utils_64.o
 	$(CC) -o $@ umip_utils_64.o $^
+
+umip_test_basic_64: umip_test_basic.c
+	$(CC) -no-pie -o umip_test_basic_64 umip_utils_64.o $^
 
 umip_exceptions_32: umip_exceptions.c
 	$(CC) -no-pie -c umip_utils.c -m32 -o umip_utils_32.o
