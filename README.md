@@ -52,8 +52,8 @@ git clone http://github.com/intel/libipt.git
 cd libipt && cmake . && make install
 ```
 
-* CET
-CET tests have 32-bit compatible tests, which need install 32-bit architect support. But the 32-bit architect support is not a mandetory for CET tests.
+* UMIP
+The UMIP test has 32-bit compatibility tests and requires 32-bit Glibc to be installed for compilation. However, 32-bit Glibc support is not mandatory on Linux OS.
 
 #### Install 32-bit architect
 ##### Ubuntu OS
