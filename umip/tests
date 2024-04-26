@@ -6,3 +6,5 @@
 
 umip_exceptions_32 a
 umip_exceptions_64 a
+# Test sgdt sidt sldt smsw str should trigger #GP in proper kernel
+umip_test_basic_64 a

@@ -39,6 +39,8 @@ void print_results(void)
 {
 	printf("RESULTS: passed[%d], failed[%d], errors[%d].\n",
 	       test_passed, test_failed, test_errors);
+	if (test_failed != 0 || test_errors != 0)
+		exit(1);
 }
 
 /*
@@ -97,7 +99,6 @@ int unexpected_signal(void)
 
 	pr_pass(test_passed, "No signal received as expected.\n");
 	return 1;
-
 }
 
 int check_signal(int exp_signum)
@@ -109,7 +110,7 @@ int check_signal(int exp_signum)
 			return 0;
 		}
 		pr_fail(test_failed, "Received wrong signal:%d, expected sig:%d.\n",
-		got_signal, exp_signum);
+			got_signal, exp_signum);
 		return 1;
 	}
 	pr_fail(test_failed, "There was no signal received.\n");
@@ -142,12 +143,12 @@ int inspect_signal(int exp_signum, int exp_sigcode)
 		if (got_signal) {
 			/* Wrong signal */
 			pr_fail(test_failed, "Received wrong signal. Expected [%d]\n",
-			        exp_signum);
+				exp_signum);
 			return 1;
 		}
 		/* signal did not come */
 		pr_fail(test_failed, "Signal [%d] was expected. Nothing received.\n",
-		        exp_signum);
+			exp_signum);
 		return 1;
 	}
 	/* If no signal is expected, make sure we did not receive one */
