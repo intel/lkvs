@@ -1,5 +1,8 @@
 # This file collects basic cases which verify CPU Topology
 # on Intel® Architecture-based client platforms.
+# @hw_dep:
+# @other_dep:
+# @other_warn:
 
 cpu_topology.sh -t verify_thread_per_core
 cpu_topology.sh -t verify_cores_per_socket
