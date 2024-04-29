@@ -3,6 +3,9 @@
 # scaling drivers on Intel® Architecture-based platforms
 # For a deeper understanding of HW P-state related MSRs,
 # Users may refer to the Intel® Software Developer Manual.
+# @hw_dep:
+# @other_dep:
+# @other_warn:
 
 intel_pstate_tests.sh -t verify_sysfs_atts
 intel_pstate_tests.sh -t verify_turbo_enable_disable
