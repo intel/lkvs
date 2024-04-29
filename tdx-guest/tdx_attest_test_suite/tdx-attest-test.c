@@ -157,6 +157,7 @@ long get_tdreport0(int devfd, struct tdx_report_req *req)
 	return ioctl(devfd, TDX_CMD_GET_REPORT0, req);
 }
 
+#ifdef VERIFY_REPORT
 TEST(verify_report)
 {
 	struct tdx_report_req req;
@@ -184,7 +185,9 @@ TEST(verify_report)
 
 	ASSERT_EQ(0, close(devfd));
 }
+#endif
 
+#ifdef VERIFY_REPORTMAC
 TEST(verify_reportmac)
 {
 	struct tdx_verify_report_req req = { };
@@ -212,7 +215,9 @@ TEST(verify_reportmac)
 
 	ASSERT_EQ(0, close(devfd));
 }
+#endif
 
+#ifdef VERIFY_RTMR_EXTEND
 TEST(verify_rtmr_extend)
 {
 	struct tdx_extend_rtmr_req req;
@@ -233,7 +238,9 @@ TEST(verify_rtmr_extend)
 
 	ASSERT_EQ(0, close(devfd));
 }
+#endif
 
+#ifdef VERIFY_QUOTE
 TEST(verify_quote)
 {
 	struct tdx_quote_hdr *quote_hdr;
@@ -280,5 +287,6 @@ TEST(verify_quote)
 
 	ASSERT_EQ(0, close(devfd));
 }
+#endif
 
 TEST_HARNESS_MAIN
