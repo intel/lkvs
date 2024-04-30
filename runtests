@@ -14,6 +14,7 @@ BLOCK="BLOCK"
 SKIP="SKIP"
 FAIL="FAIL"
 NA="NA"
+DEP_EXIT=$PASS_CODE
 
 START_TIME=""
 SUMMRY_LOG=""
@@ -402,11 +403,12 @@ while getopts ":o:d:f:c:h" opt; do
 
         check_dep_feature "$cmdfile" || {
           append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
+          DEP_EXIT=$BLOCK_CODE
           continue
         }
       done
       cat "$DEP_LOG"
-      exit 0
+      exit "$DEP_EXIT"
       ;;
     f)
       CMDFILES=$OPTARG
