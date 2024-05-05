@@ -10,6 +10,10 @@ BIN_OUTPUT=""
 BIN_DMESG=""
 BIN_RET=""
 export LAST_DMESG_TIMESTAMP=""
+export FML=""
+export MODEL=""
+export STEPPING=""
+export CPU_MODEL=""
 
 readonly CPU_SYSFS_FOLDER="/sys/devices/system/cpu"
 
@@ -534,6 +538,39 @@ online_all_cpu()
     test_print_trc "All CPUs are online."
   else
     block_test "There is offline cpu:$off_cpus after online all cpu!"
+  fi
+}
+
+# Get the cpu model info, like spr sample: 06-8f-06
+# Input: NA
+# Output: 0 otherwise failure or die
+get_cpu_model() {
+  FML=$(grep -m 1 "family" /proc/cpuinfo | awk -F ":" '{printf "%02x",$2;}')
+  [[ -n "$FML" ]] || block_test "No CPU family found:$FML"
+  MODEL=$(grep -m 1 "model" /proc/cpuinfo | awk -F ":" '{printf "%02x",$2;}')
+  [[ -n "$MODEL" ]] || block_test "No CPU model found:$MODEL"
+  STEPPING=$(grep -m 1 "stepping" /proc/cpuinfo | awk -F ":" '{printf "%02x",$2;}')
+  export CPU_MODEL="${FML}-${MODEL}-${STEPPING}"
+}
+
+# From the family model stepping list, judge the test platform is in the list
+# Input: family model stepping list file like "ifs_fms_list" under ifs folder
+# Output: 0 otherwise failure or die
+check_fms_list() {
+  local fms_list_file=$1
+  local list_file=""
+  local check_fms=""
+
+  get_cpu_model
+  list_file=$(which "$fms_list_file" 2>/dev/null)
+  [[ -n "$list_file" ]] || block_test "No family model stepping list file:$fms_list_file found"
+  check_fms=$(grep -v "^#" "$list_file" | grep "^$FML" \
+              | awk -F "$FML:" '{print $2}' \
+              | grep "$MODEL")
+  if [[ -n "$check_fms" ]]; then
+    test_print_trc "Find family:$FML model:$MODEL in $list_file"
+  else
+    block_test "No family:$FML model:$MODEL found in $list_file"
   fi
 }
 
