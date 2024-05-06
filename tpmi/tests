@@ -1,0 +1,40 @@
+# This file collects the test cases which can run against intel_tpmi driver
+# on Intel® Architecture-based server platforms.
+# Encoding of TPMI_ID(hex):
+# 0x0: RAPL - Socket RAPL, DRAM RAPL, Platform RAPL, etc.
+# 0x1: PEM - Power and Performance Excursion Monitors
+# 0x2: UFS - Uncore Frequency Scaling
+# 0x3: PMAX, 
+# 0x4: DRC
+# 0x5: SST - Intel Speed Select Technology
+# 0x6: MISC_CTRL - Misc control and status registers - package root instance
+# 0xA: FHM - FIVR Health Monitor
+# 0xC: PLR - Perf Limit Reason
+# 0xD: BMC_CTL - BMC to Primecode mailbox interface
+# 0x80: TPMI Control Interface
+# 0x81: TPMI Info Registers
+# 0xFD: CSR on all punits
+# 0xFE: CSR on compute punit(s)
+# 0xFF: CSR on package root punit
+
+intel_tpmi.sh -t tpmi_remove_all_drivers
+intel_tpmi.sh -t tpmi_sysfs
+intel_tpmi.sh -t tpmi_debugfs
+intel_tpmi.sh -t pm_feature_list
+intel_tpmi.sh -t dump_pfs_locked_disabled_status
+intel_tpmi.sh -t mem_value_00
+intel_tpmi.sh -t mem_value_01
+intel_tpmi.sh -t mem_value_02
+intel_tpmi.sh -t mem_value_03
+intel_tpmi.sh -t mem_value_04
+intel_tpmi.sh -t mem_value_05
+intel_tpmi.sh -t mem_value_06
+intel_tpmi.sh -t mem_value_0a
+intel_tpmi.sh -t mem_value_0c
+intel_tpmi.sh -t mem_value_0d
+intel_tpmi.sh -t mem_value_80
+intel_tpmi.sh -t mem_value_81
+intel_tpmi.sh -t mem_value_fd
+intel_tpmi.sh -t mem_value_fe
+intel_tpmi.sh -t mem_value_ff
+intel_tpmi.sh -t mem_write_read
