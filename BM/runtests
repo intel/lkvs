@@ -219,7 +219,7 @@ check_dep_feature() {
   # warn_sta does not set the block, just NA to fail in some cases of this feature
   [[ "$ret" == "$BLOCK_CODE" ]] && warn_sta="$NA"
 
-  [[ -z "$REASON" ]] && REASON="No dependence for $subfolder"
+  [[ -z "$REASON" || "$ret" == "$PASS_CODE" ]] && REASON="No dependence for $subfolder"
   printf "%-16s%-13s%-16s%-13s%-20s\n" "$subfolder" "|$hw_sta" "|$other_sta" "|$warn_sta" \
     "|$REASON" >> "$DEP_LOG"
   return 0
