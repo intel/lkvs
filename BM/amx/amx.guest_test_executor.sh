@@ -55,7 +55,7 @@ case "$TESTCASE" in
     ;;
   TMUL_1)
     guest_test_prepare
-    guest_test_source_code "$SCRIPT_DIR/../state-components-validation-utilities/amx/tmul" tmul || \
+    guest_test_source_code "$SCRIPT_DIR/tmul" tmul || \
       die "Failed to prepare guest test source code for $TESTCASE"
     guest_test_entry tmul "-b 2 -t 10 -c 20 -i 1" || \
       die "Failed on $TESTCASE"
