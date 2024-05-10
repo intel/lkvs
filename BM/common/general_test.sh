@@ -27,7 +27,8 @@ general_test() {
       ;;
     # family model stepping check
     fms)
-      #TODO, will add the fms check function
+      get_cpu_model
+      check_fms_list "$PARM"
       ;;
     dmesg)
       key1=$(echo "$KEYWORD" | awk -F '&' '{print $1}')

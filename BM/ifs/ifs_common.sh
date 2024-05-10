@@ -73,10 +73,6 @@ IFS_DMESG=""
 IFS_LOG=""
 WARN_LOG=""
 IFS_CSV=""
-CPU_MODEL=""
-FML=""
-MODEL=""
-STEPPING=""
 BATCH_FILE=""
 
 LOG_MAX_LINES="20"
@@ -115,16 +111,6 @@ ifs_teardown() {
       cp -rf "${BATCH_FILE}_origin" "$BATCH_FILE"
     }
   fi
-}
-
-# Get the cpu model info, like spr sample: 06-8f-06
-# Input: NA
-# Output: 0 otherwise failure or die
-get_cpu_model() {
-  FML=$(grep -m 1 "family" /proc/cpuinfo | awk -F ":" '{printf "%02x",$2;}')
-  MODEL=$(grep -m 1 "model" /proc/cpuinfo | awk -F ":" '{printf "%02x",$2;}')
-  STEPPING=$(grep -m 1 "stepping" /proc/cpuinfo | awk -F ":" '{printf "%02x",$2;}')
-  export CPU_MODEL="${FML}-${MODEL}-${STEPPING}"
 }
 
 # CPUID check ATOM, IS_ATOM=true, if no IS_ATOM=false
