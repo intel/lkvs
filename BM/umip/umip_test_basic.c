@@ -35,7 +35,7 @@
 #endif
 
 int test_passed, test_failed, test_errors;
-sig_atomic_t got_signal, got_sigcode;
+extern sig_atomic_t got_signal, got_sigcode;
 
 static void call_sgdt(void)
 {
