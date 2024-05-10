@@ -1,5 +1,0 @@
-[submodule "state-components-validation-utilities"]
-	url = https://github.com/intel/state-components-validation-utilities.git
-	path = BM/state-components-validation-utilities
-	active = true
-	branch = main
