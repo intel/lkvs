@@ -107,10 +107,20 @@ init_dep_log() {
 check_dep_cmd() {
   local dep_info=$1
   local dep=$2
-  local dep_cmd dep_reason
+  local dep_cmd dep_reason dep_app app
 
   dep_cmd=$(echo "$dep_info" | awk -F "@" '{print $1}')
   dep_reason=$(echo "$dep_info" | awk -F "@" '{print $2}')
+
+  # Avoid dependency check failure due to uncompiled app
+  dep_app=$(echo "$dep_info" | awk -F " " '{print $1}')
+  [[ "$dep_app" == *".sh" ]] || {
+    app=$(which "$dep_app" 2>/dev/null)
+    [[ -z "$app" ]] && {
+      REASON="The dependent app:$dep_app was not found and needs to be compiled first!"
+      return "$BLOCK_CODE"
+    }
+  }
 
   # Execute ret not zero, will return below error code as failed
   eval "$dep_cmd" 1>/dev/null || {
