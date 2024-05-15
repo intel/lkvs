@@ -117,7 +117,7 @@ check_dep_cmd() {
   [[ "$dep_app" == *".sh" ]] || {
     app=$(which "$dep_app" 2>/dev/null)
     [[ -z "$app" ]] && {
-      REASON="The dependent app:$dep_app was not found and needs to be compiled first!"
+      REASON="The dependent app:$dep_app was not found and make under lkvs/BM first!"
       return "$BLOCK_CODE"
     }
   }
