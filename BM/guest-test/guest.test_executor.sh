@@ -27,7 +27,7 @@ GUEST_TEST_DIR="/root/guest_test/"
 # $1 test script file and $2 rpm file are both optional
 guest_test_prepare() {
   rm -rf common.sh
-  wget https://raw.githubusercontent.com/intel/lkvs/main/common/common.sh
+  wget https://raw.githubusercontent.com/intel/lkvs/main/BM/common/common.sh
   sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
     rm -rf $GUEST_TEST_DIR
     mkdir $GUEST_TEST_DIR
