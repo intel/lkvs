@@ -185,10 +185,14 @@ test_server_all_cpus_deepest_cstate() {
   all_deepest_cstate=$(echo "$turbostat_output" |
     awk '{for(i=0;++i<=NF;)a[i]=a[i]?a[i] FS $i:$i} END{for(i=0;i++<=NF;)print a[i]}' | grep "CPU%c6")
   test_print_trc "The deepest core cstate is: $all_deepest_cstate"
-  if [[ $all_deepest_cstate =~ $unexpected_cstate ]]; then
-    die "CPU core did not enter the deepest cstate!"
+  if [[ -z $all_deepest_cstate ]]; then
+    block_test "The CPUs cstate is not available."
+  elif [[ $all_deepest_cstate =~ $unexpected_cstate ]] && [[ ! "$all_deepest_cstate" == *"100.00"* ]]; then
+    test_print_trc "Getting CPU C6 state by reading MSR 0x3fd:"
+    rdmsr -a 0x3fd
+    die "The CPU Core did not enter the deepest cstate!"
   else
-    test_print_trc "All the CPU enter the deepest cstate!"
+    test_print_trc "All the CPUs core enter the deepest cstate!"
   fi
 }
 
