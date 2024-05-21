@@ -12,12 +12,11 @@ How to run KVM test
 lkvs KVM is a seperate test provider for avocado/avocado-vt.
 
 1) Install avocado and avocado-vt
-
 ::
 
     pip install --user avocado-framework
     pip install --user git+https://github.com/avocado-framework/avocado-vt
-2) Download lkvs in test machine 
+2) Download lkvs in test machine
 ::
 
     git clone https://github.com/intel/lkvs.git
