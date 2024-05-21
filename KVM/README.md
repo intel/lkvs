@@ -7,6 +7,44 @@ More details please refer to following.
 (TODO)
 
 
+How to run KVM test
+------------------------
+lkvs KVM is a seperate test provider for avocado/avocado-vt.
+
+1) Install avocado and avocado-vt
+
+::
+
+    pip install --user avocado-framework
+    pip install --user git+https://github.com/avocado-framework/avocado-vt
+2) Download lkvs in test machine 
+::
+
+    git clone https://github.com/intel/lkvs.git
+3) Create a new test provider file for lkvs test repo, put the file
+   in the installed test provider folder. like:
+::
+
+    cat /root/avocado/data/avocado-vt/virttest/test-providers.d/myprovider.ini
+::
+
+    [provider]
+    uri: file:///home/foo/lkvs
+    [qemu]
+    subdir: KVM/qemu/
+4) Setup test into the real avocado-vt configuration file
+::
+
+    avocado vt-bootstrap
+    avocado list |grep myprovider
+
+   For example: avocado-vt type_specific.myprovider.boot_td
+5) Run test
+::
+
+    avocado run boot_td
+
+
 Contributions quick start guide
 ------------------------
 
