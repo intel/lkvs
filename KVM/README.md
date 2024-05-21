@@ -23,7 +23,7 @@ Contributions quick start guide
     [provider]
     uri: file:///home/foo/lkvs
     [qemu]
-    subdir: kvm/qemu/
+    subdir: KVM/qemu/
 You can optionally delete temporarily the
 `io-github-autotest-qemu.ini` file, just so you don't have test
 conflicts. Then you can develop your new test code, run it
