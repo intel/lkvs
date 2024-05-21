@@ -29,7 +29,7 @@ You can optionally delete temporarily the
 conflicts. Then you can develop your new test code, run it
 using virt test, and commit your changes.
 
-4) Make sure you have `inspektor installed. <https://github.com/autotest/inspektor#inspektor>`_
+4) Make sure you have [inspektor installed](https://github.com/autotest/inspektor#inspektor)
 5) Run:
 
 ::
