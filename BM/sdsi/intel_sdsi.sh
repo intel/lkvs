@@ -205,6 +205,49 @@ read_meter_tele() {
   done
 }
 
+# Reading current meter by intel_sdsi tool
+# The current_meter is the unattested snapshot of the current metering information
+read_meter_current() {
+  local meter_current
+
+  for ((j = 1; j <= "$SOCKET_NUM"; j++)); do
+    id=$(ls /sys/bus/auxiliary/devices | grep sdsi | awk -F "/" '{print $NF}' | sed -n "$j,1p" | awk -F "." '{print $NF}' 2>&1)
+    [[ -n "$id" ]] || block_test "SDSI device $id is not available."
+    test_print_trc "Reading SDSi meter current for socket $id"
+    if ! meter_current=$(intel_sdsi -d "$id" -C); then
+      die "Failed to read SDSi meter current for socket $id: $meter_current"
+    else
+      test_print_trc "$meter_current"
+    fi
+  done
+}
+
+# Function to check if meter_current updates for any 2 times reading
+meter_current_update() {
+  local sdsi_device
+  local meter_current_bf
+  local meter_current_af
+
+  for ((j = 1; j <= "$SOCKET_NUM"; j++)); do
+    sdsi_device=$(ls /sys/bus/auxiliary/devices | grep sdsi | sed -n "$j,1p")
+    [[ -n $sdsi_device ]] || block_test "SDSI device is not available."
+    test_print_trc "Dump meter_current_bf content:"
+    meter_current_bf=$(xxd /sys/bus/auxiliary/devices/"$sdsi_device"/meter_current)
+    test_print_trc "$meter_current_bf"
+    sleep 1
+    test_print_trc "Dump meter_current_af content:"
+    meter_current_af=$(xxd /sys/bus/auxiliary/devices/"$sdsi_device"/meter_current)
+    test_print_trc "$meter_current_af"
+    if [[ -z "$meter_current_bf" ]] && [[ -z "$meter_current_af" ]]; then
+      block_test "$sdsi_device meter_current content is empty"
+    elif [[ "$meter_current_bf" = "$meter_current_af" ]]; then
+      die "$sdsi_device meter_current content does not change in two times reading."
+    else
+      test_print_trc "$sdsi_device meter_current content changes in two times reading."
+    fi
+  done
+}
+
 stress_read_reg() {
   local read_reg
   test_print_trc "Repeat reading SDSi register for 30 cycles:"
@@ -254,6 +297,21 @@ stress_read_tele() {
   test_print_trc "$read_tele"
 }
 
+stress_read_cur_meter() {
+  local read_cur
+  test_print_trc "Repeat reading SDSi current metering for 30 cycles:"
+  for ((j = 0; j < "$SOCKET_NUM"; j++)); do
+    for ((i = 1; i <= 30; i++)); do
+      if ! read_cur=$(intel_sdsi -d "$j" -C); then
+        die "Repeat reading SDSi current metering for socket $j cycle $i Fails"
+      else
+        test_print_trc "Repeat reading current metering for socket $j cycle $i PASS"
+      fi
+    done
+  done
+  test_print_trc "$read_cur"
+}
+
 intel_sdsi_test() {
   case $TEST_SCENARIO in
   driver_unbind_bind)
@@ -274,6 +332,9 @@ intel_sdsi_test() {
   sysfs_telemetry_attri)
     sdsi_sysfs_attribute meter_certificate
     ;;
+  sysfs_current_meter_attri)
+    sdsi_sysfs_attribute meter_current
+    ;;
   sdsi_devices)
     available_sdsi_devices
     ;;
@@ -289,6 +350,12 @@ intel_sdsi_test() {
   read_meter_telemetry)
     read_meter_tele
     ;;
+  read_meter_current)
+    read_meter_current
+    ;;
+  verify_meter_current_update)
+    meter_current_update
+    ;;
   stress_reading_reg)
     stress_read_reg
     ;;
@@ -297,6 +364,9 @@ intel_sdsi_test() {
     ;;
   stress_reading_tele)
     stress_read_tele
+    ;;
+  stress_reading_cur_meter)
+    stress_read_cur_meter
     ;;
   esac
   return 0
