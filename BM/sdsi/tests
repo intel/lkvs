@@ -7,11 +7,15 @@ intel_sdsi.sh -t sdsi_per_socket
 intel_sdsi.sh -t sysfs_register_attri
 intel_sdsi.sh -t sysfs_certificate_attri
 intel_sdsi.sh -t sysfs_telemetry_attri
+intel_sdsi.sh -t sysfs_current_meter_attri
 intel_sdsi.sh -t sdsi_devices
 intel_sdsi.sh -t sdsi_ppin
 intel_sdsi.sh -t nvram_content_err_check
 intel_sdsi.sh -t enable_status
 intel_sdsi.sh -t read_meter_telemetry
+intel_sdsi.sh -t verify_meter_current_update
+intel_sdsi.sh -t read_meter_current
 intel_sdsi.sh -t stress_reading_reg
 intel_sdsi.sh -t stress_reading_lic
 intel_sdsi.sh -t stress_reading_tele
+intel_sdsi.sh -t stress_reading_cur_meter
