@@ -1,5 +1,8 @@
 # This file collects the test cases which can run against intel_tpmi driver
 # on Intel® Architecture-based server platforms.
+# @hw_dep: general_test.sh -t fms -p "tpmi_fms_list" @ CPU Model doesn't support tpmi
+# @other_dep: general_test.sh -t kconfig -k "CONFIG_INTEL_TPMI=m"
+# @other_warn:
 # Encoding of TPMI_ID(hex):
 # 0x0: RAPL - Socket RAPL, DRAM RAPL, Platform RAPL, etc.
 # 0x1: PEM - Power and Performance Excursion Monitors
