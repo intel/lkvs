@@ -1,6 +1,9 @@
 # This file collects basic cases which can run against 
 # TPMI UFS (Uncore Frequency Scaling) driver
 # on Intel® GRANITERAPIDS and further server platforms.
+# @hw_dep: general_test.sh -t fms -p "ufs_fms_list" @ CPU Model doesn't support tpmi_ufs
+# @other_dep: general_test.sh -t kconfig -k "CONFIG_INTEL_TPMI=m"
+# @other_warn:
 
 tpmi_ufs.sh -t check_ufs_unbind_bind
 tpmi_ufs.sh -t check_ufs_device

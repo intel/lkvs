@@ -1,4 +1,7 @@
 #This file collects the basic test cases for Intel® Processor Trace feature
+# @hw_dep:
+# @other_dep:
+# @other_warn:
 
 # Verify to filter MTC (Mini Time Counter) and TSC (Time-Stamp Counter) package
 perf_tests.sh -t fp

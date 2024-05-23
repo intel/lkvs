@@ -2,6 +2,9 @@
 # here assume the platform supports SST perf profile level 0,3,4
 # user can adjust the case lists based on the actual SUT SST 
 # perf profile level support status
+# @hw_dep:
+# @other_dep:
+# @other_warn:
 
 
 intel_sst.sh -t isst_pp_config_enable_status
