@@ -10,6 +10,7 @@ More details please refer to following.
 
 ## BM Features
   * [AMX](BM/amx/README.md)
+  * [avx512vbmi](BM/avx512vbmi/README.md)
   * [cet(Control flow Enhancement Technology)](BM/cet/README.md)
   * [cstate](BM/cstate/README.md)
   * [DSA](BM/dsa/README.md)

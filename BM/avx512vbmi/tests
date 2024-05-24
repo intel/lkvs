@@ -1,0 +1,38 @@
+# This file collects the VBMI(Vector Byte Manipulation Instructions) tests on
+# Intel® Architecture-based platforms.
+# @hw_dep: cpuid_check 7 0 0 0 c 1 @ CPU doesn't support VBMI CPUID.(EAX=07H,ECX=0H):ECX[bit 1]
+# @other_dep:
+# @other_warn:
+
+vbmi_func.sh -n vbmi_test -p "0 ff b"
+vbmi_func.sh -n vbmi_test -p "1 ff b"
+vbmi_func.sh -n vbmi_test -p "2 ff b"
+vbmi_func.sh -n vbmi_test -p "3 ff b"
+vbmi_func.sh -n vbmi_test -p "4 ff b"
+vbmi_func.sh -n vbmi_test -p "5 ff b"
+vbmi_func.sh -n vbmi_test -p "6 ff b"
+vbmi_func.sh -n vbmi_test -p "7 ff b"
+vbmi_func.sh -n vbmi_test -p "18 ff b"
+vbmi_func.sh -n vbmi_test -p "19 ff b"
+vbmi_func.sh -n vbmi_test -p "1F ff b"
+vbmi_func.sh -n vbmi_test -p "20 ff b"
+vbmi_func.sh -n vbmi_test -p "21 ff b"
+vbmi_func.sh -n vbmi_test -p "30 ff b"
+vbmi_func.sh -n vbmi_test -p "3A ff b"
+vbmi_func.sh -n vbmi_test -p "3F ff b"
+vbmi_func.sh -n vbmi_test -p "40 ff b"
+vbmi_func.sh -n vbmi_test -p "41 ff b"
+vbmi_func.sh -n vbmi_test -p "42 ff b"
+vbmi_func.sh -n vbmi_test -p "43 ff b"
+vbmi_func.sh -n vbmi_test -p "50 ff b"
+vbmi_func.sh -n vbmi_test -p "60 ff b"
+vbmi_func.sh -n vbmi_test -p "ff ff b"
+vbmi_func.sh -n vbmi_test -p "0 0 b"
+vbmi_func.sh -n vbmi_test -p "0 1 b"
+vbmi_func.sh -n vbmi_test -p "0 5 b"
+vbmi_func.sh -n vbmi_test -p "0 A b"
+vbmi_func.sh -n vbmi_test -p "0 F b"
+vbmi_func.sh -n vbmi_test -p "0 1FF b"
+vbmi_func.sh -n vbmi_test -p "0 FFFF b"
+vbmi_func.sh -n vbmi_test -p "0 1FFFF b"
+vbmi_func.sh -n vbmi_test -p random
