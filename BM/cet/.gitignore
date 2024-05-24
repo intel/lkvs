@@ -4,6 +4,8 @@ glibc_supported_shstk_test
 quick_test
 shstk_alloc
 shstk_cp
+shstk_cpu
+shstk_cpu_legacy
 shstk_huge_page
 shstk_unlock_test
 test_shadow_stack
