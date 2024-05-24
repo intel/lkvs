@@ -4,6 +4,7 @@
   * [AMX](amx/README.md)
   * [avx512vbmi](avx512vbmi/README.md)
   * [cet(Control flow Enhancement Technology)](cet/README.md)
+  * [CMPccXADD](cmpccxadd/README.md)
   * [cstate](cstate/README.md)
   * [DSA](dsa/README.md)
   * [FRED](fred/README.md) (in progress)
