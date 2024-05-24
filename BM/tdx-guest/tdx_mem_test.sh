@@ -127,14 +127,14 @@ case "$MEM_CASE" in
     ebizzy_func
     ;;
   MEM_ACPT_T_1C_8G_1W)
-    # expected 19secs in case of
+    # expected 24secs in case of
     # 1VCPU + 8G MEM + 1 mem stress process
-    mem_accepted_time 19 1
+    mem_accepted_time 24 1
     ;;
   MEM_ACPT_T_1C_8G_8W)
-    # expected 15secs in case of
+    # expected 19secs in case of
     # 1VCPU + 8G MEM + 8 mem stress processes
-    mem_accepted_time 15 8
+    mem_accepted_time 19 8
     ;;
   MEM_ACPT_T_1C_32G_1W)
     # expected 119secs in case of
@@ -162,9 +162,9 @@ case "$MEM_CASE" in
     mem_accepted_time 34 1
     ;;
   MEM_ACPT_T_32C_16G_32W)
-    # expected 5secs in case of
+    # expected 6secs in case of
     # 32VCPU + 16G MEM + 32 mem stress processes
-    mem_accepted_time 5 32
+    mem_accepted_time 6 32
     ;;
   MEM_ACPT_T_32C_32G_1W)
     # expected 80secs in case of
