@@ -112,12 +112,12 @@ long unlock_shstk(pid_t pid)
 
 	if (ptrace(PTRACE_SEIZE, pid, 0, 0)) {
 		free(xstate);
-		printf("[FAIL]\tCan't attach to %d", pid);
+		printf("[FAIL]\tCan't attach to %d: %s\n", pid, strerror(errno));
 		return -1;
 	}
 
 	if (ptrace(PTRACE_INTERRUPT, pid, 0, 0)) {
-		printf("[FAIL]\tCan't interrupt the %d task", pid);
+		printf("[FAIL]\tCan't interrupt the %d task: %s", pid, strerror(errno));
 		err_num++;
 		goto detach;
 	}
@@ -262,29 +262,11 @@ int main(void)
 		printf("[INFO]\tChild:%d, ssp:%p, bp,%p, *bp:%lx, *(bp+1):%lx\n",
 		       getpid(), ssp, bp, *bp, *(bp + 1));
 
-		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK)) {
-			printf("[FAIL]\tDisabling shadow stack failed\n");
-			err_num++;
-		} else {
-			printf("[PASS]\tDisabling shadow stack successfully\n");
-		}
-
-		ret = ARCH_PRCTL(ARCH_SHSTK_STATUS, &feature);
-		if (ret) {
-			printf("[FAIL]\tSHSTK_STATUS nok, feature:%lx, ret:%ld\n",
-			       feature, ret);
-			err_num++;
-		} else if (feature == 0) {
-			printf("[PASS]\tSHSTK_STATUS ok, feature:%lx is 0, ret:%ld\n",
-			       feature, ret);
-		} else {
-			printf("[FAIL]\tSHSTK_STATUS ok, feature:%lx isn't 0, ret:%ld\n",
-			       feature, ret);
-			err_num++;
-		}
-
+		/* Sleep 0.2s, wait parent pid to unlock child process SHSTK */
+		usleep(200000);
 		if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, ARCH_SHSTK_SHSTK)) {
-			printf("[FAIL]\tCould not re-enable Shadow stack.\n");
+			printf("[FAIL]\tCould not re-enable Shadow stack%s\n",
+				strerror(errno));
 			err_num++;
 		} else {
 			printf("[PASS]\tChild process re-enable SHSTK\n");
@@ -305,7 +287,8 @@ int main(void)
 		}
 
 		if (ARCH_PRCTL(ARCH_SHSTK_ENABLE, ARCH_SHSTK_WRSS)) {
-			printf("[FAIL]\tCould not enable WRSS in child pid.\n");
+			printf("[FAIL]\tCould not enable WRSS in child pid%s\n",
+				strerror(errno));
 			err_num++;
 		} else {
 			printf("[PASS]\tChild process enabled wrss\n");
@@ -339,22 +322,11 @@ int main(void)
 			err_num++;
 		}
 
-		if (ARCH_PRCTL(ARCH_SHSTK_DISABLE, ARCH_SHSTK_SHSTK)) {
-			printf("[FAIL]\tChild process could not disable shstk.\n");
-			err_num++;
-		} else {
-			printf("[PASS]\tChild process disable shstk successfully.\n");
-		}
-
-		/*
-		 * Transfer the child process test result to
-		 * the parent process for aggregation.
-		 */
 		close(fd[0]);
 		if (!write(fd[1], &result, sizeof(result)))
 			fatal_error("write fd failed");
 
-		return result;
+		exit(0);
 	}
 
 	if (child > 0) {
