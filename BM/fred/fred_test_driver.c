@@ -25,8 +25,8 @@ static int      __init fred_test_driver_init(void);
 static void     __exit fred_test_driver_exit(void);
 static int      fred_test_open(struct inode *inode, struct file *file);
 static int      fred_test_release(struct inode *inode, struct file *file);
-static ssize_t  fred_test_read(struct file *filp, char __user *buf, size_t count, loff_t *off);
-static ssize_t  fred_test_write(struct file *filp, const char *buf, size_t count, loff_t *off);
+static ssize_t  fred_test_read(struct file *file, char __user *buf, size_t count, loff_t *off);
+static ssize_t  fred_test_write(struct file *file, const char *buf, size_t count, loff_t *off);
 static long     fred_test_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
 
 /*
@@ -47,9 +47,8 @@ static inline u64 fred_test_rdmsr(u32 msr)
 
 	__asm__ __volatile__("rdmsr" : "=a"(a), "=d"(d) : "c"(msr) : "memory");
 
-	return a | ((u64) d << 32);
+	return a | ((u64)d << 32);
 }
-
 
 static inline void fred_test_wrmsr(u32 msr, u64 value)
 {
@@ -73,7 +72,7 @@ u64 read_performance_counter(void)
 
 	rdpmcl(0x40000002, value);
 
-	printk(KERN_INFO "REF_TSC Value: %llu\n", value);
+	pr_info("REF_TSC Value: %llu\n", value);
 
 	return value;
 }
@@ -89,7 +88,7 @@ static void check_wrmsr_cycles(long loop)
 	//start = rdtsc();
 	wrmsrl(0x38f, 0); // clear global_ctrl
 	wrmsrl(0x30b, 0); // clear fixed counter 2 value (REF_TSC)
-	wrmsrl(0x38f, BIT_ULL(32+2)); // enable fixed counter in global_ctrl
+	wrmsrl(0x38f, BIT_ULL(32 + 2)); // enable fixed counter in global_ctrl
 	wrmsrl(0x38d, 0x300); // enable fixed counter 2
 	start = read_performance_counter();
 	for (i = 0; i < loop; i++)
@@ -109,7 +108,7 @@ static void check_wrmsr_cycles(long loop)
 	gs_base = fred_test_rdmsr(MSR_GS_BASE);
 	wrmsrl(0x38f, 0); // clear global_ctrl	
 	wrmsrl(0x30b, 0); // clear fixed counter 2 value (REF_TSC)
-	wrmsrl(0x38f, BIT_ULL(32+2)); // enable fixed counter in global_ctrl
+	wrmsrl(0x38f, BIT_ULL(32 + 2)); // enable fixed counter in global_ctrl
 	wrmsrl(0x38d, 0x300); // enable fixed counter 2
 	//start = rdtsc();
 	start = read_performance_counter();
@@ -120,7 +119,7 @@ static void check_wrmsr_cycles(long loop)
 	preempt_enable();
 	local_irq_enable();
 	elapsed = (end - start) / loop;
-    pr_info("Elapsed time: wrmsr used %llu cycles\n", elapsed);
+	pr_info("Elapsed time: wrmsr used %llu cycles\n", elapsed);
 }
 
 static int fred_enable(void)
@@ -174,7 +173,7 @@ static int fred_test_release(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static ssize_t fred_test_read(struct file *filp, char __user *buf, size_t count, loff_t *off)
+static ssize_t fred_test_read(struct file *file, char __user *buf, size_t count, loff_t *off)
 {
 	int len;
 	/* For example - when content of our_buf is "100" - */
@@ -184,7 +183,7 @@ static ssize_t fred_test_read(struct file *filp, char __user *buf, size_t count,
 	return len;
 }
 
-static ssize_t fred_test_write(struct file *filp, const char *buf, size_t count, loff_t *off)
+static ssize_t fred_test_write(struct file *file, const char *buf, size_t count, loff_t *off)
 {
 	long opt;
 	u64 fred_bit;
