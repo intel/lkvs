@@ -51,3 +51,74 @@ jobs:
         run: sudo docker build -f BM/Dockerfile.build -t builder BM
       - name: Build Project
         run: sudo ./.github/scripts/build_check
+  python-style-check:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.9]
+      fail-fast: false
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          pip install sphinx
+          pip install -r ./.github/scripts/requirements-ci.txt
+      - name: Run inspekt
+        run: inspekt checkall ./KVM --disable-style E501,E265,W601,E402,E722,E741 --disable-lint=W,R,C,E0601,E1002,E1101,E1103,E1120,F0401,I0011,I1101 --enable-lint W0611,W1201 --no-license-check
+      - run: echo "This job's status is ${{ job.status }}."
+  cfg-lint-check:
+    name: Cfg lint
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get changed files
+        id: cfg-files
+        uses: tj-actions/changed-files@v35
+        with:
+          files: |
+            ./KVM/qemu/*.cfg
+      - name: Set matrix
+        id: set-matrix
+        run: echo matrix=$(python3 -c 'print("${{ steps.cfg-files.outputs.all_changed_files }}".split())') >> $GITHUB_OUTPUT
+      - name: Check cfg files lint
+        if: steps.cfg-files.outputs.any_changed == 'true'
+        run: |
+          ./.github/scripts/cfg-lint-check.py ${{ steps.cfg-files.outputs.all_changed_files }}
+  cartesian-syntax-check:
+    name: Cartesian syntax
+    runs-on: ubuntu-latest
+    needs: cfg-lint-check
+    if: ${{ needs.cfg-lint-check.outputs.matrix != '[]' }}
+    strategy:
+      matrix:
+        file: ${{ fromJson(needs.cfg-lint-check.outputs.matrix) }}
+      fail-fast: false
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Parse ${{ matrix.file }} into Cartesian configuration
+        env:
+          CFG_FILE: ${{ matrix.file }}
+        run: |
+          echo "Parse ${CFG_FILE} into Cartesian configuration"
+          sed -i '1s/^/variants:\n/' ${CFG_FILE}
+          curl -fsSL https://raw.githubusercontent.com/avocado-framework/avocado-vt/master/virttest/cartesian_config.py | python3 - -f ${CFG_FILE}
