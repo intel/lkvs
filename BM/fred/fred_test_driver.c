@@ -106,7 +106,7 @@ static void check_wrmsr_cycles(long loop)
 	local_irq_disable();
 	preempt_disable();
 	gs_base = fred_test_rdmsr(MSR_GS_BASE);
-	wrmsrl(0x38f, 0); // clear global_ctrl	
+	wrmsrl(0x38f, 0); // clear global_ctrl
 	wrmsrl(0x30b, 0); // clear fixed counter 2 value (REF_TSC)
 	wrmsrl(0x38f, BIT_ULL(32 + 2)); // enable fixed counter in global_ctrl
 	wrmsrl(0x38d, 0x300); // enable fixed counter 2
