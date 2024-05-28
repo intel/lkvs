@@ -128,7 +128,7 @@ Normally, there're one or more executable binaries or scirpts in a sub-project, 
 There are 2 ways to pass test to **runtests**, add point 3 and 4 for general dependence check:
   1. `-c`: Pass test cmdline.
   2. `-f <component/tests*>`: the `tests*` file under each component folder records the detailed test cmd lines.
-  3. `-d <compoent/tests*>`: the `tests*` file under each component folder records the detailed test cmd lines.
+  3. `-d <component/tests*>`: the `tests*` file under each component folder records the detailed test cmd lines.
   4. `-d <tests-server|tests-client>`: tests-server or tests-client for all features dependence
 
 Output of tests can be saved in a file using `-o` option.
