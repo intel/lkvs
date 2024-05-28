@@ -8,6 +8,9 @@
 #include <linux/device.h>
 #include <linux/ioctl.h>
 #include <linux/err.h>
+#include <asm/cpufeatures.h>
+#include <asm/msr-index.h>
+#include <asm/msr.h>
 
 MODULE_AUTHOR("Shan Kang <shan.kang@intel.com>");
 MODULE_VERSION("1.0");
@@ -37,6 +40,88 @@ static const struct file_operations fops = {
 	.unlocked_ioctl = fred_test_ioctl,
 	.release = fred_test_release,
 };
+
+static inline u64 fred_test_rdmsr(u32 msr)
+{
+	u32 a, d;
+
+	__asm__ __volatile__("rdmsr" : "=a"(a), "=d"(d) : "c"(msr) : "memory");
+
+	return a | ((u64) d << 32);
+}
+
+
+static inline void fred_test_wrmsr(u32 msr, u64 value)
+{
+	u32 a = value;
+	u32 d = value >> 32;
+
+	__asm__ __volatile__("wrmsr" :: "a"(a), "d"(d), "c"(msr) : "memory");
+}
+
+static inline void fred_test_wrmsrns(u32 msr, u64 value)
+{
+	u32 a = value;
+	u32 d = value >> 32;
+
+	__asm__ __volatile__(".byte 0x0f,0x01,0xc6" :: "a"(a), "d"(d), "c"(msr));
+}
+
+u64 read_performance_counter(void)
+{
+	u64 value;
+
+	rdpmcl(0x40000002, value);
+
+	printk(KERN_INFO "REF_TSC Value: %llu\n", value);
+
+	return value;
+}
+
+static void check_wrmsr_cycles(long loop)
+{
+	u64 start, end, gs_base, elapsed, i;
+	//if (static_cpu_has(X86_FEATURE_WRMSRNS))
+	//{
+	local_irq_disable();
+	preempt_disable();
+	gs_base = fred_test_rdmsr(MSR_GS_BASE);
+	//start = rdtsc();
+	wrmsrl(0x38f, 0); // clear global_ctrl
+	wrmsrl(0x30b, 0); // clear fixed counter 2 value (REF_TSC)
+	wrmsrl(0x38f, BIT_ULL(32+2)); // enable fixed counter in global_ctrl
+	wrmsrl(0x38d, 0x300); // enable fixed counter 2
+	start = read_performance_counter();
+	for (i = 0; i < loop; i++)
+		fred_test_wrmsrns(MSR_GS_BASE, gs_base);
+	//end = rdtsc();
+	end = read_performance_counter();
+	wrmsrl(0x38d, 0); // disable fixed counter 2
+	wrmsrl(0x38f, 0); // clear global_ctrl
+	preempt_enable();
+	local_irq_enable();
+	elapsed = (end - start) / loop;
+	pr_info("Elapsed time: wrmsrns used %llu cycles\n", elapsed);
+	//}
+
+	local_irq_disable();
+	preempt_disable();
+	gs_base = fred_test_rdmsr(MSR_GS_BASE);
+	wrmsrl(0x38f, 0); // clear global_ctrl	
+	wrmsrl(0x30b, 0); // clear fixed counter 2 value (REF_TSC)
+	wrmsrl(0x38f, BIT_ULL(32+2)); // enable fixed counter in global_ctrl
+	wrmsrl(0x38d, 0x300); // enable fixed counter 2
+	//start = rdtsc();
+	start = read_performance_counter();
+	for (i = 0; i < loop; i++)
+		fred_test_wrmsr(MSR_GS_BASE, gs_base);
+	//end = rdtsc();
+	end = read_performance_counter();
+	preempt_enable();
+	local_irq_enable();
+	elapsed = (end - start) / loop;
+    pr_info("Elapsed time: wrmsr used %llu cycles\n", elapsed);
+}
 
 static int fred_enable(void)
 {
@@ -112,27 +197,35 @@ static ssize_t fred_test_write(struct file *filp, const char *buf, size_t count,
 	/* Here we read from buf to our_buf */
 	if (copy_from_user(our_buf, buf, count))
 		pr_err("Data Write : Err!\n");
-
+	else
+		pr_err("Data Write : %s! count=%ld\n", our_buf, count);
 	/* we write NULL to end the string */
 	our_buf[count] = '\0';
 
 	if (strncmp(our_buf, "fred_enable ", strlen("fred_enable ")) == 0) {
 		ret = kstrtol(our_buf + strlen("fred_enable "), 10, &opt);
-		if (!ret) {
-			pr_err("kstrtol failed\n");
+		if (ret) {
+			pr_err("kstrtol failed ret=%d\n", ret);
 			return 0;
 		}
-		//opt = simple_strtol(our_buf + strlen("fred_enable "), NULL, 10);
 		pr_info("fred_enable expected %ld\n", opt);
 		fred_bit = fred_enable();
 		if (fred_bit == (u64)opt)
 			pr_info("fred_enable test PASS\n");
 		else
 			pr_info("fred_enable test FAIL\n");
-
 	} else if (strncmp(our_buf, "double_fault", strlen("double_fault")) == 0) {
 		pr_info("double_fault test begin\n");
 		invoke_double_fault();
+	} else if (strncmp(our_buf, "fast_msr ", strlen("fast_msr ")) == 0) {
+		pr_info("fast_msr test begin\n");
+		ret = kstrtol(our_buf + strlen("fast_msr "), 10, &opt);
+		if (ret) {
+			pr_err("kstrtol failed ret=%d\n", ret);
+			return 0;
+		}
+		pr_info("fast_msr loop %ld\n", opt);
+		check_wrmsr_cycles(opt);
 	} else {
 		pr_info("Not supported case\n");
 	}
@@ -163,7 +256,8 @@ static int __init fred_test_driver_init(void)
 		goto r_class;
 	}
 	/* Creating struct class */
-	dev_class = class_create(THIS_MODULE, "fred_test_class");
+	//dev_class = class_create(THIS_MODULE, "fred_test_class");
+	dev_class = class_create("fred_test_class");
 	if (IS_ERR(dev_class)) {
 		pr_err("Cannot create the struct class\n");
 		goto r_class;
