@@ -11,6 +11,7 @@ from avocado.utils import process, cpu
 from virttest import error_context
 from provider.cpu_utils import check_cpu_flags
 
+
 @error_context.context_aware
 def run(test, params, env):
     """
