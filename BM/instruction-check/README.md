@@ -26,12 +26,27 @@ The Instruction Check project utilizes the Avocado Test Framework, so it needs t
 After installing the framework, you also need to install the HTML plugin for generating test results in HTML format. You can do this by running the following command:
 ``pip install avocado-framework-plugin-result-html``
 
-## Usage
+## Usage 1
 
-### 1. ompile the cpuid_check tool
+### 1. Compile the cpuid_check tool
 Run the command:
-``./setuo.sh``
+``./setup.sh``
 
 ### 2. Execute instruction_check.py
 Run the command:
-``./ininstruction_check.py`` or ``python instruction_check.py``
+``./instruction_check.py`` or ``python instruction_check.py``
+
+## Usage 2
+Usage 1 assembles each test into an Avocado job, so it can be executed directly by calling the Python interpreter. We also provide another method, which generates Avocado test classes based on the information in feature_list.py and writes them into the file cpuid_test.py.
+
+### 1. Compile the cpuid_check tool
+Run the command:
+``./setup.sh``
+
+### 2. Generate Avocado tests
+Run the command:
+``./auto_gen_test.py`` or ``python auto_gen_test.py``
+
+### 3. Use Avocado to run tests
+Run the command:
+``avocado run cpuid_test.py``
