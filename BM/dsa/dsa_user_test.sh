@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
+
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2021 Intel Corporation
 #
 # Description:  Call dsa_test to run dsa user test
-
-source "$PWD/$DIRNAME/../common/common.sh"
-
-set -x
-
-DIRNAME=`dirname $0`
-DSA_DIR=$PWD/$DIRNAME
-CONFIG_DIR=$DSA_DIR/configs
+DIRNAME=$(dirname "$0")
+DSA_DIR="$PWD/$DIRNAME"
+CONFIG_DIR="$DSA_DIR/configs"
 ACCFG=/usr/bin/accel-config
 TEST_DIR=/usr/libexec/accel-config/test
 DSATEST=$TEST_DIR/dsa_test
 
+source "$PWD/$DIRNAME/../common/common.sh"
 ############################# FUNCTIONS #######################################
 
 # Global variables
@@ -172,12 +169,12 @@ disable_all() {
       DSA_DEVICE_PATH="/sys/bus/dsa/devices"
     fi
     # Get available devices
-    for device_path in ${DSA_DEVICE_PATH}/${device_type}* ; do
+    for device_path in "${DSA_DEVICE_PATH}"/"${device_type}"* ; do
       [[ $(echo "$device_path" | grep -c '!') -eq 0 ]] && {
       # Get wqs and disable it if the status is enabled
-        for wqp in ${device_path}/wq* ; do
+        for wqp in "${device_path}"/wq* ; do
 	  [[ $( cat "${wqp}"/state ) == "enabled" ]] && {
-	    wq=${wqp##${DSA_DEVICE_PATH}/}
+	    wq=${wqp##"${DSA_DEVICE_PATH}"/}
             test_print_trc "info:disable wq $wq"
 	    "$ACCFG" disable-wq "${wq}"
 	    echo "-1" > "${wqp}"/group_id
@@ -185,11 +182,11 @@ disable_all() {
         done
 	# Disable device
 	[[ $( cat "${device_path}"/state ) == "enabled" ]] && {
-	  test_print_trc "info:disable ${device_path##${DSA_DEVICE_PATH}/}"
-	  "$ACCFG" disable-device "${device_path##${DSA_DEVICE_PATH}/}"
+	  test_print_trc "info:disable ${device_path##"${DSA_DEVICE_PATH}"/}"
+	  "$ACCFG" disable-device "${device_path##"${DSA_DEVICE_PATH}"/}"
 	}
 	# Remove group id of engine
-	for engine in ${device_path}/engine* ; do
+	for engine in "${device_path}"/engine* ; do
 	  echo -1 > "$engine"/group_id
 	done
       }
@@ -243,7 +240,7 @@ test_op_batch()
   local wq_mode_name
   local xfer_size
 
-  if [ $opcode == "0x2" ];then
+  if [ "$opcode" == "0x2" ];then
     return 0
   fi
 
@@ -374,5 +371,5 @@ while getopts :c:g:o:h arg; do
 done
 
 dsa_user_test
-teardown_handler="dsa_user_teardown"
+#teardown_handler="dsa_user_teardown"
 exec_teardown
