@@ -18,8 +18,7 @@ DEP_EXIT=$PASS_CODE
 
 START_TIME=""
 SUMMRY_LOG=""
-TESTS_CLIENT="tests-client"
-TESTS_SERVER="tests-server"
+readonly TESTS_SERVER="tests-server"
 TEST_FILES=""
 SUB_FOLDERS=""
 TEST_LIST_FILE="/tmp/tests"
@@ -40,14 +39,15 @@ usage() {
 Usage: ${0##*/} [-f CMDFILES] [-c CMDLINE] [-o LOGFILE]
   -f CMDFILES   execute user defined list of tests in files separated by ','
   -d DEPENDENCE_FILE check dependence for specified feature tests
+  -t TYPE_FILE  check test type like tests-server|tests-client
   -c CMDLINE    execute test case
   -o LOGFILE    redirect output of tests to file
 
 Examples:
   ./runtests -f cet/tests
   ./runtests -f cet/tests -o cet_tests.log
-  ./runtests -f tests-client  // exeucte tests-client/tests for all subfolders
-  ./runtests -f tests-server  // exeucte tests-server/tests for all subfolders
+  ./runtests -t tests-client  // type like tests-client|tests for all subfolders
+  ./runtests -t tests-server  // type like tests-server|tests for all subfolders
   ./runtests -c ./cet/quick_test -o cet_quick_test.log
   ./runtests -d cet/tests     // check cet dependence
   ./runtests -d tests-server  // check tests-server/tests for all subfolders dependence
@@ -326,13 +326,19 @@ prepare_files_list() {
       else
         TEST_FILES="${TEST_FILES},${sub_folder}/tests"
       fi
+    elif [[ -e "${sub_folder}/${TESTS_SERVER}" ]]; then
+      if [[ -z "$TEST_FILES" ]]; then
+        TEST_FILES="${sub_folder}/${TESTS_SERVER}"
+      else
+        TEST_FILES="${TEST_FILES},${sub_folder}/${TESTS_SERVER}"
+      fi
     else
-      append_log "WARNING: No $test_file_type or tests file under $sub_folder folder." "$LOGFILE"
+      append_log "WARNING: No $test_file_type or tests, $TESTS_SERVER under $sub_folder folder." "$LOGFILE"
     fi
   done
 }
 
-test_all() {
+list_all_test_files() {
   local test_file_type=$1
 
   # Don't quote */, otherwise it could not list all folders.
@@ -398,7 +404,7 @@ run_tests() {
 : CMDFILES=""
 : CMDLINE=""
 
-while getopts ":o:d:f:c:h" opt; do
+while getopts ":o:d:f:t:c:h" opt; do
   case "$opt" in
     o)
       LOGFILE=$OPTARG
@@ -406,8 +412,9 @@ while getopts ":o:d:f:c:h" opt; do
     d)
       init_dep_log "$DEP_LOG"
       CMDFILES=$OPTARG
-      [[ "$CMDFILES" == "$TESTS_CLIENT" ]] && test_all "$TESTS_CLIENT"
-      [[ "$CMDFILES" == "$TESTS_SERVER" ]] && test_all "$TESTS_SERVER"
+      # If tests-server type will list tests-server in all subfolders
+      [[ "$CMDFILES" == *"-"* ]] && list_all_test_files "$CMDFILES"
+
       for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
         check_test_file_legal "$cmdfile"
 
@@ -422,8 +429,10 @@ while getopts ":o:d:f:c:h" opt; do
       ;;
     f)
       CMDFILES=$OPTARG
-      [[ "$CMDFILES" == "$TESTS_CLIENT" ]] && test_all "$TESTS_CLIENT"
-      [[ "$CMDFILES" == "$TESTS_SERVER" ]] && test_all "$TESTS_SERVER"
+      ;;
+    t)
+      # If tests-server type will list tests-server in all subfolders
+      [[ "$CMDFILES" == *"-"* ]] && list_all_test_files "$CMDFILES"
       ;;
     c)
       CMDLINE=$OPTARG
