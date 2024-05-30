@@ -42,7 +42,7 @@ class CheckResult:
 
 
 class BashChecker:
-    EXCLUDE_CODES = [1091, 2010, 2011, 2012, 2013, 2086, 2126, 2206]
+    EXCLUDE_CODES = [1090, 1091, 2010, 2011, 2012, 2013, 2086, 2126, 2206]
 
     def __init__(self, df: DiffFile):
         self._diff_file = df
