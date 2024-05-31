@@ -13,6 +13,7 @@
   * [IFS(In Field Scan)](ifs/README.md)
   * [ISST](isst/README.md)
   * [PMU](pmu/README.md)
+  * [PREFETCHI(Code SW Prefetch)](prefetchi/README.md)
   * [pstate](pstate/README.md)
   * [Intel_PT](pt/README.md)
   * [RAPL](rapl/README.md)
