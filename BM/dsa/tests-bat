@@ -1,0 +1,3 @@
+./dsa_user.sh -t check_dsa_driver
+./dsa_user.sh -t check_dsa0_device
+./dsa_user.sh -t check_shared_mode
