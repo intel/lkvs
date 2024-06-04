@@ -11,6 +11,7 @@
 #include <asm/cpufeatures.h>
 #include <asm/msr-index.h>
 #include <asm/msr.h>
+#include <linux/version.h>
 
 MODULE_AUTHOR("Shan Kang <shan.kang@intel.com>");
 MODULE_VERSION("1.0");
@@ -255,8 +256,15 @@ static int __init fred_test_driver_init(void)
 		goto r_class;
 	}
 	/* Creating struct class */
-	//dev_class = class_create(THIS_MODULE, "fred_test_class");
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
+	// For kernel versions 2.6.26 and later
+	dev_class = class_create(THIS_MODULE, "fred_test_class");
+#else
+	// For older kernel versions
 	dev_class = class_create("fred_test_class");
+#endif
+
 	if (IS_ERR(dev_class)) {
 		pr_err("Cannot create the struct class\n");
 		goto r_class;
