@@ -12,7 +12,7 @@ def cfg_lint_check():
         status_code = 0
         blank_line = 0
         cfg_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                os.pardir, file))
+                                                os.pardir, os.pardir, file))
         with open(cfg_path, 'r') as f:
             contents = f.read()
             for num, line in enumerate(contents.splitlines(), 1):
