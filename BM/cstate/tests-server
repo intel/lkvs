@@ -6,11 +6,13 @@
 
 powermgr_cstate_tests.sh -t verify_cstate_name
 powermgr_cstate_tests.sh -t verify_server_all_cores_cstate6
+powermgr_cstate_tests.sh -t verify_server_all_cpus_mc6
 powermgr_cstate_tests.sh -t verify_server_core_cstate6_residency
 powermgr_cstate_tests.sh -t verify_residency_latency_override
 powermgr_cstate_tests.sh -t verify_server_cstate_list
 powermgr_cstate_tests.sh -t verify_server_perf_core_cstat_update
 powermgr_cstate_tests.sh -t verify_server_perf_pkg_cstat_update
+powermgr_cstate_tests.sh -t verify_server_perf_module_cstat_update
 powermgr_cstate_tests.sh -t verify_server_pc2_entry
 powermgr_cstate_tests.sh -t verify_server_pc6_entry
 powermgr_cstate_tests.sh -t verify_server_pc6_residency

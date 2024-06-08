@@ -196,6 +196,34 @@ test_server_all_cpus_deepest_cstate() {
   fi
 }
 
+# Verify if the ATOM server platform CPUs can enter the MC6 state
+test_server_all_cpus_mc6() {
+  local unexpected_cstate=0.00
+  local cpu_model=""
+
+  cpu_model=$(lscpu | grep Model: | awk '{print $2}')
+  if [[ $cpu_model -eq 175 ]] || [[ $cpu_model -eq 221 ]]; then
+    columns="sysfs,CPU%c1,CPU%c6,Mod%c6"
+    turbostat_output=$(turbostat -i 10 --quiet \
+      --show $columns sleep 10 2>&1)
+    test_print_trc "Turbostat log: $turbostat_output"
+    all_mc6_cstate=$(echo "$turbostat_output" |
+      awk '{for(i=0;++i<=NF;)a[i]=a[i]?a[i] FS $i:$i} END{for(i=0;i++<=NF;)print a[i]}' | grep "Mod%c6")
+    test_print_trc "The MC6 cstate is: $all_mc6_cstate"
+    if [[ -z $all_mc6_cstate ]]; then
+      block_test "The CPUs cstate is not available."
+    elif [[ $all_mc6_cstate =~ $unexpected_cstate ]] && [[ ! "$all_mc6_cstate" == *"100.00"* ]]; then
+      test_print_trc "Getting CPU MC6 state by reading MSR 0x664:"
+      rdmsr -a 0x664
+      die "The CPU did not enter the MC6 cstate!"
+    else
+      test_print_trc "All the CPUs enter the MC6 cstate!"
+    fi
+  else
+    skip_test "SUT does not support module cstate."
+  fi
+}
+
 # The Core C6 is only supported on Intel® Server platform
 # This function is to check Core C6 residency during runtime
 judge_cc6_residency_during_idle() {
@@ -625,6 +653,9 @@ core_cstate_test() {
   verify_server_all_cores_cstate6)
     test_server_all_cpus_deepest_cstate
     ;;
+  verify_server_all_cpus_mc6)
+    test_server_all_cpus_mc6
+    ;;
   verify_server_cstate_list)
     perf_server_cstate_list
     ;;
@@ -633,6 +664,9 @@ core_cstate_test() {
     ;;
   verify_server_perf_pkg_cstat_update)
     perf_server_cstat_update cstate_pkg
+    ;;
+  verify_server_perf_module_cstat_update)
+    perf_server_cstat_update cstate_module
     ;;
   verify_server_pc2_entry)
     runtime_pc2_entry
