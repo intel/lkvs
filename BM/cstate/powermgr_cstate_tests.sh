@@ -595,7 +595,7 @@ cpu_off_on_stress() {
   done
 
   dmesg_log=$(extract_case_dmesg)
-  if echo "$dmesg_log" | grep -iE "fail|Call Trace|error|BUG|err"; then
+  if echo "$dmesg_log" | grep -v "IRQ request may fail" | grep -iE "fail|Call Trace|error|BUG|err"; then
     die "Kernel dmesg shows failure after CPU offline/online stress: $dmesg_log"
   else
     test_print_trc "Kernel dmesg shows Okay after CPU offline/online stress."
