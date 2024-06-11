@@ -387,8 +387,8 @@ run_tests() {
   echo "Test Start Time: $START_TIME" > "$SUMMRY_LOG"
   {
     echo "--------------------------------------------------------"
-    printf "%-76s%-11s%-12s%-8s\n" "Testcase" "Result" "Exit Value" "Duration"
-    printf "%-76s%-11s%-12s%-8s\n" "--------" "------" "----------" "--------"
+    printf "%-77s%-10s%-12s%-8s\n" "Testcase" "Result" "Exit Value" "Duration"
+    printf "%-77s%-10s%-12s%-8s\n" "--------" "------" "----------" "--------"
   } >> "$SUMMRY_LOG"
 
   init_dep_log "$DEP_LOG"
