@@ -17,6 +17,8 @@ NA="NA"
 DEP_EXIT=$PASS_CODE
 
 START_TIME=""
+START_TIME_SEC=""
+END_TIME_SEC=""
 SUMMRY_LOG=""
 readonly TESTS_SERVER="tests-server"
 TEST_FILES=""
@@ -350,12 +352,17 @@ list_all_test_files() {
 }
 
 show_result() {
+  local execution_time=""
+
+  END_TIME_SEC=$(date +%s)
+  # Will record execution time 1s if it's less than 1s.
+  execution_time=$((END_TIME_SEC - START_TIME_SEC + 1))
   # Add the following print for the end of the case summary.
   echo "--------------------------------------------------------" >> "$SUMMRY_LOG"
-
+  echo "LKVS log $LOGFILE as above. Execution time:${execution_time}s." >> "$SUMMRY_LOG"
   [[ -z "$LOGFILE" ]] || cat "$SUMMRY_LOG" >> "$LOGFILE"
   cat "$SUMMRY_LOG"
-  echo "LKVS log $LOGFILE as above."
+
   echo "The dependency info $DEP_LOG is as follows:"
   cat "$DEP_LOG"
 }
@@ -375,6 +382,7 @@ run_tests() {
   cat /dev/null > "$LOGFILE"
 
   START_TIME="$(date +%Y-%m-%d_%H-%M-%S)"
+  START_TIME_SEC=$(date +%s)
   SUMMRY_LOG="/tmp/lkvs_${START_TIME}_summary.log"
   echo "Test Start Time: $START_TIME" > "$SUMMRY_LOG"
   {
