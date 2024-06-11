@@ -1,18 +1,12 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (c) 2024 Intel Corporation.
-# Jiaan Lu <jiaan.lu@intel.com>
 
-CFLAGS = -g
+CC = gcc
+CFLAGS = -g -Wall
+TARGET = cmpccxadd
 
-src = $(filter-out cmpxadd.c, $(wildcard *.c))
-target = $(patsubst %.c, %, ${src})
-
-.PHONY: all clean
-
-%:%.c
-	$(CC) ${CFLAGS} $^ -o $@
-
-all: ${target}
+$(TARGET): cmpccxadd.c
+	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
-	rm -f ${target}
+	rm -f $(TARGET)
