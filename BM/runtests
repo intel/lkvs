@@ -355,7 +355,9 @@ show_result() {
 
   [[ -z "$LOGFILE" ]] || cat "$SUMMRY_LOG" >> "$LOGFILE"
   cat "$SUMMRY_LOG"
-  echo "Dependence info in $DEP_LOG and runtests log in $LOGFILE"
+  echo "LKVS log $LOGFILE as above."
+  echo "The dependency info $DEP_LOG is as follows:"
+  cat "$DEP_LOG"
 }
 
 # runtests_cleanup to show test result. TODO: restore the env if needed
