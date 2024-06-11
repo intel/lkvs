@@ -250,7 +250,7 @@ test_ifs() {
   list_cpus "$PROCESSOR"
 
   case $NAME in
-    "reload_ifs")
+    "reload_ifs_scan_image")
       modprobe -r "$IFS_NAME"
       enable_ifs_module
       # Load the batch
