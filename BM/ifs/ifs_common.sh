@@ -388,13 +388,13 @@ get_sibling_cpu() {
 
   # Don't use $SIBLINGS_FILE, otherwise will fail the case due to *!
   sibling_cpus=$(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list \
-                | grep "^${cpu}\," \
+                | grep "^${cpu}," \
                 | tail -n 1)
   if [[ -n "$sibling_cpus" ]]; then
     SIBLING_CPU=$(echo "$sibling_cpus" | cut -d "," -f 2)
   else
     sibling_cpus=$(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list \
-                  | grep "\,${cpu}" \
+                  | grep ",${cpu}$" \
                   | tail -n 1)
     if [[ -z "$sibling_cpus" ]]; then
       test_print_wrg "Could not get the sibling_cpu for $cpu, is it atom core?"
