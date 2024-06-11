@@ -4,7 +4,8 @@
 # @other_dep: general_test.sh -t kconfig -k "CONFIG_X86_INTEL_UMIP|CONFIG_X86_UMIP=y"
 # @other_warn:
 
-umip_exceptions_32 a
+# Most of the Linux OS will not support 32bit, comment umip_exceptions_32 as default
+#umip_exceptions_32 a
 umip_exceptions_64 a
 # Test sgdt sidt sldt smsw str should trigger #GP in proper kernel
 umip_test_basic_64 a
