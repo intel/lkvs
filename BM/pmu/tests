@@ -6,13 +6,7 @@ apebs_tests.sh -t lbr_1 -w 1
 apebs_tests.sh -t lbr_2 -w 1
 apebs_tests.sh -t xmm_1 -w 1
 apebs_tests.sh -t xmm_2 -w 1
-apebs_tests.sh -t ip_1 -w 1
-apebs_tests.sh -t ip_2 -w 1
 apebs_tests.sh -t data_src -w 1
-apebs_tests.sh -t lbr_1 -w 1
-apebs_tests.sh -t lbr_2 -w 1
-apebs_tests.sh -t xmm_1 -w 1
-apebs_tests.sh -t xmm_2 -w 1
 apebs_tests.sh -t ip_1 -w 1
 apebs_tests.sh -t ip_2 -w 1
 apebs_tests.sh -t data_src -w 1
