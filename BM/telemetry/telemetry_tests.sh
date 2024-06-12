@@ -68,8 +68,6 @@ pci_test() {
 
 pre_unload_driver() {
   rmmod intel_pmc_core
-  rmmod intel_tpmi_pem
-  rmmod intel_tpmi_pem_core
   rmmod intel_rapl_tpmi
   rmmod isst_tpmi
   rmmod isst_tpmi_core
