@@ -54,13 +54,10 @@ pmu_iommu_test() {
   return 0
 }
 
-while getopts :t:w:H arg; do
+while getopts :t:H arg; do
   case $arg in
     t)
       TEST_SCENARIO=$OPTARG
-      ;;
-    w)
-      WATCHDOG=$OPTARG
       ;;
     H)
       usage && exit 0
