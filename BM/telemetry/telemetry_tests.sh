@@ -7,10 +7,8 @@
 # History:
 #             Feb. 2, 2024 - (Ammy Yi)Creation
 
-
 # @desc This script verify telemetry test
 # @returns Fail the test if return code is non-zero (value set not found)
-
 
 cd "$(dirname "$0")" 2>/dev/null || exit 1
 source ../.env
@@ -47,16 +45,14 @@ telem_sysfs_common_test() {
 
 telem_data_test() {
   offset=$1
-  bin=$2
   tel_bin="telemetry_tests"
-  [[ $bin -eq 32 ]] && tel_bin="telemetry_tests_32"
   ids=$(ls $SYSFS_PATH | grep telem)
   [[ -z $ids ]] && die "No telemetry device found!"
   test_print_trc "ids=$ids!"
   for id in $ids; do
     test_print_trc "id=$id!"
     size=$(cat "$SYSFS_PATH"/"$id"/size)
-    size=$(( size-1 ))
+    size=$((size - 1))
     do_cmd "ls $SYSFS_PATH/$id/telem"
     do_cmd "$tel_bin 1 $SYSFS_PATH/$id/telem $size $offset"
   done
@@ -68,8 +64,6 @@ pci_test() {
 
 pre_unload_driver() {
   rmmod intel_pmc_core
-  rmmod intel_tpmi_pem
-  rmmod intel_tpmi_pem_core
   rmmod intel_rapl_tpmi
   rmmod isst_tpmi
   rmmod isst_tpmi_core
@@ -80,7 +74,7 @@ pre_unload_driver() {
 driver_test() {
   module=$1
   pre_unload_driver
-  load_unload_module.sh -c -d "$module" && \
+  load_unload_module.sh -c -d "$module" &&
     do_cmd "load_unload_module.sh -u -d $module"
   do_cmd "load_unload_module.sh -l -d $module"
   sleep 5
@@ -97,51 +91,48 @@ dmesg_check() {
 
 telemetry_test() {
   case $TEST_SCENARIO in
-    telem_sysfs)
-      telem_sysfs_test
-      ;;
-    telem_dev)
-      telem_dev_test
-      ;;
-    telem_sysfs_common)
-      telem_sysfs_common_test
-      ;;
-    telem_data)
-      telem_data_test 0
-      ;;
-    pci)
-      pci_test
-      ;;
-    telem_driver)
-      driver_test "pmt_telemetry"
-      ;;
-    telem_data_32)
-      telem_data_test 0 32
-      ;;
-    pci_driver)
-      driver_test "intel_vsec"
-      ;;
-    esac
+  telem_sysfs)
+    telem_sysfs_test
+    ;;
+  telem_dev)
+    telem_dev_test
+    ;;
+  telem_sysfs_common)
+    telem_sysfs_common_test
+    ;;
+  telem_data)
+    telem_data_test 0
+    ;;
+  pci)
+    pci_test
+    ;;
+  telem_driver)
+    driver_test "pmt_telemetry"
+    ;;
+  pci_driver)
+    driver_test "intel_vsec"
+    ;;
+  esac
   dmesg_check
   return 0
 }
 
 while getopts :t:H arg; do
   case $arg in
-    t)
-      TEST_SCENARIO=$OPTARG
-      ;;
-    H)
-      usage && exit 0
-      ;;
-    \?)
-      usage
-      die "Invalid Option -$OPTARG"
-      ;;
-    :)
-      usage
-      die "Option -$OPTARG requires an argument."
-      ;;
+  t)
+    TEST_SCENARIO=$OPTARG
+    ;;
+  H)
+    usage && exit 0
+    ;;
+  \?)
+    usage
+    die "Invalid Option -$OPTARG"
+    ;;
+  :)
+    usage
+    die "Option -$OPTARG requires an argument."
+    ;;
   esac
 done
 
