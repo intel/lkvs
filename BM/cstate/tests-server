@@ -2,7 +2,8 @@
 # on Intel® Architecture-based server platforms.
 # @hw_dep:
 # @other_dep:
-# @other_warn:
+# @other_warn: which turbostat 2>/dev/null @ turbostat tool is required
+# @other_warn: which perf 2>/dev/null @ perf tool is required, please install perf.x86_64 package
 
 powermgr_cstate_tests.sh -t verify_cstate_name
 powermgr_cstate_tests.sh -t verify_server_all_cores_cstate6

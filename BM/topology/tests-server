@@ -2,7 +2,8 @@
 # on Intel® Architecture-based server platforms.
 # @hw_dep:
 # @other_dep:
-# @other_warn:
+# @other_warn: which cpuid 2>/dev/null @ cpuid tool is required
+# @other_warn: which lstopo 2>/dev/null @ Please install hwloc-gui.x86_64 package to get lstopo tool
 
 cpu_topology.sh -t numa_nodes_compare
 cpu_topology.sh -t verify_thread_per_core
