@@ -8,6 +8,7 @@
 
 cd "$(dirname "$0")" 2>/dev/null || exit 1
 source ../.env
+declare -i LOAD UNLOAD CHECK
 
 usage() {
   cat <<_EOF
@@ -96,21 +97,21 @@ while getopts :lucd:p:h arg; do
 done
 
 # DEFAULT VALUES IF NOT SET IN 'getopts'
-: "${LOAD:='0'}"
-: "${UNLOAD:='0'}"
-: "${CHECK:='0'}"
+: "${LOAD:=0}"
+: "${UNLOAD:=0}"
+: "${CHECK:=0}"
 : "${PARAMS:=''}"
 
 # LOAD MODULE DRIVER
-if [ "$LOAD" -eq 1 ]; then
+if [[ "$LOAD" -eq 1 ]]; then
   load_module "$DRIVER" "$PARAMS"
 fi
 
 # UNLOAD MODULE DRIVER
-if [ "$UNLOAD" -eq 1 ]; then
+if [[ "$UNLOAD" -eq 1 ]]; then
   unload_module "$DRIVER"
 fi
 
-if [ "$CHECK" -eq 1 ]; then
+if [[ "$CHECK" -eq 1 ]]; then
   check_lsmod "$DRIVER"
 fi
