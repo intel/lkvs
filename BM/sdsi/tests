@@ -2,7 +2,7 @@
 # on Intel® Architecture-based server platforms.
 # @hw_dep: general_test.sh -t fms -p "sdsi_fms_list" @ CPU Model doesn't support sdsi
 # @other_dep: general_test.sh -t kconfig -k "CONFIG_INTEL_SDSI=m"
-# @other_warn:
+# @other_warn: which intel_sdsi 2>/dev/null @ intel_sdsi tool is required, please get it from the latest upstream kernel tools: tools/arch/x86/intel_sdsi/intel_sdsi.c
 
 intel_sdsi.sh -t driver_unbind_bind
 intel_sdsi.sh -t sdsi_sysfs

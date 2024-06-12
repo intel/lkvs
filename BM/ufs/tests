@@ -3,7 +3,7 @@
 # on Intel® GRANITERAPIDS and further server platforms.
 # @hw_dep: general_test.sh -t fms -p "ufs_fms_list" @ CPU Model doesn't support tpmi_ufs
 # @other_dep: general_test.sh -t kconfig -k "CONFIG_INTEL_TPMI=m"
-# @other_warn:
+# @other_warn: which stress 2>/dev/null @ stress tool is required, please install stress-ng.x86_64 and run command: ln -s /usr/bin/stress-ng /usr/bin/stress
 
 tpmi_ufs.sh -t check_ufs_unbind_bind
 tpmi_ufs.sh -t check_ufs_device

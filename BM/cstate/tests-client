@@ -2,7 +2,7 @@
 # on Intel® Architecture-based client platforms.
 # @hw_dep:
 # @other_dep:
-# @other_warn:
+# @other_warn: which turbostat 2>/dev/null @ turbostat tool is required
 
 powermgr_cstate_tests.sh -t verify_cstate_name
 powermgr_cstate_tests.sh -t verify_cstate_switch
