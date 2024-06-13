@@ -92,11 +92,18 @@ ufs_device_per_package() {
 
 ufs_sysfs_attr() {
   local attr
+  local per_die_num
+
+  per_die_num=$(ls "$UFS_SYSFS_PATH" | grep -c uncore)
+  [[ "$per_die_num" = 0 ]] && block_test "Uncore number is 0"
 
   test_print_trc "Check TPMI_UFS driver sysfs attribute:"
-  for attr in $UFS_ATTR; do
-    sysfs_verify f "$UFS_SYSFS_PATH"/"$attr" ||
-      die "$attr does not exist!"
+  for ((i = 1; i <= per_die_num; i++)); do
+    per_die=$(ls "$UFS_SYSFS_PATH" | grep uncore | sed -n "$i,1p")
+    for attr in $UFS_ATTR; do
+      sysfs_verify f "$UFS_SYSFS_PATH"/"$per_die"/"$attr" ||
+        die "$attr does not exist under $per_die!"
+    done
   done
 
   if ! lines=$(ls "$UFS_SYSFS_PATH"); then
