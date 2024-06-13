@@ -1,0 +1,36 @@
+# This file collects the isst cases for Intel® server platforms 
+# here assume the platform supports SST perf profile level 0,3,4
+# user can adjust the case lists based on the actual SUT SST 
+# perf profile level support status
+# @hw_dep:
+# @other_dep:
+# @other_warn: which turbostat 2>/dev/null @ turbostat tool is required, please get it from the latest upstream kernel-tools
+# @other_warn: which stress 2>/dev/null @ stress tool is required, please install stress-ng.x86_64 and run command: ln -s /usr/bin/stress-ng /usr/bin/stress
+# @other_warn: which intel-speed-select 2>/dev/null @ intel-speed-select tool is required, please get it from the latest upstream kernel-tools
+
+intel_sst.sh -t isst_pp_config_enable_status
+intel_sst.sh -t isst_cap
+intel_sst.sh -t isst_cp_enable_prop_type
+intel_sst.sh -t isst_cp_set_config_clos_min_0
+intel_sst.sh -t isst_cp_set_config_clos_min_1
+intel_sst.sh -t isst_cp_set_config_clos_min_2
+intel_sst.sh -t isst_cp_set_config_clos_min_3
+intel_sst.sh -t isst_cp_set_config_clos_max_0
+intel_sst.sh -t isst_cp_set_config_clos_max_1
+intel_sst.sh -t isst_cp_set_config_clos_max_2
+intel_sst.sh -t isst_cp_set_config_clos_max_3
+intel_sst.sh -t isst_cp_set_config_clos_prop_0
+intel_sst.sh -t isst_cp_set_config_clos_prop_1
+intel_sst.sh -t isst_cp_set_config_clos_prop_2
+intel_sst.sh -t isst_cp_set_config_clos_prop_3
+intel_sst.sh -t isst_cp_assoc_set_get_clos_0
+intel_sst.sh -t isst_cp_assoc_set_get_clos_1
+intel_sst.sh -t isst_cp_assoc_set_get_clos_2
+intel_sst.sh -t isst_cp_assoc_set_get_clos_3
+intel_sst.sh -t isst_cp_max_cpu_assoc_set_get_clos_0
+intel_sst.sh -t isst_cp_max_cpu_assoc_set_get_clos_1
+intel_sst.sh -t isst_cp_max_cpu_assoc_set_get_clos_2
+intel_sst.sh -t isst_cp_max_cpu_assoc_set_get_clos_3
+intel_sst.sh -t isst_cp_disable_prop_type
+intel_sst.sh -t isst_cp_enable_ordered_type
+intel_sst.sh -t isst_cp_disable_ordered_type
