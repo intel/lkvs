@@ -1,0 +1,9 @@
+# This file collects the CPU Core cstate cases which can run
+# on Intel® Architecture-based server platforms.
+# @hw_dep:
+# @other_dep:
+# @other_warn: which turbostat 2>/dev/null @ turbostat tool is required
+# @other_warn: which perf 2>/dev/null @ perf tool is required, please install perf.x86_64 package
+
+powermgr_cstate_tests.sh -t verify_server_perf_core_cstat_update
+powermgr_cstate_tests.sh -t verify_server_perf_pkg_cstat_update
