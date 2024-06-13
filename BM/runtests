@@ -83,8 +83,8 @@ check_test_file_legal() {
   [[ $(which file) ]] && {
     file_type=""
     file_type=$(file "$cmdfile")
-    [[ "$file_type" == *"text"* ]] || {
-      append_log "WARNING: -f $cmdfile is not a text type, it's real type:|$file_type|" "$LOGFILE"
+    [[ "$file_type" == *"text"* ]] || [[ "$file_type" == *"link"* ]] || {
+      append_log "WARNING: -f $cmdfile is not a text or link type, it's type:|$file_type|" "$LOGFILE"
       append_log "Please choose the correct tests file." "$LOGFILE"
       return "$NA_CODE"
     }
