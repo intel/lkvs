@@ -16,10 +16,14 @@ It will be checked if the result is correct or not.
 
 - How to build:  
 
-    gcc 11.1 or above is required.  
+    gcc 11.1 or above is required for amx_bf16, amx_int8 test. 
+    gcc 13.3 or above is required for extra amx_fp16 test.
 
-    To compile,  
+    To compile,
+    for amx_bf16, amx_int8 test:  
     $ make
+    for extra amx_fp16 test:
+    $ make fp16
 
     To clean,  
     $ make clean
@@ -46,4 +50,8 @@ It will be checked if the result is correct or not.
 
     f. Break sub-thread which is doing TMUL TDPBUUD calculation by futex  
     $ ./tmul -b 5 -t 10 -c 20 -i 4
+
+    g. Break sub-thread which is doing TMUL TDPFP16PS calculation by yield
+    $ ./tmul -b 1 -t 10 -c 20 -i 5
+
 
