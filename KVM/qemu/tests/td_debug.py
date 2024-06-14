@@ -6,8 +6,6 @@
 # Author: Xudong Hao <xudong.hao@intel.com>
 #
 # History:  Jun. 2024 - Xudong Hao - creation
-from virttest import env_process
-from virttest import virt_vm
 from virttest import error_context
 
 
