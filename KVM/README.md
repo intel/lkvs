@@ -3,8 +3,7 @@
 More details please refer to following.
 
 ## KVM Features
-  * [demo](demo/README.md)
-(TODO)
+  * [TDX](https://github.com/intel/tdx-linux)
 
 
 ## How to run KVM test
