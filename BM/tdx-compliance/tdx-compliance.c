@@ -3,7 +3,10 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/list.h>
-
+#include <linux/interrupt.h>
+#include <linux/kernel.h>
+#include <asm/desc.h>
+#include <asm/desc_defs.h>
 #include "asm/trapnr.h"
 
 #include "tdx-compliance.h"
@@ -475,6 +478,99 @@ const struct file_operations data_file_fops = {
 	.read = tdx_tests_proc_read,
 };
 
+static  unsigned long __lkm_order;
+static inline unsigned long lkm_read_cr0(void)
+{
+	unsigned long val;
+	asm volatile("mov %%cr0,%0\n\t" : "=r" (val), "=m" (__lkm_order));
+	return val;
+}
+static inline void lkm_write_cr0(unsigned long val)
+{
+	asm volatile("mov %0,%%cr0": : "r" (val), "m" (__lkm_order));
+}
+void disable_write_protection(void)
+{
+	unsigned long cr0 = lkm_read_cr0();
+	cr0 &= ~(1UL << 16);
+	lkm_write_cr0(cr0);
+}
+void enable_write_protection(void)
+{
+  unsigned long cr0 = lkm_read_cr0();
+  cr0 |= (1UL << 16);
+  lkm_write_cr0(cr0);
+}
+
+volatile static unsigned long interrupt_count=0;
+unsigned long orig_VE_handler_addr;
+// original #VE handler
+void (*orig_VE_handler)(void);
+
+// my #VE handler
+void my_VE_handler(void) 
+{
+	// interrupt_count++;
+	// pr_buf("#VE trigger\n");
+	// pr_info("#VE trigger\n");
+	// printk(KERN_DEBUG "#VE trigger\n");
+	return;
+}
+
+void my_VE_handler_asm_entry(void);
+__asm__(
+	".global my_VE_handler_asm_entry\n"
+	".type my_VE_handler_asm_entry, @function\n"
+	"my_VE_handler_asm_entry:\n"
+	// Save the registers
+	"pushq %rax\n\r"
+	"pushq %rcx\n\r"
+	"pushq %rdx\n\r"
+	"pushq %rdi\n\r"
+	"pushq %rsi\n\r"
+	"pushq %rbx\n\r"
+	"pushq %r8\n\r"
+	"pushq %r9\n\r"
+	"pushq %r10\n\r"
+	"pushq %r11\n\r"
+	"pushq %r12\n\r"
+	"pushq %r13\n\r"
+	"pushq %r14\n\r"
+	"pushq %r15\n\r"
+	// Leaf ID
+	"mov $3, %rax\n\r"
+	"tdcall\n\r"
+	// Determine whether it is a #VE triggered by the CPUID.
+	"cmpq $10, %rcx\n\r"
+	"jne  .Lno_increment\n\r"
+	"lock incq interrupt_count\n\r"
+
+	".Lno_increment:\n\r"
+	"popq %r15\n\r"
+	"popq %r14\n\r"
+	"popq %r13\n\r"
+	"popq %r12\n\r"
+	"popq %r11\n\r"
+	"popq %r10\n\r"
+	"popq %r9\n\r"
+	"popq %r8\n\r"
+	"popq %rbx\n\r"
+	"popq %rsi\n\r"
+	"popq %rdi\n\r"
+	"popq %rdx\n\r"
+	"popq %rcx\n\r"
+	"popq %rax\n\r"
+	// Jump to the original #VE handler.
+	"jmp *orig_VE_handler_addr\n\r"
+
+	".size my_VE_handler_asm_entry, . - my_VE_handler_asm_entry\n"
+);
+
+struct desc_ptr idt_descriptor;
+gate_desc* idt_table;
+gate_desc my_gate;
+struct idt_data new_idt_data;
+
 static int __init tdx_tests_init(void)
 {
 	d_tdx = debugfs_create_dir("tdx", NULL);
@@ -499,6 +595,42 @@ static int __init tdx_tests_init(void)
 	cur_cr4 = get_cr4();
 	pr_buf("cur_cr0: %016llx, cur_cr4: %016llx\n", cur_cr0, cur_cr4);
 
+	unsigned long cr0;
+	unsigned long flags; 
+	store_idt(&idt_descriptor);
+
+	// The address of the IDT.
+	idt_table = (struct gate_struct *)idt_descriptor.address;
+
+	// The address of the original #VE handler.
+	orig_VE_handler = (void *)((unsigned long)idt_table[X86_TRAP_VE].offset_low |
+				((unsigned long)idt_table[X86_TRAP_VE].offset_middle << 16) |
+				((unsigned long)idt_table[X86_TRAP_VE].offset_high << 32));
+	orig_VE_handler_addr = orig_VE_handler;
+	printk(KERN_INFO "Original #VE handler address: %px\n", orig_VE_handler);
+
+	new_idt_data.vector = X86_TRAP_VE;
+	new_idt_data.segment = idt_table[X86_TRAP_VE].segment;
+	new_idt_data.bits = idt_table[X86_TRAP_VE].bits;
+	new_idt_data.addr = my_VE_handler_asm_entry;
+	
+	printk(KERN_INFO "new_idt_data.vector: %u\n", new_idt_data.vector);
+	printk(KERN_INFO "new_idt_data.segment: 0x%x\n", new_idt_data.segment);
+	printk(KERN_INFO "new_idt_data.addr: %px\n", new_idt_data.addr);
+
+	// Disable interrupt and write protection
+	local_irq_save(flags);
+	disable_write_protection();
+
+	// Write the new_idt_data #VE handler to the IDT.
+	idt_init_desc(&my_gate, &new_idt_data);
+	write_idt_entry(idt_table, new_idt_data.vector, &my_gate);
+	printk(KERN_INFO "Write success.\n");
+	
+	// Enable interrupt and write protection
+	enable_write_protection();
+	local_irq_restore(flags);
+
 	return 0;
 }
 
@@ -512,6 +644,17 @@ static void __exit tdx_tests_exit(void)
 	}
 	kfree(buf_ret);
 	debugfs_remove_recursive(d_tdx);
+
+	// Restore the original #VE handler
+	printk(KERN_INFO "interrupt_count:%ld\n",interrupt_count);
+    new_idt_data.addr = orig_VE_handler;
+	local_irq_save(flags);
+    disable_write_protection();
+    idt_init_desc(&my_gate, &new_idt_data);
+    write_idt_entry(idt_table, new_idt_data.vector, &my_gate);
+    enable_write_protection();
+    local_irq_restore(flags);
+
 }
 
 module_init(tdx_tests_init);
