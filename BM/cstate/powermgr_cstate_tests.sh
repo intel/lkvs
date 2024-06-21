@@ -19,7 +19,7 @@ current_cpuidle_driver=$(cat "$CPU_IDLE_SYSFS_PATH"/current_driver)
 
 # Turbostat tool is required to run core cstate cases
 if which turbostat 1>/dev/null 2>&1; then
-  turbostat sleep 1 1>/dev/null || block_test "Failed to run turbostat tool,
+  turbostat -q sleep 1 1>/dev/null || block_test "Failed to run turbostat tool,
 please check turbostat tool error message."
 else
   block_test "Turbostat tool is required to run CSTATE cases,
@@ -33,6 +33,13 @@ please check perf tool error message."
 else
   block_test "perf tool is required to run CSTATE cases,
 please get it from latest upstream kernel-tools."
+fi
+
+# msr-tools is required to run this cstate pc case
+if which rdmsr 1>/dev/null 2>&1; then
+  test_print_trc "rdmsr tool is available."
+else
+  block_test "msr-tools is required to run CSTATE cases."
 fi
 
 # Function to verify if Intel_idle driver refer to BIOS _CST table
@@ -572,6 +579,63 @@ runtime_pc6_residency() {
   done
 }
 
+# Function to check if the deepest PC6 counter is available after CPU offline and online
+offline_cpu_pc() {
+  local pc=$1
+  local pc_ori=""
+  local pc_af=""
+  local cpus_num=""
+
+  cpus_num=$(lscpu | grep "On-line CPU(s) list" | awk -F "-" '{print $NF}' 2>&1)
+
+  test_print_trc "Reading the deepest Package cstate counter before CPU offline"
+  pc_ori=$(rdmsr $pc 2>&1)
+  dec_pc_ori=$((16#$pc_ori))
+  if [ -n $dec_pc_ori ]; then
+    test_print_trc "The deepest Package cstate counter before CPU offline is available: $dec_pc_ori"
+  else
+    die "The deepest Package cstate counter before CPU offline is not available: $dec_pc_ori"
+  fi
+
+  # Offline all the CPUs except CPU0
+  for ((i = 1; i <= cpus_num; i++)); do
+    do_cmd "echo 0 > /sys/devices/system/cpu/cpu$i/online"
+  done
+
+  # Read the deepest Package cstate counter residency after CPU offline
+  test_print_trc "Reading the deepest Package cstate counter after CPU offline"
+  pc_res_bf=$(rdmsr $pc 2>&1)
+  dec_pc_res_bf=$((16#$pc_res_bf))
+  test_print_trc "The deepest Package cstate counter after CPU offline: $dec_pc_res_bf"
+  sleep 20
+  pc_res_af=$(rdmsr $pc 2>&1)
+  dec_pc_res_af=$((16#$pc_res_af))
+  test_print_trc "The deepest Package cstate counter after CPU offline and idle: $dec_pc_res_af"
+
+  # Online all the CPUs
+  for ((i = 1; i <= $cpus_num; i++)); do
+    do_cmd "echo 1 > /sys/devices/system/cpu/cpu$i/online"
+  done
+
+  # Check if the PC6 counter is updated after CPU offline, if offline CPUs are stucked in C1
+  # PC6 will not be available
+  if [ -n $dec_pc_res_bf ] && [ -n $dec_pc_res_af ] && (($dec_pc_res_af > $dec_pc_res_bf)); then
+    test_print_trc "The deepest Package cstate counter is updated after CPU offline"
+  else
+    die "The deepest Package cstate counter after CPU offline is not updated."
+  fi
+
+  # Recheck the PC6 counter after CPUs online
+  test_print_trc "Reading the deepest Package cstate counter after CPU online"
+  pc_af=$(rdmsr $pc 2>&1)
+  dec_pc_af=$((16#$pc_af))
+  if [ -n $pc_af ] && (($dec_pc_af > $dec_pc_ori)); then
+    test_print_trc "The deepest Package cstate counter after CPU online is updated: $dec_pc_af"
+  else
+    die "The deepest Package cstate counter after CPU online is not updated: $dec_pc_af"
+  fi
+}
+
 # Function to do CPU offline and online short stress
 cpu_off_on_stress() {
   local cycle=$1
@@ -676,6 +740,9 @@ core_cstate_test() {
     ;;
   verify_server_pc6_residency)
     runtime_pc6_residency
+    ;;
+  verify_offline_cpu_deepest_pc)
+    offline_cpu_pc 0x3f9
     ;;
   verify_cpu_offline_online_stress)
     cpu_off_on_stress 5
