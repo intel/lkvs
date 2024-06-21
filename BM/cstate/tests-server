@@ -17,4 +17,5 @@ powermgr_cstate_tests.sh -t verify_server_perf_module_cstat_update
 powermgr_cstate_tests.sh -t verify_server_pc2_entry
 powermgr_cstate_tests.sh -t verify_server_pc6_entry
 powermgr_cstate_tests.sh -t verify_server_pc6_residency
+powermgr_cstate_tests.sh -t verify_offline_cpu_deepest_pc
 powermgr_cstate_tests.sh -t verify_cpu_offline_online_stress
