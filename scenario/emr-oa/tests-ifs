@@ -1,0 +1,21 @@
+# This file collects Intel IFS(In Field SCAN) tests on
+# Intel® Architecture-based platforms.
+# @hw_dep: general_test.sh -t fms -p "ifs_fms_list" @ CPU doesn't support ifs, family model not in ifs/ifs_fms_list
+# @other_dep: general_test.sh -t kconfig -k "CONFIG_INTEL_IFS=m"
+# @other_warn: ifs_tests.sh -m 0 -p all -b 1 -n ifs_batch @ check if SGX init ok and DIMM proper set as IFS relies on enabled SGX
+# ifs_0 scan test cases, it works on SPR(Sapphire Rapids) platform and future server
+ifs_tests.sh -m 0 -p all -n load_ifs
+# Need to set the IFS BIOS and put IFS scan blob image, please check BM/ifs/README.md
+#ifs_tests.sh -m 0 -p all -b 1 -n ifs_batch
+#ifs_tests.sh -m 0 -p all -b 1 -n legacy_twice_run
+#ifs_tests.sh -m 0 -p all -b 2 -n legacy_twice_run
+#ifs_tests.sh -m 0 -p all -b 3 -n legacy_twice_run
+#ifs_tests.sh -m 0 -p all -b 1 -n img_version
+#ifs_tests.sh -m 0 -p all -b 1 -n reload_ifs_scan_image
+
+# ifs_1 array BIST(Board Integrated System Test), it works on EMR(Emerald Rapids) and future server
+ifs_tests.sh -m 1 -p all -n ifs_array_scan
+ifs_tests.sh -m 1 -p ran -n ifs_array_off_sib -t 10
+ifs_tests.sh -m 1 -p ran -n ifs_array_offran -t 5
+ifs_tests.sh -m 1 -p ran -n ifs_array_cpuran_fullload -t 10
+ifs_tests.sh -m 1 -p ran -b 1 -n ifs_loop -t 500
