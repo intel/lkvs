@@ -421,14 +421,14 @@ check_pstate_turbo() {
   test_print_trc "Getting freq of cpu1 from turbostat"
   cpu_freq_noturbo=$(echo "$cpu_stat" | grep -E "^-" -A 2 | sed -n "2, 1p" | awk '{print $5}')
   test_print_trc "Actual max freq of cpu1 is: $cpu_freq_noturbo Mhz, \
-  when turbo mode is disabled and cpu1 has 100% workload"
+when turbo mode is disabled and cpu1 has 100% workload"
   [ -n "$stress_pid" ] && do_cmd "do_kill_pid $stress_pid"
 
   # Enable turbo mode
   test_print_trc "Enable turbo mode"
   do_cmd "echo 0 > $CPU_SYSFS_PATH/intel_pstate/no_turbo"
   test_print_trc "Executing stress -c 1 -t 90 & in background"
-  takset -c 1 stress -c 1 -t 90 &
+  taskset -c 1 stress -c 1 -t 90 &
   stress_pid=$!
   test_print_trc "Executing turbostat --show Core,CPU,Avg_MHz,Busy%,Bzy_MHz,PkgWatt -i 10 sleep 30 2>&1"
   cpu_stat=$(get_cpu_stat)
@@ -437,7 +437,7 @@ check_pstate_turbo() {
   test_print_trc "Getting cpu freq from turbostat"
   cpu_freq_turbo=$(echo "$cpu_stat" | grep -E "^-" -A 2 | sed -n "2, 1p" | awk '{print $5}')
   test_print_trc "Actual max freq of cpu1 is: $cpu_freq_turbo Mhz, \
-  when turbo mode is enabled and cpu1 has 100% workload"
+when turbo mode is enabled and cpu1 has 100% workload"
 
   if [[ -n "$stress_pid" ]]; then
     do_cmd "do_kill_pid $stress_pid"
