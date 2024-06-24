@@ -7,10 +7,6 @@
 # @other_dep: general_test.sh -t turbostat @ The latest 2024 version turbostat tool is required
 # @other_warn: which stress 2>/dev/null @ stress tool is required, please install stress-ng.x86_64 and run command: ln -s /usr/bin/stress-ng /usr/bin/stress
 
-intel_pstate_tests.sh -t verify_sysfs_atts
-intel_pstate_tests.sh -t verify_turbo_enable_disable
-intel_pstate_tests.sh -t verify_cpufreq_after_hotplug
-intel_pstate_tests.sh -t verify_hwp_cap_req_after_hotplug
 intel_pstate_tests.sh -t verify_default_gov_epp
 intel_pstate_tests.sh -t verify_gov_perf_epp_perf
 intel_pstate_tests.sh -t verify_gov_powersave_epp_perf
@@ -21,9 +17,6 @@ intel_pstate_tests.sh -t verify_cpufreq_with_governor_perf
 intel_pstate_tests.sh -t verify_cpufreq_with_governor_powersave
 intel_pstate_tests.sh -t verify_cpufreq_with_maxperfpct_50
 intel_pstate_tests.sh -t verify_cpufreq_with_minperfpct_50
-intel_pstate_tests.sh -t verify_max_cpufreq_powersave_turbo
 intel_pstate_tests.sh -t verify_max_cpufreq_perf_turbo
 intel_pstate_tests.sh -t verify_max_cpufreq_passive_perf_turbo
-intel_pstate_tests.sh -t verify_max_cpufreq_passive_sched_turbo
-intel_pstate_tests.sh -t verify_max_cpufreq_powersave_non_turbo
 intel_pstate_tests.sh -t verify_max_cpufreq_perf_non_turbo

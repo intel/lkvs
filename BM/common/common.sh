@@ -21,9 +21,9 @@ readonly CPU_SYSFS_FOLDER="/sys/devices/system/cpu"
 root_check() {
   local user=""
 
-  if command -v whoami &> /dev/null; then
+  if command -v whoami &>/dev/null; then
     user=$(whoami)
-  elif command -v id &> /dev/null; then
+  elif command -v id &>/dev/null; then
     user=$(id -nu)
   else
     user="${USER}"
@@ -41,14 +41,14 @@ TIME_FMT="%m%d_%H%M%S.%3N"
 # Print trace log.
 # Arguments:
 #   $1: trace log
-test_print_trc(){
+test_print_trc() {
   echo "|$(date +"$TIME_FMT")|TRACE|$1|"
 }
 
 # Print test warning message.
 # Arguments:
 #   $1: warning message
-test_print_wrg(){
+test_print_wrg() {
   caller_info="${BASH_SOURCE[1]##*/}:${BASH_LINENO[0]}:${FUNCNAME[1]}()"
   echo "|$(date +"$TIME_FMT")|WARNING| $caller_info - $*|" >&2
 }
@@ -56,7 +56,7 @@ test_print_wrg(){
 # Print test error message.
 # Arguments:
 #   $1: error message
-test_print_err(){
+test_print_err() {
   caller_info="${BASH_SOURCE[1]##*/}:${BASH_LINENO[0]}:${FUNCNAME[1]}()"
   echo "|$(date +"$TIME_FMT")|ERROR| $caller_info - $*|" >&2
 }
@@ -281,8 +281,8 @@ test_any_kconfig_match() {
 #   0 if it is configured as built-in
 #   1 if it is not.
 is_kmodule_builtin() {
-  [[ $# -eq 1 ]] \
-    || die "is_kmodule_builtin(): 1 and only 1 argument is required!"
+  [[ $# -eq 1 ]] ||
+    die "is_kmodule_builtin(): 1 and only 1 argument is required!"
 
   local kmodule=$1
   [[ -n $kmodule ]] || die "is_kmodule_builtin(): kmodule cannot be empty!"
@@ -305,8 +305,8 @@ is_kmodule_builtin() {
 get_devnode_instance_num() {
   local devnode_entry=$1
   local inst_num
-  inst_num=$(echo "$devnode_entry" | grep -oE "[[:digit:]]+$" ) || \
-            die "Failed to get instance number for dev node entry $devnode_entry"
+  inst_num=$(echo "$devnode_entry" | grep -oE "[[:digit:]]+$") ||
+    die "Failed to get instance number for dev node entry $devnode_entry"
   echo "$inst_num"
 }
 
@@ -377,33 +377,33 @@ full_dmesg_check() {
   local check_log=""
 
   dmesg_head=$(dmesg | grep "\[    0.000000\]" | head -n 1)
-  [[ -n $dmesg_head ]] \
-    || test_print_wrg "Dmesg is not started from 0.000000!"
-  check_log=$(dmesg | grep -v "dmesg" | grep -i "$keyword1" \
-              | grep -i "$keyword2" \
-              | grep -i "$keyword3")
+  [[ -n $dmesg_head ]] ||
+    test_print_wrg "Dmesg is not started from 0.000000!"
+  check_log=$(dmesg | grep -v "dmesg" | grep -i "$keyword1" |
+    grep -i "$keyword2" |
+    grep -i "$keyword3")
 
   case $type in
-    "$contain")
-      if [[ -n "$check_log" ]]; then
-        test_print_trc "Dmesg contains $keyword1 $keyword2:$check_log, pass"
-      else
-        test_print_wrg "Dmesg doesn't contain $keyword1 $keyword2:$check_log, fail"
-        return 1
-      fi
-      ;;
-    "$null")
-      if [[ -z "$check_log" ]]; then
-        test_print_trc "Dmesg doesn't contain $keyword1 $keyword2:$check_log, pass"
-      else
-        test_print_wrg "Dmesg contains $keyword1 $keyword2:$check_log, fail"
-        return 1
-      fi
-      ;;
-    *)
-      test_print_wrg "Invalid type:$type"
-      return 2
-      ;;
+  "$contain")
+    if [[ -n "$check_log" ]]; then
+      test_print_trc "Dmesg contains $keyword1 $keyword2:$check_log, pass"
+    else
+      test_print_wrg "Dmesg doesn't contain $keyword1 $keyword2:$check_log, fail"
+      return 1
+    fi
+    ;;
+  "$null")
+    if [[ -z "$check_log" ]]; then
+      test_print_trc "Dmesg doesn't contain $keyword1 $keyword2:$check_log, pass"
+    else
+      test_print_wrg "Dmesg contains $keyword1 $keyword2:$check_log, fail"
+      return 1
+    fi
+    ;;
+  *)
+    test_print_wrg "Invalid type:$type"
+    return 2
+    ;;
   esac
 
   return 0
@@ -441,18 +441,17 @@ extract_case_dmesg() {
   fi
 
   if [[ -n "$tempfile" ]]; then
-    grep -v "$LAST_DMESG_TIMESTAMP" <<< "$dmesg"  > "$tempfile"
+    grep -v "$LAST_DMESG_TIMESTAMP" <<<"$dmesg" >"$tempfile"
     echo "$tempfile"
   else
-    grep -v "$LAST_DMESG_TIMESTAMP" <<< "$dmesg"
+    grep -v "$LAST_DMESG_TIMESTAMP" <<<"$dmesg"
   fi
 }
 
 # Set specific CPU online or offline
 # $1: 0|1, 0 means online cpu, 1 means offline cpu
 # $2: cpu_num, it should be in the range of 0 - max_cpu
-set_specific_cpu_on_off()
-{
+set_specific_cpu_on_off() {
   local on_off=$1
   local cpu_num=$2
   local max_cpu=""
@@ -471,9 +470,9 @@ set_specific_cpu_on_off()
     block_test "Invalid cpu_num:$cpu_num, it's not in the range: 0 - $max_cpu"
   }
 
-  if [[ "$on_off" == "1" || "$on_off" == "0"  ]]; then
+  if [[ "$on_off" == "1" || "$on_off" == "0" ]]; then
     test_print_trc "echo $on_off > ${CPU_SYSFS_FOLDER}/cpu${cpu_num}/online"
-    echo "$on_off" > "$CPU_SYSFS_FOLDER"/cpu"$cpu_num"/online
+    echo "$on_off" >"$CPU_SYSFS_FOLDER"/cpu"$cpu_num"/online
     ret=$?
     [[ "$ret" -eq 0 ]] || {
       test_print_err "Failed to set cpu$cpu_num to $on_off, ret:$ret not 0"
@@ -494,9 +493,8 @@ set_specific_cpu_on_off()
 
 # Set specific CPU online or offline
 # $1: 0|1, 0 means online cpu, 1 means offline cpu
-# $2: cpus: sample: 11,22-27,114 same format in /sys/devices/system/cpu/offline 
-set_cpus_on_off()
-{
+# $2: cpus: sample: 11,22-27,114 same format in /sys/devices/system/cpu/offline
+set_cpus_on_off() {
   local on_off=$1
   local target_cpus=$2
   local cpu=""
@@ -512,7 +510,7 @@ set_cpus_on_off()
         i=""
         cpu_start=$(echo "$cpu" | cut -d "-" -f 1)
         cpu_end=$(echo "$cpu" | cut -d "-" -f 2)
-        for((i=cpu_start;i<=cpu_end;i++)); do
+        for ((i = cpu_start; i <= cpu_end; i++)); do
           set_specific_cpu_on_off "$on_off" "$i" || return $?
         done
       else
@@ -524,14 +522,13 @@ set_cpus_on_off()
   return 0
 }
 
-online_all_cpu()
-{
+online_all_cpu() {
   local off_cpus=""
 
   test_print_trc "Online all CPUs:"
   off_cpus=$(cat "${CPU_SYSFS_FOLDER}/offline")
   set_cpus_on_off "1" "$off_cpus" || {
-    block_test "Online all CPUs with ret:$? not 0!" 
+    block_test "Online all CPUs with ret:$? not 0!"
   }
   off_cpus=$(cat "${CPU_SYSFS_FOLDER}/offline")
   if [[ -z "$off_cpus" ]]; then
@@ -564,9 +561,9 @@ check_fms_list() {
   get_cpu_model
   list_file=$(which "$fms_list_file" 2>/dev/null)
   [[ -n "$list_file" ]] || block_test "No family model stepping list file:$fms_list_file found"
-  check_fms=$(grep -v "^#" "$list_file" | grep "^$FML" \
-              | awk -F "$FML:" '{print $2}' \
-              | grep "$MODEL")
+  check_fms=$(grep -v "^#" "$list_file" | grep "^$FML" |
+    awk -F "$FML:" '{print $2}' |
+    grep "$MODEL")
   if [[ -n "$check_fms" ]]; then
     test_print_trc "Find family:$FML model:$MODEL in $list_file"
   else
@@ -602,4 +599,21 @@ bin_output_dmesg() {
   export BIN_OUTPUT
   export BIN_RET
   export BIN_DMESG
+}
+
+# Function to check if turbostat tool version is 2024.xx.xx
+# The OE OS default installed turbostat does not meet the test requirement
+check_turbostat_ver() {
+  local turbostat_output=""
+  local version=""
+
+  turbostat_output=$(turbostat -v 2>&1)
+  version=$(echo "$turbostat_output" | grep -o "version [0-9]*" | cut -d ' ' -f 2)
+
+  if [[ "$version" == 2024 ]]; then
+    test_print_trc "The turbostat version is 2024"
+  else
+    block_test "Please ensure you are using the most recent version of turbostat by recompiling
+2024 version from the latest upstream kernel source located at: tools/power/x86/turbostat"
+  fi
 }
