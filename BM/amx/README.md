@@ -18,6 +18,9 @@ It will be checked if the result is correct or not.
 
     gcc 11.1 or above is required for amx_bf16, amx_int8 test. 
     gcc 13.3 or above is required for extra amx_fp16 test.
+    Note: some OS distros has gcc12.3 support extra amx_fp16 test,
+    you may confirm gcc amx_fp16 support or not by command:
+    echo 'int main() { asm volatile("tdpfp16ps %tmm2, %tmm1, %tmm0"); return 0; }' | gcc -x c -o /dev/null -
 
     To compile,
     for amx_bf16, amx_int8 test:  
