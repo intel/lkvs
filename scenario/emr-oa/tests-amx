@@ -1,0 +1,56 @@
+# This file collects the AMX(Advanced Matrix eXtension) related instruction tests on
+# Intel® Architecture-based platforms.
+# @hw_dep: cpuid_check 7 0 0 0 d 24 @ CPU doesn't support AMX-TILE - CPUID.(7.0).EDX[24]
+# @hw_dep: cpuid_check 7 0 0 0 d 25 @ CPU doesn't support AMX-INT8 - CPUID.(7.0).EDX[25]
+# @hw_dep: cpuid_check 7 0 0 0 d 22 @ CPU doesn't support AMX-BF16 - CPUID.(7.0).EDX[22]
+# @hw_dep: cpuid_check d 0 1 0 a 4 @ CPU doesn't support AMX XFD - CPUID.(d.1).EAX[4]
+
+# Usage:./tmul [OPTIONS]
+#  -b, --break-reason [1 - 4]
+#      0: break by nothing
+#      1: break by yield
+#      2: break by sleep
+#      3: break by trap
+#      4: break by signal
+#  -t, --thread-count [Should not be less than 1]
+#  -c, --cycle-number [Should not be less than 1]
+#  -i, --instruction-type [0:TDPBF16PS 1:TDPBSSD 2:TDPBSUD 3:TDPBUSD 4:TDPBUUD]
+
+# functional tests
+tmul -b 0 -t 10 -c 10 -i 0
+tmul -b 1 -t 10 -c 10 -i 0
+tmul -b 2 -t 10 -c 10 -i 0
+tmul -b 3 -t 10 -c 10 -i 0
+tmul -b 4 -t 10 -c 100000 -i 0
+tmul -b 5 -t 10 -c 10 -i 0
+tmul -b 0 -t 10 -c 10 -i 1
+tmul -b 1 -t 10 -c 10 -i 1
+tmul -b 2 -t 10 -c 10 -i 1
+tmul -b 3 -t 10 -c 10 -i 1
+tmul -b 4 -t 10 -c 100000 -i 1
+tmul -b 5 -t 10 -c 10 -i 1
+tmul -b 0 -t 10 -c 10 -i 2
+tmul -b 1 -t 10 -c 10 -i 2
+tmul -b 2 -t 10 -c 10 -i 2
+tmul -b 3 -t 10 -c 10 -i 2
+tmul -b 4 -t 10 -c 100000 -i 2
+tmul -b 5 -t 10 -c 10 -i 2
+tmul -b 0 -t 10 -c 10 -i 3
+tmul -b 1 -t 10 -c 10 -i 3
+tmul -b 2 -t 10 -c 10 -i 3
+tmul -b 3 -t 10 -c 10 -i 3
+tmul -b 4 -t 10 -c 100000 -i 3
+tmul -b 5 -t 10 -c 10 -i 3
+tmul -b 0 -t 10 -c 10 -i 4
+tmul -b 1 -t 10 -c 10 -i 4
+tmul -b 2 -t 10 -c 10 -i 4
+tmul -b 3 -t 10 -c 10 -i 4
+tmul -b 4 -t 10 -c 100000 -i 4
+tmul -b 5 -t 10 -c 10 -i 4
+
+# stress tests
+tmul -b 1 -t 10000 -c 10 -i 0
+tmul -b 1 -t 10000 -c 10 -i 1
+tmul -b 1 -t 10000 -c 10 -i 2
+tmul -b 1 -t 10000 -c 10 -i 3
+tmul -b 1 -t 10000 -c 10 -i 4
