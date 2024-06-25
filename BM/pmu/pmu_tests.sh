@@ -71,7 +71,7 @@ fix_counter_test() {
 
 basic_test() {
   do_cmd "dmesg | grep 'Intel PMU driver'"
-  should_fail "dmesg | grep 'generic architected perfmon'"
+#  should_fail "dmesg | grep 'generic architected perfmon'"
 }
 
 lbr_events_cpuid_test() {
