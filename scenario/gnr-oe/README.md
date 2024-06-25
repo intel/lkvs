@@ -62,3 +62,8 @@ gcc missing AMX FP16 support
 
 * CET
 OE kernel does NOT configuure CONFIG_X86_USER_SHADOW_STACK=y, resulting in CET SHSTK not working.
+
+* OS failed to put CPUs offline, the unknown driver module may have improper IRQ allocation,
+which will cause available IRQ is not enough during CPUs Offline and online. e.g. error log
+CPU 206 has 151 vectors, 103 available. Cannot disable CPU
+CPU 207 has 150 vectors, 102 available. Cannot disable CPU
