@@ -6,13 +6,13 @@
 #
 # Description:  Call dsa_test to run dsa user test
 DIRNAME=$(dirname "$0")
-DSA_DIR="$PWD/$DIRNAME"
+DSA_DIR="$DIRNAME"
 CONFIG_DIR="$DSA_DIR/configs"
 ACCFG=/usr/bin/accel-config
 TEST_DIR=/usr/libexec/accel-config/test
 DSATEST=$TEST_DIR/dsa_test
 
-source "$PWD/$DIRNAME/../common/common.sh"
+source "$DIRNAME/../common/common.sh"
 ############################# FUNCTIONS #######################################
 
 # Global variables
