@@ -5,14 +5,14 @@
 #
 # Description:  Call iaa_test to run iax user test
 
-source "$PWD/$DIRNAME/../common/common.sh"
-
 DIRNAME=$(dirname "$0")
-IAX_DIR=$PWD/$DIRNAME
-CONFIG_DIR=$IAX_DIR/configs
+IAX_DIR=$DIRNAME
+CONFIG_DIR="$IAX_DIR/configs"
 ACCFG=/usr/bin/accel-config
 TEST_DIR=/usr/libexec/accel-config/test
 IAXTEST=$TEST_DIR/iaa_test
+
+source "$DIRNAME/../common/common.sh"
 
 ############################# FUNCTIONS #######################################
 
@@ -191,7 +191,7 @@ load_config()
 {
   iax_disable_wq
   # CONFIGS
-  if [ -f "$CONFIG_DIR/$CONFIG_NAME.conf" ]; then
+  if [ -f "$CONFIG_DIR/${CONFIG_NAME}.conf" ]; then
     export CONFIG1=$CONFIG_DIR/${CONFIG_NAME}.conf
   else
     test_print_trc "Can't find config file $CONFIG_DIR/$CONFIG_NAME.conf"

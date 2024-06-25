@@ -1,57 +1,57 @@
 
 #IAX_XS_FUNC_USER_DECOMPRESS_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x42 -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x42 -w 0
 #IAX_XS_FUNC_USER_COMPRESS_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x43 -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x43 -w 0
 #IAX_XS_FUNC_USER_CRC64_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x44 -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x44 -w 0
 #IAX_XS_FUNC_USER_ZDECOMPRESS32_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x48 -0
+iax_user_test.sh -c 2g2q_user_2 -o 0x48 -w 0
 #IAX_XS_FUNC_USER_ZDECOMPRESS16_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x49 -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x49 -w 0
 #IAX_XS_FUNC_USER_ZCOMPRESS32_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x4c -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x4c -w 0
 #IAX_XS_FUNC_USER_ZCOMPRESS16_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x4d -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x4d -w 0
 #IAX_XS_FUNC_USER_SCAN_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x50 -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x50 -w 0
 #IAX_XS_FUNC_USER_SET_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x51 -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x51 -w 0
 #IAX_XS_FUNC_USER_EXTRACT_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x52 -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x52 -w 0
 #IAX_XS_FUNC_USER_SELECT_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x53 -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x53 -w 0
 #IAX_XS_FUNC_USER_RLE_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x54 -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x54 -w 0
 #IAX_XS_FUNC_USER_FIND_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x55 -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x55 -w 0
 #IAX_XS_FUNC_USER_EXPAND_DEDICATED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x56 -w 0
+iax_user_test.sh -c 2g2q_user_2 -o 0x56 -w 0
 #IAX_XS_FUNC_USER_DECOMPRESS_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x42 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x42 -w 1
 #IAX_XS_FUNC_USER_COMPRESS_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x43 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x43 -w 1
 #IAX_XS_FUNC_USER_CRC64_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x44 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x44 -w 1
 #IAX_XS_FUNC_USER_ZDECOMPRESS32_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x48 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x48 -w 1
 #IAX_XS_FUNC_USER_ZDECOMPRESS16_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x49 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x49 -w 1
 #IAX_XS_FUNC_USER_ZCOMPRESS32_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x4c -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x4c -w 1
 #IAX_XS_FUNC_USER_ZCOMPRESS16_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x4d -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x4d -w 1
 #IAX_XS_FUNC_USER_SCAN_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x50 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x50 -w 1
 #IAX_XS_FUNC_USER_SET_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x51 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x51 -w 1
 #IAX_XS_FUNC_USER_EXTRACT_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x52 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x52 -w 1
 #IAX_XS_FUNC_USER_SELECT_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x53 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x53 -w 1
 #IAX_XS_FUNC_USER_RLE_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x54 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x54 -w 1
 #IAX_XS_FUNC_USER_FIND_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x55 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x55 -w 1
 #IAX_XS_FUNC_USER_EXPAND_SHARED 
-./iax_user_test.sh -c 2g2q_user_2 -o 0x56 -w 1
+iax_user_test.sh -c 2g2q_user_2 -o 0x56 -w 1
