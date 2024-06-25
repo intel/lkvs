@@ -29,10 +29,14 @@ ln -s /usr/bin/stress-ng /usr/bin/stress
 ```
 
 ### tests-cstate
-perf.x86_64 package
+* perf.x86_64 package
 ```
 yum install perf
 ```
+
+### tests-pstate and tests-rapl
+* turbostat tool version 2024.xx.xx is required,
+recompile from the latest mainline kernel source code: `tools/power/x86/turbostat/turbostat.c`
 
 ## Known Issues
 ### Tools Missing
