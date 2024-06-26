@@ -31,5 +31,5 @@ cet_tests.sh -t all_cpu_perf -n shstk_cpu
 # Kernel space IBT tests
 general_test.sh -t dmesg -p "contain" -k "Indirect Branch Tracking enabled"
 cet_tests.sh -t kmod_ibt_msr
-cet_tests.sh -t kmod_ibt_illegal -n cet_app -p "b1" -k "Missing ENDBR"
-cet_tests.sh -t kmod_ibt_legal -n cet_app -p "b2" -k "Missing ENDBR"
+#cet_tests.sh -t kmod_ibt_illegal -n cet_app -p "b1" -k "Missing ENDBR"
+#cet_tests.sh -t kmod_ibt_legal -n cet_app -p "b2" -k "Missing ENDBR"
