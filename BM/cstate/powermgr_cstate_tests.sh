@@ -636,6 +636,67 @@ offline_cpu_pc() {
   fi
 }
 
+# Function to check the core cstae residency after CPU1 offline and online
+# Server CC1 residency MSR: 0x660, CC6 residency MSR: 0x3fd, TSC MSR: 0x10
+ccstate_res_offline_online() {
+  local tcs=$1
+  local cc1=$2
+  local cc6=$3
+
+  tsc_bf=$(rdmsr -p 1 "$tcs" 2>&1)
+  cc1_bf=$(rdmsr -p 1 "$cc1" 2>&1)
+  cc6_bf=$(rdmsr -p 1 "$cc6" 2>&1)
+
+  tsc_bf_dec=$((16#$tsc_bf))
+  cc1_bf_dec=$((16#$cc1_bf))
+  cc6_bf_dec=$((16#$cc6_bf))
+  test_print_trc "tsc before counter: $tsc_bf_dec"
+  test_print_trc "cc1 before counter: $cc1_bf_dec"
+  test_print_trc "cc6 before counter: $cc6_bf_dec"
+
+  # Offline CPU1
+  do_cmd "echo 0 > /sys/devices/system/cpu/cpu1/online"
+
+  test_print_trc "Sleep 10 seconds:"
+  sleep 10
+
+  # Online CPU1
+  do_cmd "echo 1 > /sys/devices/system/cpu/cpu1/online"
+
+  tsc_af=$(rdmsr -p 1 "$tcs" 2>&1)
+  cc1_af=$(rdmsr -p 1 "$cc1" 2>&1)
+  cc6_af=$(rdmsr -p 1 "$cc6" 2>&1)
+
+  tsc_af_dec=$((16#$tsc_af))
+  cc1_af_dec=$((16#$cc1_af))
+  cc6_af_dec=$((16#$cc6_af))
+  test_print_trc "tsc after counter: $tsc_af_dec"
+  test_print_trc "cc1 after counter: $cc1_af_dec"
+  test_print_trc "cc6 after counter: $cc6_af_dec"
+
+  # Check the residency of CPU1 C1 and CPU1 C6
+  # Expect CC6 residency is larger than 90%, CC1 residency is less than 10%
+  tsc_delta=$((tsc_af_dec - tsc_bf_dec))
+  cc1_delta=$((cc1_af_dec - cc1_bf_dec))
+  cc6_delta=$((cc6_af_dec - cc6_bf_dec))
+  cc1_res=$((cc1_delta * 100 / tsc_delta))
+  cc6_res=$((cc6_delta * 100 / tsc_delta))
+  test_print_trc "CPU1 C1 residency: $cc1_res%"
+  test_print_trc "CPU1 C6 residency: $cc6_res%"
+
+  if [[ "$cc1_res" -lt 10 ]]; then
+    test_print_trc "CPU1 C1 residency is less than 10%"
+  else
+    die "CPU1 C1 residency is not less than 10%."
+  fi
+
+  if [[ "$cc6_res" -gt 90 ]]; then
+    test_print_trc "CPU1 C6 residency is larger than 90%"
+  else
+    die "CPU1 C6 residency is not larger than 90%."
+  fi
+}
+
 # Function to do CPU offline and online short stress
 cpu_off_on_stress() {
   local cycle=$1
@@ -743,6 +804,9 @@ core_cstate_test() {
     ;;
   verify_offline_cpu_deepest_pc)
     offline_cpu_pc 0x3f9
+    ;;
+  verify_ccstate_res_offline_online)
+    ccstate_res_offline_online 0x10 0x660 0x3fd
     ;;
   verify_cpu_offline_online_stress)
     cpu_off_on_stress 5
