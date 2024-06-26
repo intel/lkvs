@@ -571,6 +571,42 @@ check_fms_list() {
   fi
 }
 
+# Check all cpu msr value should match with expected value
+# Input $1: rdmsr value
+#       $2: rdmsr check high bit
+#       $3: rdmsr check low bit
+#       $4: rdmsr check expected value
+# Output: 0 for true, otherwise false or die
+check_msr() {
+  local msr_value=$1
+  local high_bit=$2
+  local low_bit=$3
+  local check_value=$4
+  local value_exist=""
+  local other_value=""
+  local check_rdmsr=""
+
+  # For some old version kernel, need to load msr module
+  test_print_trc "modprobe msr"
+  modprobe msr
+  check_rdmsr=$(which rdmsr 2>/dev/null)
+  [[ -n "$check_rdmsr" ]] || die "rdmsr doesn't work:$check_rdmsr"
+  value_exist=$(rdmsr "$msr_value" --bitfield "$high_bit":"$low_bit" -a \
+              | grep "$check_value")
+  if [[ -n "$value_exist" ]]; then
+    test_print_trc "rdmsr $msr_value $high_bit:$low_bit exist $check_value"
+  else
+    die "rdmsr $msr_value $high_bit:$low_bit doesn't exist $check_value"
+  fi
+  other_value=$(rdmsr "$msr_value" --bitfield "$high_bit":"$low_bit" -a \
+              | grep -v "$check_value")
+  if [[ -n "$other_value" ]]; then
+    die "rdmsr $msr_value $high_bit:$low_bit contain other value:$other_value"
+  else
+    test_print_trc "rdmsr $msr_value $high_bit:$low_bit all $check_value pass"
+  fi
+}
+
 # Check specified pattern in dmesg
 # Arguments:
 #   $1: bin name

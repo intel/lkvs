@@ -241,9 +241,11 @@ cet_tests() {
   local bin_file=""
   local legacy="legacy"
 
-  # Absolute path of BIN_NAME
-  bin_file=$(which "$BIN_NAME")
-  test_print_trc "Test bin:$bin_file $PARM, $TYPE:check dmesg $KEYWORD"
+  [[ -z "$BIN_NAME" ]] || {
+    # Absolute path of BIN_NAME
+    bin_file=$(which "$BIN_NAME" 2>/dev/null)
+    test_print_trc "Test bin:$bin_file $PARM, $TYPE:check dmesg $KEYWORD"
+  }
   case $TYPE in
     cp_test)
       cet_dmesg_check "$bin_file" "$PARM" "$KEYWORD" "$CONTAIN"
@@ -255,6 +257,13 @@ cet_tests() {
     kmod_ibt_legal)
       load_cet_driver
       cet_dmesg_check "$bin_file" "$PARM" "$KEYWORD" "$NULL"
+      ;;
+    kmod_ibt_msr)
+      local msr_kmod_cet="0x6a2"
+      local high_bit="2"
+      local low_bit="2"
+      local exp_value="1"
+      check_msr "$msr_kmod_cet" "$high_bit" "$low_bit" "$exp_value"
       ;;
     no_cp)
       cet_dmesg_check "$bin_file" "$PARM" "$KEYWORD" "$NULL"
