@@ -4,6 +4,8 @@
 # @other_dep:
 # @other_warn: which turbostat 2>/dev/null @ turbostat tool is required
 # @other_warn: which perf 2>/dev/null @ perf tool is required, please install perf.x86_64 package
+# @other_warn: which rdmsr 2>/dev/null @ rdmsr tool is required, please install msr-tools
 
 powermgr_cstate_tests.sh -t verify_server_perf_core_cstat_update
 powermgr_cstate_tests.sh -t verify_server_perf_pkg_cstat_update
+powermgr_cstate_tests.sh -t verify_ccstate_res_offline_online
