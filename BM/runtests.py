@@ -14,7 +14,51 @@ parser.add_argument('-t', '--tests', help='Path to a test file containing the li
 args = parser.parse_args()
 
 # Check the dependency, if the exit value is not 0, then terminate the test.
-# TODO
+# Parse dependency information.
+def parse_line(line):
+    colon_index = line.find(':')
+    if colon_index != -1:
+        info = line[colon_index + 1:].strip()
+        if not info:
+            return None, None
+        at_index = info.find('@')
+        if at_index != -1:
+            reason_info = info[at_index + 1:].strip()
+            info = info[:at_index].strip()
+        else:
+            reason_info = None
+        info += ' >& /dev/null'
+        return info, reason_info
+    return None, None
+
+def dependency_check(ftests, feature_dir):
+    parent_dir = os.path.abspath(feature_dir)
+    grandparent_dir = os.path.dirname(parent_dir)
+
+    common_dir = f"{grandparent_dir}/common"
+    cpuid_dir = f"{grandparent_dir}/tools/cpuid_check"
+
+    # Add the necessary environment variables.
+    os.environ['PATH'] += os.pathsep + os.pathsep.join([common_dir, cpuid_dir, feature_dir])
+    
+    # Check the dependency.
+    with open(ftests, 'r') as file:
+        for line in file:
+            if line.startswith('# @hw_dep') or line.startswith('# @other_dep'):
+                info, reason_info = parse_line(line)
+                if info:
+                    try:
+                        subprocess.run(info, shell=True, check=True)
+                    except subprocess.CalledProcessError:
+                        print(f"Terminate the test: {reason_info}")
+                        sys.exit(1)
+            elif line.startswith('# @other_warn'):
+                info, reason_info = parse_line_and_execute(line)
+                if info:
+                    try:
+                        subprocess.run(info, shell=True, check=True)
+                    except subprocess.CalledProcessError:
+                        print(f"Warning:  {reason_info}")
 
 # Read the tests file and create Runnable objects.
 def create_runnables_from_file(ftests, feature_dir):
@@ -33,6 +77,8 @@ def create_runnables_from_file(ftests, feature_dir):
     return tests
 
 def main():
+    # Check the dependency and create Runnable objects.
+    dependency_check(args.tests, args.feature)
     tests = create_runnables_from_file(args.tests, args.feature)
 
     # Create a test suite and add tests.
