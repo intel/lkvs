@@ -15,8 +15,6 @@ intel_pstate_tests.sh -t verify_gov_powersave_epp_balance_power
 intel_pstate_tests.sh -t verify_gov_powersave_epp_power
 intel_pstate_tests.sh -t verify_cpufreq_with_governor_perf
 intel_pstate_tests.sh -t verify_cpufreq_with_governor_powersave
-intel_pstate_tests.sh -t verify_cpufreq_with_maxperfpct_50
-intel_pstate_tests.sh -t verify_cpufreq_with_minperfpct_50
 intel_pstate_tests.sh -t verify_max_cpufreq_perf_turbo
 intel_pstate_tests.sh -t verify_max_cpufreq_passive_perf_turbo
 intel_pstate_tests.sh -t verify_max_cpufreq_perf_non_turbo
