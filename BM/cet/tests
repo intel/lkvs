@@ -1,7 +1,7 @@
 # This file collects the CET(Control-flow Enforcement Technology) tests on
 # Intel® Architecture-based platforms.
 # @hw_dep: cpuid_check 7 0 0 0 c 7 @ CPU doesn't support CET SHSTK CPUID.(EAX=07H,ECX=0H):ECX[bit 7]
-# @other_dep: general_test.sh -t kconfig -k "CONFIG_X86_USER_SHADOW_STACK=y"
+# @other_dep: general_test.sh -t kconfig -k "CONFIG_X86_USER_SHADOW_STACK=y" @ No kconfig CONFIG_X86_USER_SHADOW_STACK=y
 # @other_warn: quick_test @ Glibc could not support CET
 
 # User space SHSTK tests without SHSTK Glibc supported
