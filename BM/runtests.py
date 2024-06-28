@@ -13,6 +13,8 @@ parser.add_argument('-f', '--feature', help='Directory of a feature to run the t
 parser.add_argument('-t', '--tests', help='Path to a test file containing the list of tests to run')
 args = parser.parse_args()
 
+BM_dir = os.path.dirname(os.path.realpath(__file__))
+
 # Check the dependency, if the exit value is not 0, then terminate the test.
 # Parse dependency information.
 def parse_line(line):
@@ -32,11 +34,8 @@ def parse_line(line):
     return None, None
 
 def dependency_check(ftests, feature_dir):
-    parent_dir = os.path.abspath(feature_dir)
-    grandparent_dir = os.path.dirname(parent_dir)
-
-    common_dir = f"{grandparent_dir}/common"
-    cpuid_dir = f"{grandparent_dir}/tools/cpuid_check"
+    common_dir = f"{BM_dir}/common"
+    cpuid_dir = f"{BM_dir}/tools/cpuid_check"
 
     # Add the necessary environment variables.
     os.environ['PATH'] += os.pathsep + os.pathsep.join([common_dir, cpuid_dir, feature_dir])
@@ -53,7 +52,7 @@ def dependency_check(ftests, feature_dir):
                         print(f"Terminate the test: {reason_info}")
                         sys.exit(1)
             elif line.startswith('# @other_warn'):
-                info, reason_info = parse_line_and_execute(line)
+                info, reason_info = parse_line(line)
                 if info:
                     try:
                         subprocess.run(info, shell=True, check=True)
@@ -70,16 +69,16 @@ def create_runnables_from_file(ftests, feature_dir):
                 continue
             # Split command line parameters.
             parts = line.strip().split()
-            script_path = os.path.join(feature_dir, parts[0])
             # Create a Runnable object.
-            runnable = Runnable("exec-test", script_path, *parts[1:])
+            runnable = Runnable("exec-test", parts[0], *parts[1:])
             tests.append(runnable)
     return tests
 
 def main():
     # Check the dependency and create Runnable objects.
     dependency_check(args.tests, args.feature)
-    tests = create_runnables_from_file(args.tests, args.feature)
+    os.chdir(f'{BM_dir}/{args.feature}')
+    tests = create_runnables_from_file("../"+args.tests, args.feature)
 
     # Create a test suite and add tests.
     suite = TestSuite(name="lkvs-test", tests=tests)
