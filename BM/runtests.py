@@ -53,7 +53,7 @@ def dependency_check(ftests, feature_dir):
                         print(f"Terminate the test: {reason_info}")
                         sys.exit(1)
             elif line.startswith('# @other_warn'):
-                info, reason_info = parse_line_and_execute(line)
+                info, reason_info = parse_line(line)
                 if info:
                     try:
                         subprocess.run(info, shell=True, check=True)
