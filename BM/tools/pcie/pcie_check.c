@@ -261,7 +261,7 @@ void speed_show(u8 speed)
 void linkwidth(u8 width)
 {
 	printf("\tLink Capabilities Register(0x0c bit9:4) width:%02x - ", width);
-	if (width > 0 && width < 17 && (width & width - 1) == 0)
+	if (width > 0 && width < 17 && (width & (width - 1)) == 0)
 		printf("x%d\n", width);
 	else
 		printf("reserved\n");
@@ -511,8 +511,7 @@ int scan_pci(void)
 	u32 bus, dev, fun;
 	// Must 32bit for data check!
 	u32 *ptrdata = malloc(sizeof(unsigned long) * 4096);
-	u8 nextpoint;
-	int fd, result;
+	int fd;
 
 	fd = open("/dev/mem", O_RDWR);
 
