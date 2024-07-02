@@ -1,6 +1,6 @@
 # This file collects the basic Performance Monitoring Unit(PMU) cases on Intel® Architecture-based platforms.
 # @hw_dep:
-# @other_dep: yum install perf
+# @other_dep: which perf @no perf tool, please install perf
 # @other_warn: Disable watchdog when running with vPMU. $echo 0 > /proc/sys/kernel/nmi_watchdog
 pmu_tests.sh -t benchmark -w 0
 pmu_tests.sh -t benchmark -w 1

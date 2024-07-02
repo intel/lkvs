@@ -33,12 +33,12 @@ def parse_line(line):
         return info, reason_info
     return None, None
 
-def dependency_check(ftests, feature_dir):
+def dependency_check(ftests):
     common_dir = f"{BM_dir}/common"
     cpuid_dir = f"{BM_dir}/tools/cpuid_check"
 
     # Add the necessary environment variables.
-    os.environ['PATH'] += os.pathsep + os.pathsep.join([common_dir, cpuid_dir, feature_dir])
+    os.environ['PATH'] += os.pathsep + os.pathsep.join([common_dir, cpuid_dir])
     
     # Check the dependency.
     with open(ftests, 'r') as file:
@@ -60,7 +60,7 @@ def dependency_check(ftests, feature_dir):
                         print(f"Warning:  {reason_info}")
 
 # Read the tests file and create Runnable objects.
-def create_runnables_from_file(ftests, feature_dir):
+def create_runnables_from_file(ftests):
     tests = []
     with open(ftests, 'r') as file:
         for line in file:
@@ -75,10 +75,13 @@ def create_runnables_from_file(ftests, feature_dir):
     return tests
 
 def main():
+    # Get the absolute directory of the tests file.
+    tests_abs = os.path.abspath(args.tests)
+
     # Check the dependency and create Runnable objects.
-    dependency_check(args.tests, args.feature)
-    os.chdir(f'{BM_dir}/{args.feature}')
-    tests = create_runnables_from_file("../"+args.tests, args.feature)
+    os.chdir(f"{BM_dir}/{args.feature}")
+    dependency_check(tests_abs)
+    tests = create_runnables_from_file(tests_abs)
 
     # Create a test suite and add tests.
     suite = TestSuite(name="lkvs-test", tests=tests)
