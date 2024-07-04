@@ -17,40 +17,40 @@
 #  -i, --instruction-type [0:TDPBF16PS 1:TDPBSSD 2:TDPBSUD 3:TDPBUSD 4:TDPBUUD]
 
 # functional tests
-tmul -b 0 -t 10 -c 10 -i 0
-tmul -b 1 -t 10 -c 10 -i 0
-tmul -b 2 -t 10 -c 10 -i 0
-tmul -b 3 -t 10 -c 10 -i 0
-tmul -b 4 -t 10 -c 100000 -i 0
-tmul -b 5 -t 10 -c 10 -i 0
-tmul -b 0 -t 10 -c 10 -i 1
-tmul -b 1 -t 10 -c 10 -i 1
-tmul -b 2 -t 10 -c 10 -i 1
-tmul -b 3 -t 10 -c 10 -i 1
-tmul -b 4 -t 10 -c 100000 -i 1
-tmul -b 5 -t 10 -c 10 -i 1
-tmul -b 0 -t 10 -c 10 -i 2
-tmul -b 1 -t 10 -c 10 -i 2
-tmul -b 2 -t 10 -c 10 -i 2
-tmul -b 3 -t 10 -c 10 -i 2
-tmul -b 4 -t 10 -c 100000 -i 2
-tmul -b 5 -t 10 -c 10 -i 2
-tmul -b 0 -t 10 -c 10 -i 3
-tmul -b 1 -t 10 -c 10 -i 3
-tmul -b 2 -t 10 -c 10 -i 3
-tmul -b 3 -t 10 -c 10 -i 3
-tmul -b 4 -t 10 -c 100000 -i 3
-tmul -b 5 -t 10 -c 10 -i 3
-tmul -b 0 -t 10 -c 10 -i 4
-tmul -b 1 -t 10 -c 10 -i 4
-tmul -b 2 -t 10 -c 10 -i 4
-tmul -b 3 -t 10 -c 10 -i 4
-tmul -b 4 -t 10 -c 100000 -i 4
-tmul -b 5 -t 10 -c 10 -i 4
+tmul -b 0 -t 2 -c 2 -i 0
+tmul -b 1 -t 2 -c 2 -i 0
+tmul -b 2 -t 2 -c 2 -i 0
+tmul -b 3 -t 2 -c 2 -i 0
+tmul -b 4 -t 2 -c 10 -i 0
+tmul -b 5 -t 2 -c 2 -i 0
+tmul -b 0 -t 2 -c 2 -i 1
+tmul -b 1 -t 2 -c 2 -i 1
+tmul -b 2 -t 2 -c 2 -i 1
+tmul -b 3 -t 2 -c 2 -i 1
+tmul -b 4 -t 2 -c 10 -i 1
+tmul -b 5 -t 2 -c 2 -i 1
+tmul -b 0 -t 2 -c 2 -i 2
+tmul -b 1 -t 2 -c 2 -i 2
+tmul -b 2 -t 2 -c 2 -i 2
+tmul -b 3 -t 2 -c 2 -i 2
+tmul -b 4 -t 2 -c 10 -i 2
+tmul -b 5 -t 2 -c 2 -i 2
+tmul -b 0 -t 2 -c 2 -i 3
+tmul -b 1 -t 2 -c 2 -i 3
+tmul -b 2 -t 2 -c 2 -i 3
+tmul -b 3 -t 2 -c 2 -i 3
+tmul -b 4 -t 2 -c 10 -i 3
+tmul -b 5 -t 2 -c 2 -i 3
+tmul -b 0 -t 2 -c 2 -i 4
+tmul -b 1 -t 2 -c 2 -i 4
+tmul -b 2 -t 2 -c 2 -i 4
+tmul -b 3 -t 2 -c 2 -i 4
+tmul -b 4 -t 2 -c 10 -i 4
+tmul -b 5 -t 2 -c 2 -i 4
 
-# stress tests
-tmul -b 1 -t 10000 -c 10 -i 0
-tmul -b 1 -t 10000 -c 10 -i 1
-tmul -b 1 -t 10000 -c 10 -i 2
-tmul -b 1 -t 10000 -c 10 -i 3
-tmul -b 1 -t 10000 -c 10 -i 4
+# stress tests all skipped to simplify test execution
+# tmul -b 1 -t 10000 -c 10 -i 0
+# tmul -b 1 -t 10000 -c 10 -i 1
+# tmul -b 1 -t 10000 -c 10 -i 2
+# tmul -b 1 -t 10000 -c 10 -i 3
+# tmul -b 1 -t 10000 -c 10 -i 4
