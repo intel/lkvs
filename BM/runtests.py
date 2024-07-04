@@ -3,6 +3,7 @@ import sys
 import subprocess
 import argparse
 import os
+import shlex
 from avocado.core.job import Job
 from avocado.core.nrunner.runnable import Runnable
 from avocado.core.suite import TestSuite
@@ -65,12 +66,13 @@ def create_runnables_from_file(ftests):
     with open(ftests, 'r') as file:
         for line in file:
             # Handle empty lines and comments.
-            if not line.strip() or line.startswith('#'):
+            line_str = line.strip()
+            if not line_str or line.startswith('#'):
                 continue
+
             # Split command line parameters.
-            parts = line.strip().split()
-            # Create a Runnable object.
-            runnable = Runnable("exec-test", parts[0], *parts[1:])
+            cmd_line = shlex.split(line_str)
+            runnable = Runnable("exec-test", *cmd_line)
             tests.append(runnable)
     return tests
 
