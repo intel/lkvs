@@ -3,6 +3,7 @@ import sys
 import subprocess
 import argparse
 import os
+import shlex
 from avocado.core.job import Job
 from avocado.core.nrunner.runnable import Runnable
 from avocado.core.suite import TestSuite
@@ -67,12 +68,19 @@ def create_runnables_from_file(ftests):
             # Handle empty lines and comments.
             if not line.strip() or line.startswith('#'):
                 continue
+
             # Split command line parameters.
-            parts = line.strip().split()
-            # Create a Runnable object.
-            runnable = Runnable("exec-test", parts[0], *parts[1:])
+            parts = parse_cmd_str(line.strip())
+            runnable = Runnable("exec-test", *parts)
             tests.append(runnable)
+
     return tests
+
+def parse_cmd_str(cmd):
+    lexer = shlex.shlex(cmd, posix=True)
+    lexer.whitespace_split = True
+    lexer.whitespace = ' '
+    return list(lexer)
 
 def main():
     # Get the absolute directory of the tests file.
