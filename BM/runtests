@@ -99,9 +99,9 @@ init_dep_log() {
   cat /dev/null > "$dep_log"
   {
     echo "-----------------------------------------------------------------"
-    printf "%-16s%-13s%-16s%-13s%-20s\n" "Feature" "|HW_support" "|Other_support" \
+    printf "%-35s%-13s%-16s%-13s%-20s\n" "Feature" "|HW_support" "|Other_support" \
       "|Other_WARN" "|Reason"
-    printf "%-16s%-13s%-16s%-13s%-20s\n" "-------" "-----------" "--------------" \
+    printf "%-35s%-13s%-16s%-13s%-20s\n" "-------" "-----------" "--------------" \
       "-----------" "-------"
   } >> "$dep_log"
 }
@@ -196,33 +196,33 @@ check_dep_feature() {
   other_dep_info=$(grep "$MARK_OTHER_DEP" "$cmdfile" | awk -F "$MARK_OTHER_DEP" '{print $2}' | sed -e 's/^ *//g')
   other_warn_info=$(grep "$MARK_WARN_DEP" "$cmdfile" | awk -F "$MARK_WARN_DEP" '{print $2}' | sed -e 's/^ *//g')
 
-  check_dep_info "$hw_dep_info" "$subfolder" "$MARK_HW_DEP"
+  check_dep_info "$hw_dep_info" "$cmdfile" "$MARK_HW_DEP"
   ret=$?
   hw_sta=$(get_ret_status "$ret")
   [[ "$ret" == "$NA_CODE" || "$ret" == "$BLOCK_CODE" ]] && {
-    printf "%-16s%-13s%-16s%-13s%-20s\n" "$subfolder" "|$hw_sta" "|$SKIP" "|$SKIP" \
+    printf "%-35s%-13s%-16s%-13s%-20s\n" "$cmdfile" "|$hw_sta" "|$SKIP" "|$SKIP" \
       "|$REASON" >> "$DEP_LOG"
     return "$ret"
   }
 
-  check_dep_info "$other_dep_info" "$subfolder" "$MARK_OTHER_DEP"
+  check_dep_info "$other_dep_info" "$cmdfile" "$MARK_OTHER_DEP"
   ret=$?
   other_sta=$(get_ret_status "$ret")
   [[ "$ret" == "$NA_CODE" || "$ret" == "$BLOCK_CODE" ]] && {
-    printf "%-16s%-13s%-16s%-13s%-20s\n" "$subfolder" "|$hw_sta" "|$other_sta" "|$SKIP" \
+    printf "%-35s%-13s%-16s%-13s%-20s\n" "$cmdfile" "|$hw_sta" "|$other_sta" "|$SKIP" \
       "|$REASON" >> "$DEP_LOG"
     return "$ret"
   }
 
   # It's a warning, will not block the subfolder test cases
-  check_dep_info "$other_warn_info" "$subfolder" "$MARK_WARN_DEP"
+  check_dep_info "$other_warn_info" "$cmdfile" "$MARK_WARN_DEP"
   ret=$?
   warn_sta=$(get_ret_status "$ret")
   # warn_sta does not set the block, just NA to fail in some cases of this feature
   [[ "$ret" == "$BLOCK_CODE" ]] && warn_sta="$NA"
 
-  [[ -z "$REASON" || "$ret" == "$PASS_CODE" ]] && REASON="No dependence for $subfolder"
-  printf "%-16s%-13s%-16s%-13s%-20s\n" "$subfolder" "|$hw_sta" "|$other_sta" "|$warn_sta" \
+  [[ -z "$REASON" || "$ret" == "$PASS_CODE" ]] && REASON="No dependence for $cmdfile"
+  printf "%-35s%-13s%-16s%-13s%-20s\n" "$cmdfile" "|$hw_sta" "|$other_sta" "|$warn_sta" \
     "|$REASON" >> "$DEP_LOG"
   return 0
 }
@@ -422,8 +422,9 @@ while getopts ":o:d:f:t:c:h" opt; do
     d)
       init_dep_log "$DEP_LOG"
       CMDFILES=$OPTARG
+
       # If tests-server type will list tests-server in all subfolders
-      [[ "$CMDFILES" == *"-"* ]] && list_all_test_files "$CMDFILES"
+      [[ "$CMDFILES" == "$TESTS_SERVER" ]] && list_all_test_files "$CMDFILES"
 
       for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
         check_test_file_legal "$cmdfile"
