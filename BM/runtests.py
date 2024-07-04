@@ -3,6 +3,7 @@ import sys
 import subprocess
 import argparse
 import os
+import shlex
 from avocado.core.job import Job
 from avocado.core.nrunner.runnable import Runnable
 from avocado.core.suite import TestSuite
@@ -59,6 +60,32 @@ def dependency_check(ftests):
                     except subprocess.CalledProcessError:
                         print(f"Warning:  {reason_info}")
 
+def parse_parts(parts):
+    parsed_parts = []
+    current_part = []
+    in_quotes = False
+
+    for part in parts:
+        if part.startswith('"') and part.endswith('"') and len(part) > 1:
+            parsed_parts.append(part[1:-1])
+        elif part.startswith('"'):
+            current_part.append(part[1:])
+            in_quotes = True
+        elif part.endswith('"') and in_quotes:
+            current_part.append(part[:-1])
+            parsed_parts.append(' '.join(current_part))
+            current_part = []
+            in_quotes = False
+        elif in_quotes:
+            current_part.append(part)
+        else:
+            parsed_parts.append(part)
+
+    if in_quotes:
+        raise ValueError("No closing quotation")
+
+    return parsed_parts
+
 # Read the tests file and create Runnable objects.
 def create_runnables_from_file(ftests):
     tests = []
@@ -70,7 +97,9 @@ def create_runnables_from_file(ftests):
             # Split command line parameters.
             parts = line.strip().split()
             # Create a Runnable object.
-            runnable = Runnable("exec-test", parts[0], *parts[1:])
+            params = parse_parts(parts[1:])
+
+            runnable = Runnable("exec-test", parts[0], *params)
             tests.append(runnable)
     return tests
 
