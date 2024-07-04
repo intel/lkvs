@@ -43,6 +43,7 @@ Usage: ${0##*/} [-f CMDFILES] [-c CMDLINE] [-o LOGFILE]
   -d DEPENDENCE_FILE check dependence for specified feature tests
   -t TYPE_FILE  check test type like tests-server|tests-client
   -c CMDLINE    execute test case
+  -s SCENARIO_FOLDER  all tests-* files under target folder
   -o LOGFILE    redirect output of tests to file
 
 Examples:
@@ -51,6 +52,7 @@ Examples:
   ./runtests -t tests-client  // type like tests-client|tests for all subfolders
   ./runtests -t tests-server  // type like tests-server|tests for all subfolders
   ./runtests -c ./cet/quick_test -o cet_quick_test.log
+  ./runtests -s ../scenario/emr-oe  // scenario test files folder
   ./runtests -d cet/tests     // check cet dependence
   ./runtests -d tests-server  // check tests-server/tests for all subfolders dependence
 _EOF
@@ -414,7 +416,7 @@ run_tests() {
 : CMDFILES=""
 : CMDLINE=""
 
-while getopts ":o:d:f:t:c:h" opt; do
+while getopts ":o:d:f:t:s:c:h" opt; do
   case "$opt" in
     o)
       LOGFILE=$OPTARG
@@ -444,6 +446,24 @@ while getopts ":o:d:f:t:c:h" opt; do
     t)
       # If tests-server type will list tests-server in all subfolders
       [[ "$CMDFILES" == *"-"* ]] && list_all_test_files "$CMDFILES"
+      ;;
+    s)
+      test_files=""
+
+      SCENARIO_FOLDER=$OPTARG
+      [[ -d "$SCENARIO_FOLDER" ]] || usage
+      test_files=$(find "$SCENARIO_FOLDER" -name "tests-*")
+      [[ -z "$test_files" ]] && append_log "No tests-* files under $SCENARIO_FOLDER"
+      for cmdfile in $test_files; do
+        check_test_file_legal "$cmdfile"
+
+        check_dep_feature "$cmdfile" || {
+          append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
+          DEP_EXIT=$BLOCK_CODE
+          continue
+        }
+        CMDFILES="$CMDFILES,$cmdfile"
+      done
       ;;
     c)
       CMDLINE=$OPTARG
