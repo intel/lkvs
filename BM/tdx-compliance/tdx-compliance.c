@@ -4,6 +4,8 @@
 #include <linux/slab.h>
 #include <linux/list.h>
 
+#include <linux/kprobes.h>
+
 #include "asm/trapnr.h"
 
 #include "tdx-compliance.h"
@@ -475,6 +477,31 @@ const struct file_operations data_file_fops = {
 	.read = tdx_tests_proc_read,
 };
 
+unsigned count = 0;
+static int ret_handler(struct kretprobe_instance *ri, struct pt_regs *regs)
+{
+	int retval = regs_return_value(regs);
+	count++;
+	printk(KERN_INFO "handle_cpuid count %d\n", count);
+	printk(KERN_INFO "handle_cpuid returned %d\n", retval);
+	if(retval<0)
+		printk(KERN_INFO "#GP trigger. \n");
+	else
+		printk(KERN_INFO "#VE trigger. \n");
+
+	return 0;
+}
+
+static struct kretprobe my_kretprobe = {
+	.handler = ret_handler,
+	/*
+	* Here can modify the detection functions, such as hanlde_cpuid, read_msr, write_msr, handle_mmio, handle_io, etc.
+	* It should be noted that the detected function must be exposed to the kernel, 
+	* that is, the address corresponding to the function needs to be in /proc/kallsyms.
+	*/
+	.kp.symbol_name = "handle_cpuid",
+};
+
 static int __init tdx_tests_init(void)
 {
 	d_tdx = debugfs_create_dir("tdx", NULL);
@@ -499,6 +526,25 @@ static int __init tdx_tests_init(void)
 	cur_cr4 = get_cr4();
 	pr_buf("cur_cr0: %016llx, cur_cr4: %016llx\n", cur_cr0, cur_cr4);
 
+	// Register the kretprobe.
+	int ret;
+	ret = register_kretprobe(&my_kretprobe);
+	if (ret < 0) {
+		pr_err("register_kprobe failed, returned %d\n", ret);
+		return ret;
+	}
+	pr_info("Planted kprobe at %p\n", my_kretprobe.kp.addr);
+	
+	// Immediately trigger cpuid 0x1f once in kernel space, which can accurately capture the trigger once #VE.
+	unsigned int A, B, C, D;
+	A = 0x1F;
+	__asm__ volatile(
+	"cpuid"
+	: "=a" (A), "=b" (B), "=c" (C), "=d" (D)
+	: "a" (A)
+	:
+	);
+
 	return 0;
 }
 
@@ -512,6 +558,10 @@ static void __exit tdx_tests_exit(void)
 	}
 	kfree(buf_ret);
 	debugfs_remove_recursive(d_tdx);
+
+	// Unregister the kretprobe.
+	unregister_kretprobe(&my_kretprobe);
+	pr_info("kprobe at %p unregistered\n", my_kretprobe.kp.addr);
 }
 
 module_init(tdx_tests_init);
