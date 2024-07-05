@@ -21,46 +21,41 @@ BM_dir = os.path.dirname(os.path.realpath(__file__))
 # Check the dependency, if the exit value is not 0, then terminate the test.
 # Parse dependency information.
 def parse_line(line):
-    colon_index = line.find(':')
-    if colon_index != -1:
-        info = line[colon_index + 1:].strip()
-        if not info:
-            return None, None
-        at_index = info.find('@')
-        if at_index != -1:
-            reason_info = info[at_index + 1:].strip()
-            info = info[:at_index].strip()
-        else:
-            reason_info = None
-        info += ' >& /dev/null'
-        return info, reason_info
-    return None, None
+    if ':' not in line:
+        return None, None
+
+    info = line.split(':', 1)[1].strip()
+    if not info:
+        return None, None
+
+    if '@' in info:
+        info, reason_info = map(str.strip, info.split('@', 1))
+    else:
+        reason_info = None
+
+    return f"{info} >& /dev/null", reason_info
 
 def dependency_check(ftests):
     common_dir = f"{BM_dir}/common"
     cpuid_dir = f"{BM_dir}/tools/cpuid_check"
 
     # Add the necessary environment variables.
-    os.environ['PATH'] += os.pathsep + os.pathsep.join([common_dir, cpuid_dir])
-    
+    os.environ['PATH'] += os.pathsep + common_dir + os.pathsep + cpuid_dir
+
     # Check the dependency.
     with open(ftests, 'r') as file:
         for line in file:
-            if line.startswith('# @hw_dep') or line.startswith('# @other_dep'):
+            if line.startswith(('# @hw_dep', '# @other_dep', '# @other_warn')):
                 info, reason_info = parse_line(line)
                 if info:
                     try:
                         subprocess.run(info, shell=True, check=True)
                     except subprocess.CalledProcessError:
-                        print(f"Terminate the test: {reason_info}")
-                        sys.exit(1)
-            elif line.startswith('# @other_warn'):
-                info, reason_info = parse_line(line)
-                if info:
-                    try:
-                        subprocess.run(info, shell=True, check=True)
-                    except subprocess.CalledProcessError:
-                        print(f"Warning:  {reason_info}")
+                        if line.startswith('# @other_warn'):
+                            print(f"Warning: {reason_info}")
+                        else:
+                            print(f"Terminate the test: {reason_info}")
+                            sys.exit(1)
 
 # Read the tests file and create Runnable objects.
 def create_runnables_from_file(ftests):
