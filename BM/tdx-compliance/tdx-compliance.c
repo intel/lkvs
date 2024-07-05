@@ -4,6 +4,17 @@
 #include <linux/slab.h>
 #include <linux/list.h>
 
+// Interrupt related header files.
+#include <linux/interrupt.h>
+#include <linux/kernel.h>
+#include <asm/desc.h>
+#include <asm/desc_defs.h>
+
+// TDX related header files.
+#include <asm/coco.h>
+#include <asm/vmx.h>
+#include <asm/tdx.h>
+
 #include "asm/trapnr.h"
 
 #include "tdx-compliance.h"
@@ -475,6 +486,123 @@ const struct file_operations data_file_fops = {
 	.read = tdx_tests_proc_read,
 };
 
+// Modify the 16bit of the cr0 register to disable write protection.
+static inline unsigned long read_cr0(void)
+{
+	unsigned long val;
+	asm volatile("mov %%cr0, %0" : "=r" (val));
+	return val;
+}
+
+static inline void write_cr0(unsigned long val)
+{
+	asm volatile("mov %0, %%cr0" : : "r" (val));
+}
+
+void toggle_write_protection(bool enable)
+{
+	unsigned long cr0 = read_cr0();
+	if (enable) {
+		cr0 |= (1UL << 16); // Enable write protection.
+	} else {
+		cr0 &= ~(1UL << 16); // Disable write protection.
+	}
+	write_cr0(cr0);
+}
+
+// original #VE handler
+void (*orig_VE_handler)(void);
+
+volatile static unsigned long interrupt_count=0;
+
+void tdx_get_ve_info(struct ve_info *ve)
+{
+	struct tdx_module_args args = {};
+
+	tdcall(TDG_VP_VEINFO_GET, &args);
+
+	ve->exit_reason = args.rcx;
+	ve->exit_qual   = args.rdx;
+	ve->gla         = args.r8;
+	ve->gpa         = args.r9;
+	ve->instr_len   = lower_32_bits(args.r10);
+	ve->instr_info  = upper_32_bits(args.r10);
+}
+
+// my #VE handler
+void my_VE_handler(void)
+{
+	// Here, need to call the function tdx_get_ve_info to determine the reason for triggering ve.
+	// But calling this function will cause the kernel to crash.
+	// struct ve_info ve;
+	// tdx_get_ve_info(&ve);
+	// if(ve.exit_reason==10){
+	// 	interrupt_count++;
+	// }
+	
+	printk(KERN_DEBUG "#VE trigger\n");
+	return;
+}
+
+/*
+* When calling the original exception handling function, the call cannot be used, which will cause the kernel to crash.
+* Need to use jmp instruction to jump directly to the original exception handling function.
+*/
+void my_VE_handler_asm_entry(void);
+__asm__(
+	".global my_VE_handler_asm_entry\n"
+	".type my_VE_handler_asm_entry, @function\n"
+	"my_VE_handler_asm_entry:\n"
+	// Before calling the function, need to save the register, otherwise it will cause the kernel to crash.
+	// Here only save the registers that tdcall may involve.
+	"pushq %rax\n\r"
+	"pushq %rcx\n\r"
+	"pushq %rdx\n\r"
+	"pushq %rdi\n\r"
+	"pushq %rsi\n\r"
+	"pushq %rbx\n\r"
+	"pushq %r8\n\r"
+	"pushq %r9\n\r"
+	"pushq %r10\n\r"
+	"pushq %r11\n\r"
+	"pushq %r12\n\r"
+	"pushq %r13\n\r"
+	"pushq %r14\n\r"
+	"pushq %r15\n\r"
+	"call my_VE_handler\n\r"
+
+	// Try to use assembly to call the tdcall instruction to determine the cause of VE, but it is not feasible.
+	// "mov $3, %rax\n\r"
+	// "tdcall\n\r"
+	// "cmpq $10, %rcx\n\r"
+	// "jne  .Lno_increment\n\r"
+	// "lock incq interrupt_count\n\r"
+
+	".Lno_increment:\n\r"
+	"popq %r15\n\r"
+	"popq %r14\n\r"
+	"popq %r13\n\r"
+	"popq %r12\n\r"
+	"popq %r11\n\r"
+	"popq %r10\n\r"
+	"popq %r9\n\r"
+	"popq %r8\n\r"
+	"popq %rbx\n\r"
+	"popq %rsi\n\r"
+	"popq %rdi\n\r"
+	"popq %rdx\n\r"
+	"popq %rcx\n\r"
+	"popq %rax\n\r"
+	"jmp *orig_VE_handler\n\r"
+	// This directive calculates and sets the size of the my_VE_handler_asm_entry symbol based on its offset from the start to the current position in the assembly code.
+	".size my_VE_handler_asm_entry, . - my_VE_handler_asm_entry\n"
+);
+
+struct desc_ptr idt_descriptor;
+gate_desc* idt_table;
+gate_desc new_gate;
+struct idt_data new_idt_data;
+
 static int __init tdx_tests_init(void)
 {
 	d_tdx = debugfs_create_dir("tdx", NULL);
@@ -499,6 +627,35 @@ static int __init tdx_tests_init(void)
 	cur_cr4 = get_cr4();
 	pr_buf("cur_cr0: %016llx, cur_cr4: %016llx\n", cur_cr0, cur_cr4);
 
+	// hook IDT 
+	unsigned long flags;
+	store_idt(&idt_descriptor);
+
+	idt_table = (struct gate_struct *)idt_descriptor.address;
+
+	// The address of the original #VE handler.
+	orig_VE_handler = (void *)((unsigned long)idt_table[X86_TRAP_VE].offset_low |
+        	                  ((unsigned long)idt_table[X86_TRAP_VE].offset_middle << 16) |
+                	          ((unsigned long)idt_table[X86_TRAP_VE].offset_high << 32));
+	printk(KERN_INFO "Original #VE handler address: %px\n", orig_VE_handler);
+
+	// Set the new #VE handler.
+	new_idt_data.vector = X86_TRAP_VE;
+	new_idt_data.segment = idt_table[X86_TRAP_VE].segment;
+	new_idt_data.bits = idt_table[X86_TRAP_VE].bits;
+	new_idt_data.addr = my_VE_handler_asm_entry;
+
+	// Disable interrupt and write protection.
+	local_irq_save(flags);
+	toggle_write_protection(false);
+
+	idt_init_desc(&new_gate, &new_idt_data);
+	write_idt_entry(idt_table, new_idt_data.vector, &new_gate);
+
+	// Enable interrupt and write protection.
+        toggle_write_protection(true);
+        local_irq_restore(flags);
+
 	return 0;
 }
 
@@ -512,6 +669,18 @@ static void __exit tdx_tests_exit(void)
 	}
 	kfree(buf_ret);
 	debugfs_remove_recursive(d_tdx);
+
+	// Restore the original #VE handler.
+	unsigned long flags;
+	local_irq_save(flags);
+	toggle_write_protection(false);
+
+	new_idt_data.addr = orig_VE_handler;
+	idt_init_desc(&new_gate, &new_idt_data);
+	write_idt_entry(idt_table, new_idt_data.vector, &new_gate);
+
+	toggle_write_protection(true);
+	local_irq_restore(flags);
 }
 
 module_init(tdx_tests_init);
