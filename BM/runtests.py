@@ -1,17 +1,19 @@
 #!/usr/bin/python3
-import sys
-import subprocess
-import argparse
-import os
-import shlex
-from avocado.core.job import Job
 from avocado.core.nrunner.runnable import Runnable
 from avocado.core.suite import TestSuite
+from avocado.core.job import Job
+import subprocess
+import argparse
+import shlex
+import sys
+import os
 
 # Parse command line arguments.
-parser = argparse.ArgumentParser(description='Run tests from a list in a file(tests/tests-client/tests-server).')
-parser.add_argument('-f', '--feature', help='Directory of a feature to run the tests')
-parser.add_argument('-t', '--tests', help='Path to a test file containing the list of tests to run')
+parser = argparse.ArgumentParser(description='Run tests from a list in a file(tests).')
+parser.add_argument('-f', '--feature', required=True,
+    help='Directory of a feature to run the tests')
+parser.add_argument('-t', '--tests', required=True,
+    help='Path to a test file containing the list of tests to run')
 args = parser.parse_args()
 
 BM_dir = os.path.dirname(os.path.realpath(__file__))
