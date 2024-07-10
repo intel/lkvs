@@ -96,6 +96,10 @@ int __no_profile _native_write_cr0(u64 val);
 int __no_profile _native_write_cr4(u64 val);
 static int write_msr_native(struct test_msr *c);
 static int read_msr_native(struct test_msr *c);
+void initial_cpuid(void);
+void parse_version(void);
+void parse_input(char* s);
+int check_results_cr(struct test_cr *t);
 
 u64 cur_cr4, cur_cr0;
 extern struct list_head cpuid_list;

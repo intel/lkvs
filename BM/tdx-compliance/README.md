@@ -26,9 +26,9 @@ To build tdx-compliance, follow these steps:
 
 ```bash
 git clone https://github.com/intel/lkvs.git
-cd lkvs/tdx-compliance
+cd lkvs/BM/tdx-compliance
 make
-insmod tdx-compliance
+insmod tdx-compliance.ko
 ```
 ### Step 3: Run test cases
 To run all kinds of compliance tests, simply enter the following command:
@@ -92,6 +92,31 @@ Usage:
 ```
 echo cr [version] > /sys/kernel/debug/tdx/tdx-tests
 ```
+
+* Trigger the cpuid and capture #VE or #GP.
+
+Some CPUID instructions will trigger #VE (Virtualization Exceptions), and during the process of handling #VE, the ``tdx_handle_virt_exception function`` is called. Based on the return value of this function, it can be determined whether it is #VE or #GP. The #VE triggered by the CPUID instruction will ultimately be handled by the ``handle_cpuid`` function, and the return value of this function determines the return value of the ``tdx_handle_virt_exception`` function. Therefore, it is necessary to capture the return value of the ``handle_cpuid`` function. We use the kernel-provided ``kretprobe`` mechanism to capture the return value of the handle_cpuid function, thereby determining whether it is #VE or #GP.
+
+Usage:
+Register probe points:
+```
+echo kretprobe > /sys/kernel/debug/tdx/tdx-tests
+```
+Single trigger cpuid instruction, and the captured information is printed in dmesg. ``0x1f 0x0 0x0 0x0`` are the input of eax, ebx, ecx, edx.:
+```
+echo trigger_cpuid 0x1f 0x0 0x0 0x0 > /sys/kernel/debug/tdx/tdx-tests
+```
+Trigger all cpuid instructions in tdx-compliance.h：
+```
+echo cpuid > /sys/kernel/debug/tdx/tdx-tests
+```
+Unregister the kretprobe:
+```
+echo unregister > /sys/kernel/debug/tdx/tdx-tests
+rmmod tdx_compliance
+```
+Note:
+Executing the CPUID instruction in user space can lead to contamination, resulting in multiple captures of ``handle_cpuid``; therefore, the most accurate method is to trigger the CPUID instruction in kernel space.
 
 ## Contact:
 Sun, Yi (yi.sun@intel.com)
