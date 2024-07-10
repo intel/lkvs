@@ -36,6 +36,7 @@ int spec_version;
 char case_name[256];
 char version_name[32];
 char *buf_ret;
+bool kretprobe_switch;
 static struct dentry *f_tdx_tests, *d_tdx;
 LIST_HEAD(cpuid_list);
 
@@ -60,6 +61,9 @@ LIST_HEAD(cpuid_list);
 #define OPMASK_CPUID		1
 #define OPMASK_CR		2
 #define OPMASK_MSR		4
+#define OPMASK_KRETKPROBE       8
+#define OPMASK_UNREGISTER       16
+#define TRIGGER_CPUID           32
 #define OPMASK_DUMP			0x800
 #define OPMASK_SINGLE		0x8000
 
@@ -80,7 +84,7 @@ static char *result_str(int ret)
 	return "UNKNOWN";
 }
 
-void parse_version(void) 
+void parse_version(void)
 {
 	if (strstr(version_name, "1.0"))
 		spec_version = VER1_0;
@@ -92,7 +96,8 @@ void parse_version(void)
 		spec_version = (VER1_0 | VER1_5 | VER2_0);
 }
 
-static char* case_version(int ret) {
+static char *case_version(int ret)
+{
 	switch (ret) {
 	case VER1_0:
 		return "1.0";
@@ -105,18 +110,21 @@ static char* case_version(int ret) {
 	return "";
 }
 
-void parse_input(char* s) 
+void parse_input(char *s)
 {
 	memset(case_name, 0, sizeof(case_name));
 	memset(version_name, 0, sizeof(version_name));
 	char *space = strchr(s, ' ');
-	if (space != NULL) {
+
+	if (space) {
 		size_t length_case = space - s;
+
 		strncpy(case_name, s, length_case);
 		case_name[length_case] = '\0';
 
-		size_t length_ver = strlen(space+1);
-		strncpy(version_name, space+1, length_ver);
+		size_t length_ver = strlen(space + 1);
+
+		strncpy(version_name, space + 1, length_ver);
 	} else {
 		strcpy(case_name, s);
 		strcpy(version_name, "generic");
@@ -225,7 +233,8 @@ static int run_all_msr(void)
 		if (operation & 0x8000 && strcmp(case_name, t->name) != 0)
 			continue;
 
-		if (!(spec_version & t->version)) continue;
+		if (!(spec_version & t->version))
+			continue;
 
 		if (operation & 0x800) {
 			pr_buf("%s %s\n", t->name, case_version(t->version));
@@ -259,7 +268,7 @@ static int check_results_cpuid(struct test_cpuid *t)
 		return 1;
 
 	/*
-	 * Show the detail that resutls in the failure,
+	 * Show the detail that results in the failure,
 	 * CPUID here focus on the fixed bit, not actual cpuid val.
 	 */
 	pr_buf("CPUID: %s_%s\n", t->name, version_name);
@@ -295,16 +304,18 @@ static int run_all_cpuid(void)
 
 	pr_tdx_tests("Testing CPUID...\n");
 	list_for_each_entry(t, &cpuid_list, list) {
-
 		if (operation & 0x8000 && strcmp(case_name, t->name) != 0)
 			continue;
 
-		if (!(spec_version & t->version)) continue;
+		if (!(spec_version & t->version))
+			continue;
 
 		if (operation & 0x800) {
 			pr_buf("%s %s\n", t->name, case_version(t->version));
 			continue;
 		}
+		if (kretprobe_switch)
+			pr_info("leaf:%X subleaf:%X\n", t->leaf, t->subleaf);
 
 		run_cpuid(t);
 
@@ -313,9 +324,14 @@ static int run_all_cpuid(void)
 			stat_pass++;
 		else if (t->ret == -1)
 			stat_fail++;
+		if (kretprobe_switch)
+			pr_info("CPUID output: eax:%X, ebx:%X, ecx:%X, edx:%X\n",
+        			t->regs.eax.val, t->regs.ebx.val, t->regs.ecx.val, t->regs.edx.val);
 
-		pr_buf("%d: %s_%s:\t %s\n", ++stat_total, t->name, version_name, result_str(t->ret));
+		pr_buf("%d: %s_%s:\t %s\n",
+			++stat_total, t->name, version_name, result_str(t->ret));
 	}
+	pr_tdx_tests("CPUID test end!\n");
 	return 0;
 }
 
@@ -375,7 +391,8 @@ static int run_all_cr(void)
 		if (operation & 0x8000 && strcmp(case_name, t->name) != 0)
 			continue;
 
-		if (!(spec_version & t->version)) continue;
+		if (!(spec_version & t->version))
+			continue;
 
 		if (operation & 0x800) {
 			pr_buf("%s %s\n", t->name, case_version(t->version));
@@ -406,6 +423,70 @@ static int run_all_cr(void)
 	return 0;
 }
 
+unsigned int count;
+static int ret_handler(struct kretprobe_instance *ri, struct pt_regs *regs)
+{
+	int retval = regs_return_value(regs);
+
+	count++;
+	pr_info("handle_cpuid count %d\n", count);
+	pr_info("handle_cpuid returned %d\n", retval);
+	if (retval < 0)
+		pr_info("#GP trigger.\n");
+	else
+		pr_info("#VE trigger.\n");
+
+	return 0;
+}
+
+static struct kretprobe my_kretprobe = {
+	.handler = ret_handler,
+	/*
+	 * Here can modify the detection functions, such as hanlde_cpuid, read_msr,
+	 * write_msr, handle_mmio, handle_io, etc.
+	 * It should be noted that the detected function must be exposed to the kernel,
+	 * that is, the address corresponding to the function needs to be in /proc/kallsyms.
+	 */
+	.kp.symbol_name = "handle_cpuid",
+};
+
+static int run_kretprobe(void)
+{
+	// Register the kretprobe.
+	int ret;
+
+	ret = register_kretprobe(&my_kretprobe);
+	if (ret < 0) {
+		pr_err("register_kprobe failed, returned %d\n", ret);
+		return ret;
+	}
+	kretprobe_switch = true;
+	pr_info("Detect the return value of the %s.\n", my_kretprobe.kp.symbol_name);
+	pr_info("Planted kprobe at %p\n", my_kretprobe.kp.addr);
+
+	return 0;
+}
+
+static int unregister(void)
+{
+	// Unregister the kretprobe.
+	unregister_kretprobe(&my_kretprobe);
+	kretprobe_switch = false;
+	pr_info("kprobe at %p unregistered. Please rmmod tdx_compliance. \n", my_kretprobe.kp.addr);
+	return 0;
+}
+
+static int trigger_cpuid(unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D)
+{
+	pr_info("CPUID leaf:%X, subleaf:%X\n", *A, *C);
+	__asm__ volatile("cpuid"
+			: "=a" (*A), "=b" (*B), "=c" (*C), "=d" (*D)
+			: "a" (*A), "c"(*C)
+			:);
+	pr_info("CPUID output: eax:%X, ebx:%X, ecx:%X, edx:%X\n", *A, *B, *C, *D);
+	return 0;
+}
+
 static ssize_t
 tdx_tests_proc_read(struct file *file, char __user *buffer,
 		    size_t count, loff_t *ppos)
@@ -419,6 +500,7 @@ tdx_tests_proc_write(struct file *file,
 		     size_t count, loff_t *f_pos)
 {
 	char *str_input;
+
 	str_input = kzalloc((count + 1), GFP_KERNEL);
 
 	if (!str_input)
@@ -434,16 +516,22 @@ tdx_tests_proc_write(struct file *file,
 
 	parse_input(str_input);
 
-	if (strstr(case_name, "cpuid"))
+	if (strncmp(case_name, "cpuid", 5) == 0)
 		operation |= OPMASK_CPUID;
-	else if (strstr(case_name, "cr"))
+	else if (strncmp(case_name, "cr", 2) == 0)
 		operation |= OPMASK_CR;
-	else if (strstr(case_name, "msr"))
+	else if (strncmp(case_name, "msr", 3) == 0)
 		operation |= OPMASK_MSR;
-	else if (strstr(case_name, "all"))
+	else if (strncmp(case_name, "all", 3) == 0)
 		operation |= OPMASK_CPUID | OPMASK_CR | OPMASK_MSR;
-	else if (strstr(case_name, "list"))
+	else if (strncmp(case_name, "list", 4) == 0)
 		operation |= OPMASK_DUMP | OPMASK_CPUID | OPMASK_CR | OPMASK_MSR;
+	else if (strncmp(case_name, "kretprobe", 9) == 0)
+		operation |= OPMASK_KRETKPROBE;
+	else if (strncmp(case_name, "unregister", 10) == 0)
+		operation |= OPMASK_UNREGISTER;
+	else if (strncmp(case_name, "trigger_cpuid", 13) == 0)
+		operation |= TRIGGER_CPUID;
 	else
 		operation |= OPMASK_SINGLE | OPMASK_CPUID | OPMASK_CR | OPMASK_MSR;
 
@@ -460,11 +548,24 @@ tdx_tests_proc_write(struct file *file,
 		run_all_cr();
 	if (operation & OPMASK_MSR)
 		run_all_msr();
+	if (operation & OPMASK_KRETKPROBE)
+		run_kretprobe();
+	if (operation & OPMASK_UNREGISTER)
+		unregister();
+	if (operation & TRIGGER_CPUID)
+	{
+		unsigned int A, B, C, D;
+
+		if (sscanf(version_name, "%x %x %x %x", &A, &B, &C, &D) == 4)
+			trigger_cpuid(&A, &B, &C, &D);
+		else
+			pr_info("Error parsing input string.\n");
+	}
 
 	if (!(operation & OPMASK_DUMP))
 		pr_buf("Total:%d, PASS:%d, FAIL:%d, SKIP:%d\n",
-			   stat_total, stat_pass, stat_fail,
-			   stat_total - stat_pass - stat_fail);
+			stat_total, stat_pass, stat_fail,
+			stat_total - stat_pass - stat_fail);
 
 	kfree(str_input);
 	operation = 0;
@@ -475,31 +576,6 @@ const struct file_operations data_file_fops = {
 	.owner = THIS_MODULE,
 	.write = tdx_tests_proc_write,
 	.read = tdx_tests_proc_read,
-};
-
-unsigned count = 0;
-static int ret_handler(struct kretprobe_instance *ri, struct pt_regs *regs)
-{
-	int retval = regs_return_value(regs);
-	count++;
-	printk(KERN_INFO "handle_cpuid count %d\n", count);
-	printk(KERN_INFO "handle_cpuid returned %d\n", retval);
-	if(retval<0)
-		printk(KERN_INFO "#GP trigger. \n");
-	else
-		printk(KERN_INFO "#VE trigger. \n");
-
-	return 0;
-}
-
-static struct kretprobe my_kretprobe = {
-	.handler = ret_handler,
-	/*
-	* Here can modify the detection functions, such as hanlde_cpuid, read_msr, write_msr, handle_mmio, handle_io, etc.
-	* It should be noted that the detected function must be exposed to the kernel, 
-	* that is, the address corresponding to the function needs to be in /proc/kallsyms.
-	*/
-	.kp.symbol_name = "handle_cpuid",
 };
 
 static int __init tdx_tests_init(void)
@@ -526,25 +602,6 @@ static int __init tdx_tests_init(void)
 	cur_cr4 = get_cr4();
 	pr_buf("cur_cr0: %016llx, cur_cr4: %016llx\n", cur_cr0, cur_cr4);
 
-	// Register the kretprobe.
-	int ret;
-	ret = register_kretprobe(&my_kretprobe);
-	if (ret < 0) {
-		pr_err("register_kprobe failed, returned %d\n", ret);
-		return ret;
-	}
-	pr_info("Planted kprobe at %p\n", my_kretprobe.kp.addr);
-	
-	// Immediately trigger cpuid 0x1f once in kernel space, which can accurately capture the trigger once #VE.
-	unsigned int A, B, C, D;
-	A = 0x1F;
-	__asm__ volatile(
-	"cpuid"
-	: "=a" (A), "=b" (B), "=c" (C), "=d" (D)
-	: "a" (A)
-	:
-	);
-
 	return 0;
 }
 
@@ -558,10 +615,7 @@ static void __exit tdx_tests_exit(void)
 	}
 	kfree(buf_ret);
 	debugfs_remove_recursive(d_tdx);
-
-	// Unregister the kretprobe.
-	unregister_kretprobe(&my_kretprobe);
-	pr_info("kprobe at %p unregistered\n", my_kretprobe.kp.addr);
+	pr_info("The tdx_compliance module has been removed.\n");
 }
 
 module_init(tdx_tests_init);
