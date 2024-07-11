@@ -876,7 +876,7 @@ ifs_array_cpu_fullload_scan() {
   local cpu=""
 
   for cpu in $cpus; do
-    cpu_full_load "$cpu"
+    cpu_full_load "$cpu" &
     # Wait the cpu load 100%
     sleep 1
     echo "$cpu" > "$IFS_PATH"/"$RUN_TEST"
