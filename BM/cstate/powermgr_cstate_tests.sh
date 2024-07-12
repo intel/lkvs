@@ -42,6 +42,24 @@ else
   block_test "msr-tools is required to run CSTATE cases."
 fi
 
+# stress tool is required to run cstate cases
+if which stress 1>/dev/null 2>&1; then
+  stress --help 1>/dev/null || block_test "Failed to run stress tool,
+please check stress tool error message."
+else
+  block_test "stress tool is required to run cstate cases,
+please get it from latest upstream kernel-tools."
+fi
+
+# This function is used to kill stress process if it is still running.
+# We do this to release cpu resource.
+do_kill_pid() {
+  [[ $# -ne 1 ]] && die "You must supply 1 parameter"
+  local upid="$1"
+  upid=$(ps -e | awk '{if($1~/'"$upid"'/) print $1}')
+  [[ -n "$upid" ]] && do_cmd "kill -9 $upid"
+}
+
 # Function to verify if Intel_idle driver refer to BIOS _CST table
 test_cstate_table_name() {
   local cstate_name=""
@@ -697,6 +715,130 @@ ccstate_res_offline_online() {
   fi
 }
 
+# Function to check one CPU turbo freqency when other CPUs are in active idle state
+verify_single_cpu_freq() {
+  local stress_pid=""
+  local cpu_stat=""
+  local max_freq=""
+  local current_freq=""
+  local delta=0
+  local turbo_on=""
+  local cpu_no_turbo_mode="/sys/devices/system/cpu/intel_pstate/no_turbo"
+
+  # Get the CPUs num and the deepest idle cstate number
+  cpus_num=$(lscpu | grep "On-line CPU(s) list" | awk '{print $NF}' | awk -F "-" '{print $2}')
+  states=($(grep . /sys/devices/system/cpu/cpu0/cpuidle/state*/name | awk -F "/" '{print $(NF-1)}'))
+
+  length=${#states[@]}
+
+  turbo_on=$(cat "$cpu_no_turbo_mode")
+
+  test_print_trc "Executing stress -c 1 -t 90 & in background"
+  taskset -c 1 stress -c 1 -t 90 &
+  stress_pid=$!
+
+  cpu_stat_debug=$(turbostat -i 1 sleep 1 2>&1)
+  test_print_trc "Turbostat debug output is:"
+  test_print_trc "$cpu_stat_debug"
+  cpu_stat=$(turbostat -q -i 1 sleep 1 2>&1)
+  test_print_trc "Turbostat output is:"
+  test_print_trc "$cpu_stat"
+
+  if [[ "$turbo_on" -eq 0 ]]; then
+    max_freq=$(echo "$cpu_stat_debug" |
+      grep "MHz max turbo" | tail -n 1 | awk '{print $5}')
+    test_print_trc "Max_freq_turbo_On: $max_freq"
+  else
+    max_freq=$(echo "$cpu_stat_debug" |
+      grep "base frequency" |
+      awk '{print $5}')
+    test_print_trc "Max_freq_turbo_off: $max_freq"
+  fi
+
+  current_freq=$(echo "$cpu_stat" |
+    awk '{for(k=0;++k<=NF;)a[k]=a[k]?a[k] FS $k:$k} END{for(k=0;k++<NF;)print a[k]}' |
+    grep "Bzy_MHz" | awk -F " " '{print $2}')
+  do_cmd "do_kill_pid $stress_pid"
+  test_print_trc "current freq: $current_freq"
+  test_print_trc "max freq: $max_freq"
+
+  [[ -n "$max_freq" ]] || {
+    echo "$cpu_stat"
+    die "Cannot get the max freq"
+  }
+  [[ -n "$current_freq" ]] || {
+    echo "$cpu_stat"
+    die "Cannot get current freq"
+  }
+  delta=$(awk -v x="$max_freq" -v y="$current_freq" \
+    'BEGIN{printf "%.1f\n", x-y}')
+  test_print_trc "Delta freq between max_freq and current_freq is:$delta MHz"
+
+  # Enable all the CPUs idle cstate
+  for ((i = 0; i < length; i++)); do
+    for ((j = 0; j < cpus_num; j++)); do
+      do_cmd "echo 0 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
+    done
+  done
+
+  if [[ $(echo "$delta > 100" | bc) -eq 1 ]]; then
+    if power_limit_check; then
+      test_print_trc "The package and core power limitation is asserted."
+      test_print_trc "$current_freq is lower than $max_freq with power limitation assert"
+    else
+      test_print_trc "The package and core power limitation is NOT assert."
+      die "$current_freq is lower than $max_freq without power limitation assert"
+    fi
+  else
+    test_print_trc "checking single cpu freq when other CPUs are in idle: PASS"
+  fi
+}
+
+# Function to verify the turbo frequency of a single CPU
+# when all CPUs are in P0, L1, C1, or C1E states
+turbo_freq_when_idle() {
+  local cpu_num=""
+  local idle_state=$1
+
+  # Get the CPUs num and the deepest idle cstate number
+  cpus_num=$(lscpu | grep "On-line CPU(s) list" | awk '{print $NF}' | awk -F "-" '{print $2}')
+  states=($(grep . /sys/devices/system/cpu/cpu0/cpuidle/state*/name | awk -F "/" '{print $(NF-1)}'))
+
+  length=${#states[@]}
+  test_print_trc "The deepest core cstate num is: $length"
+
+  # Enable the idle state for all the CPUs
+  # If test idle state is POLL/C1/C1E, then disable all the other deeper idle cstate
+  if [[ "$idle_state" == POLL ]]; then
+    for ((i = 1; i < length; i++)); do
+      for ((j = 0; j < cpus_num; j++)); do
+        do_cmd "echo 1 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
+      done
+    done
+  elif [[ "$idle_state" == C1 ]]; then
+    for ((i = 2; i < length; i++)); do
+      for ((j = 0; j < cpus_num; j++)); do
+        do_cmd "echo 1 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
+      done
+    done
+  elif [[ "$idle_state" == C1E ]]; then
+    if grep -q 'C1E' /sys/devices/system/cpu/cpu0/cpuidle/state*/name; then
+      for ((i = 3; i < length; i++)); do
+        for ((j = 0; j < cpus_num; j++)); do
+          do_cmd "echo 1 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
+        done
+      done
+    else
+      block_test "The C1E state is not present"
+    fi
+  fi
+
+  # Run a 100% stress workload exclusively on CPU0 and verify the turbo frequency
+  # If the turbo frequency does not meet the expected value
+  # Then determine whether a thermal limitation has been reached
+  verify_single_cpu_freq
+}
+
 # Function to do CPU offline and online short stress
 cpu_off_on_stress() {
   local cycle=$1
@@ -807,6 +949,15 @@ core_cstate_test() {
     ;;
   verify_ccstate_res_offline_online)
     ccstate_res_offline_online 0x10 0x660 0x3fd
+    ;;
+  verify_turbo_freq_in_poll)
+    turbo_freq_when_idle POLL
+    ;;
+  verify_turbo_freq_in_c1)
+    turbo_freq_when_idle C1
+    ;;
+  verify_turbo_freq_in_c1e)
+    turbo_freq_when_idle C1E
     ;;
   verify_cpu_offline_online_stress)
     cpu_off_on_stress 5
