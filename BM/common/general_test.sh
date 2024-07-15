@@ -11,9 +11,12 @@ cd "$(dirname "$0")" 2>/dev/null && source ../.env
 usage() {
   cat <<__EOF
   usage: ./${0##*/} [-t TEST_TYPE][-k KCONFIG or keywrod][-p parm][-h]
-  -t  Test type like KCONFIG, FMS
+  -t  Test type, i.e., kconfig | fms | dmesg | turbostat | module
   -k  KCONFIG name like CONFIG_XXX or keyword
-  -p  PARM like y, null
+  -p  PARM for test
+        option for dmesg check
+        fms list file for fms check
+        module name for module check
   -h  show This
 __EOF
 }
@@ -38,6 +41,9 @@ general_test() {
     ;;
   turbostat)
     check_turbostat_ver
+    ;;
+  module)
+    check_module "$PARM"
     ;;
   *)
     die "Invalid TYPE:$TYPE"

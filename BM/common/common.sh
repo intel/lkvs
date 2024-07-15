@@ -653,3 +653,25 @@ check_turbostat_ver() {
 2024 version from the latest upstream kernel source located at: tools/power/x86/turbostat"
   fi
 }
+
+# Check module existence. If not, try to load module
+# Arguments: $1 module name
+# Output: 0 for module exists or loaded succss; 1 for module loaded failure
+check_module() {
+  local module_name=$1
+
+  module_exist=$(lsmod | grep -w "$module_name")
+  if [[ -n "$module_exist" ]]; then
+    test_print_trc "Module $module_name is already loaded"
+  else
+    modprobe $module_name
+    if [ $? -eq 0 ]; then
+      test_print_trc "Module $module_name is loaded"
+    else
+      block_test "Module $module_name cannot be loaded"
+      return 1
+    fi
+  fi
+
+  return 0
+}
