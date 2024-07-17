@@ -23,6 +23,7 @@
   * [tdx-guest](tdx-guest/README.md)
   * [tdx-osv-sanity](tdx-osv-sanity/README.md) (TODO)
   * [telemetry](telemetry/README.md)
+  * [tpm](tpm/README.md)
   * [Intel_TH(Trace Hub)](th/README.md)
   * [thermal](thermal/README.md)
   * [topology](topology/README.md)
