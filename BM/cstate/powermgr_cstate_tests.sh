@@ -950,6 +950,9 @@ core_cstate_test() {
   verify_ccstate_res_offline_online)
     ccstate_res_offline_online 0x10 0x660 0x3fd
     ;;
+  verify_turbo_freq_in_default)
+    verify_single_cpu_freq
+    ;;
   verify_turbo_freq_in_poll)
     turbo_freq_when_idle POLL
     ;;
