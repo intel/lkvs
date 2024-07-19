@@ -1,6 +1,6 @@
-# This file collects the isst cases for Intel® server platforms 
+# This file collects the isst cases for Intel® server platforms
 # here assume the platform supports SST perf profile level 0,3,4
-# user can adjust the case lists based on the actual SUT SST 
+# user can adjust the case lists based on the actual SUT SST
 # perf profile level support status
 # @hw_dep:
 # @other_dep:
@@ -12,8 +12,14 @@ intel_sst.sh -t isst_pp_config_enable_status
 intel_sst.sh -t isst_legacy_driver_sysfs
 intel_sst.sh -t isst_cap
 intel_sst.sh -t isst_unlock_status
+intel_sst.sh -t isst_pp_config_level1_config
+intel_sst.sh -t isst_pp_config_level2_config
 intel_sst.sh -t isst_pp_config_level3_config
 intel_sst.sh -t isst_pp_config_level4_config
+intel_sst.sh -t isst_pp_config_level1_config_cgroup
+intel_sst.sh -t isst_pp_config_level2_config_cgroup
+intel_sst.sh -t isst_pp_config_level3_config_cgroup
+intel_sst.sh -t isst_pp_config_level4_config_cgroup
 intel_sst.sh -t isst_base_freq_pp_level3_change
 intel_sst.sh -t isst_base_freq_pp_level4_change
 intel_sst.sh -t isst_cp_enable_prop_type
