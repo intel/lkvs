@@ -353,7 +353,7 @@ static u64 get_cr4(void)
 	return cr4;
 }
 
-int __no_profile _native_write_cr0(u64 val)
+int _native_write_cr0(u64 val)
 {
 	int err;
 
@@ -366,7 +366,7 @@ int __no_profile _native_write_cr0(u64 val)
 	return err;
 }
 
-int __no_profile _native_write_cr4(u64 val)
+int _native_write_cr4(u64 val)
 {
 	int err;
 
