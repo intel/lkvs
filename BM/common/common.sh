@@ -158,6 +158,14 @@ block_test() {
   exit 2
 }
 
+skip_test() {
+  caller_info="${BASH_SOURCE[1]##*/}:${BASH_LINENO[0]}:${FUNCNAME[1]}()"
+  test_print_wrg "skip_test() is called by $caller_info"
+  test_print_wrg "SKIPPING TEST: $*"
+  exec_teardown
+  exit 0
+}
+
 # Wrapper function to mark a test as not applicable,
 # it accepts a string to explain why the test is not
 # applicable. exec_teardown is called before exiting with 32.
