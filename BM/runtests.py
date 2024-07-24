@@ -1,4 +1,5 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+
 from avocado.core.nrunner.runnable import Runnable
 from avocado.core.suite import TestSuite
 from avocado.core.job import Job
