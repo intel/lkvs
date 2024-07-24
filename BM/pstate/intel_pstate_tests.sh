@@ -106,6 +106,18 @@ cpufreq_sysfs_attr() {
   fi
 }
 
+# Function to check tuned.service is enabled or disabled
+# This may impact the cpu frequency when a workload is running
+check_tuned_service() {
+  # Check the status of tuned.service using systemctl
+  if systemctl is-enabled --quiet tuned.service; then
+    test_print_trc "tuned.service is enabled, which may change the performance profile and impact the CPU frequency,\
+please consider disabling it with the command: 'sudo systemctl disable tuned.service', then reboot the system."
+  else
+    test_print_trc "tuned.service is disabled, so it will not impact the CPU frequency."
+  fi
+}
+
 # Function to check if there is any package and core power limitation being asserted
 # When CPU Frequency is lower than the expected value.
 power_limit_check() {
@@ -350,6 +362,7 @@ check_max_cores_freq() {
       test_print_trc "$current_freq is lower than $max_freq with power limitation asserted"
     else
       test_print_trc "The package and core power limitation is NOT being asserted."
+      check_tuned_service
       die "$current_freq is lower than $max_freq without power limitation asserted"
     fi
   else

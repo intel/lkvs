@@ -60,6 +60,18 @@ do_kill_pid() {
   [[ -n "$upid" ]] && do_cmd "kill -9 $upid"
 }
 
+# Function to check tuned.service is enabled or disabled
+# This may impact the cpu frequency when a workload is running
+check_tuned_service() {
+  # Check the status of tuned.service using systemctl
+  if systemctl is-enabled --quiet tuned.service; then
+    test_print_trc "tuned.service is enabled, which may change the performance profile and impact the CPU frequency,\
+please consider disabling it with the command: 'sudo systemctl disable tuned.service', then reboot the system."
+  else
+    test_print_trc "tuned.service is disabled, so it will not impact the CPU frequency."
+  fi
+}
+
 # Function to verify if Intel_idle driver refer to BIOS _CST table
 test_cstate_table_name() {
   local cstate_name=""
@@ -787,6 +799,7 @@ verify_single_cpu_freq() {
       test_print_trc "$current_freq is lower than $max_freq with power limitation assert"
     else
       test_print_trc "The package and core power limitation is NOT assert."
+      check_tuned_service
       die "$current_freq is lower than $max_freq without power limitation assert"
     fi
   else

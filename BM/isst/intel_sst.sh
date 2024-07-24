@@ -77,6 +77,18 @@ isst_legacy_driver_interface() {
   done
 }
 
+# Function to check tuned.service is enabled or disabled
+# This may impact the cpu frequency when a workload is running
+check_tuned_service() {
+  # Check the status of tuned.service using systemctl
+  if systemctl is-enabled --quiet tuned.service; then
+    test_print_trc "tuned.service is enabled, which may change the performance profile and impact the CPU frequency,\
+please consider disabling it with the command: 'sudo systemctl disable tuned.service', then reboot the system."
+  else
+    test_print_trc "tuned.service is disabled, so it will not impact the CPU frequency."
+  fi
+}
+
 power_limit_check() {
   pkg_power_limitation_log=$(rdmsr -p 1 0x1b1 -f 11:11 2>/dev/null)
   test_print_trc "The power limitation log from package thermal status 0x1b1 bit 11 is: \
@@ -612,6 +624,7 @@ isst_bf_baseline_test() {
 with power limitation log observed."
     else
       test_print_trc "The package and core power limitation is not assert."
+      check_tuned_service
       die "The CPUs base freq is 100Mhz larger than expected base_freq without power limitation assert."
     fi
   else
@@ -740,6 +753,7 @@ isst_bf_freq_test() {
         test_print_trc "The 2nd and 3rd CPUs of package$j did not reach ISST HP base freq when power limitation assert."
       else
         test_print_trc "The package$j and core power limitation is not assert."
+        check_tuned_service
         die "The 2nd and 3rd CPUs of package$j did not reach ISST HP base freq without power limitation assert."
       fi
     else
@@ -860,6 +874,7 @@ isst_tf_freq_test() {
       die "The test CPUs did not reach ISST HP turbo freq when power limitation assert."
     else
       test_print_trc "The package and core power limitation is not assert."
+      check_tuned_service
       die "The test CPUs did not reach ISST HP turbo freq without power limitation assert."
     fi
   else
