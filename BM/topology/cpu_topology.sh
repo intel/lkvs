@@ -14,6 +14,8 @@ LL3_VALUE=""
 DIE_VALUE=""
 SNC_VALUE=""
 LL3_PER_SOCKET=""
+CXL_DEVICE=""
+CXL_MEM=""
 
 : "${CASE_NAME:=""}"
 
@@ -24,6 +26,12 @@ usage() {
   -H  show this
 __EOF
 }
+
+CXL_DEVICE=$(lspci | grep CXL 2>&1)
+[[ -n "$CXL_DEVICE" ]] && test_print_trc "CXL device is available."
+
+CXL_MEM=$(grep CXL /proc/iomem 2>&1)
+[[ -n "$CXL_MEM" ]] && test_print_trc "CXL memory is available."
 
 # cpuid tool is required to run cases
 if which cpuid 1>/dev/null 2>&1; then
@@ -225,6 +233,8 @@ socket_num() {
     [[ $numa_num -eq $snc_enabled_pkg_num_two ]] || [[ $numa_num -eq $snc_enabled_pkg_num_three ]]
   then
     test_print_trc "SNC is enabled, sockets and NUMA Nodes number is expected."
+  elif [[ -n "$CXL_DEVICE" ]] && [[ -n "$CXL_MEM" ]]; then
+    test_print_trc "CXL device is available, sockets and NUMA Nodes number is expected."
   else
     die "socket number is not aligned between lspci and sysfs"
   fi
