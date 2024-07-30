@@ -60,6 +60,33 @@ do_kill_pid() {
   [[ -n "$upid" ]] && do_cmd "kill -9 $upid"
 }
 
+# Function to check if there is any package and core power limitation being asserted
+# When CPU Frequency is lower than the expected value.
+power_limit_check() {
+  pkg_power_limitation_log=$(rdmsr -p 1 0x1b1 -f 11:11 2>/dev/null)
+  test_print_trc "The power limitation log from package thermal status 0x1b1 bit 11 is: \
+$pkg_power_limitation_log"
+
+  core_power_limitation_log=$(rdmsr -p 1 0x19c -f 11:11 2>/dev/null)
+  test_print_trc "The power limitation log from IA32 thermal status 0x19c bit 11 is: \
+$core_power_limitation_log"
+
+  hwp_cap_value=$(rdmsr -a 0x771)
+  test_print_trc "MSR HWP Capabilities shows: $hwp_cap_value"
+
+  hwp_req_value=$(rdmsr -a 0x774)
+  test_print_trc "MSR HWP Request shows: $hwp_req_value"
+
+  core_perf_limit_reason=$(rdmsr -a 0x64f 2>/dev/null)
+  test_print_trc "The core perf limit reasons msr 0x64f value is: $core_perf_limit_reason"
+
+  if [ "${pkg_power_limitation_log}" == "1" ] && [ "${core_power_limitation_log}" == "1" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 # Function to verify if Intel_idle driver refer to BIOS _CST table
 test_cstate_table_name() {
   local cstate_name=""
