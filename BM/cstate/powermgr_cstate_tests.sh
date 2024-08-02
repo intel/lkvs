@@ -391,12 +391,12 @@ perf_client_cstate_list() {
   test_print_trc "turbostat tool output: $tc_out"
   tc_out_cstate_list=$(echo "$tc_out" | grep -E "^POLL")
 
-  perf_cstates=$(perf list | grep cstate)
+  perf_cstates=$(perf list | grep cstate | grep "Kernel PMU event")
   [[ -n "$perf_cstates" ]] || block_test "Did not get cstate events by perf list"
   test_print_trc "perf list shows cstate events: $perf_cstates"
-  perf_core_cstate_num=$(perf list | grep -c cstate_core)
+  perf_core_cstate_num=$(perf list | grep "Kernel PMU event" | grep -c cstate_core)
   for ((i = 1; i <= perf_core_cstate_num; i++)); do
-    perf_core_cstate=$(perf list | grep cstate_core | sed -n "$i, 1p")
+    perf_core_cstate=$(perf list | grep "Kernel PMU event" | grep cstate_core | sed -n "$i, 1p")
     if [[ $perf_core_cstate =~ c1 ]] && [[ $tc_out_cstate_list =~ CPU%c1 ]]; then
       test_print_trc "$perf_core_cstate is supported and aligned with turbostat"
     elif [[ $perf_core_cstate =~ c6 ]] && [[ $tc_out_cstate_list =~ CPU%c6 ]]; then
@@ -408,9 +408,9 @@ perf_client_cstate_list() {
     fi
   done
 
-  perf_pkg_cstate_num=$(perf list | grep -c cstate_pkg)
+  perf_pkg_cstate_num=$(perf list | grep "Kernel PMU event" | grep -c cstate_pkg)
   for ((i = 1; i <= perf_pkg_cstate_num; i++)); do
-    perf_pkg_cstate=$(perf list | grep cstate_pkg | sed -n "$i, 1p")
+    perf_pkg_cstate=$(perf list | grep "Kernel PMU event" | grep cstate_pkg | sed -n "$i, 1p")
     if [[ $perf_pkg_cstate =~ c2 ]] && [[ $tc_out_cstate_list =~ Pkg%pc2 ]]; then
       test_print_trc "$perf_pkg_cstate is supported and aligned with turbostat"
     elif [[ $perf_pkg_cstate =~ c3 ]] && [[ $tc_out_cstate_list =~ Pkg%pc3 ]]; then
@@ -455,12 +455,12 @@ perf_server_cstate_list() {
   test_print_trc "turbostat tool output: $tc_out"
   tc_out_cstate_list=$(echo "$tc_out" | grep -E "^POLL")
 
-  perf_cstates=$(perf list | grep cstate)
+  perf_cstates=$(perf list | grep cstate | grep "Kernel PMU event")
   [[ -n "$perf_cstates" ]] || block_test "Did not get cstate events by perf list"
   test_print_trc "perf list shows cstate events: $perf_cstates"
-  perf_core_cstate_num=$(perf list | grep -c cstate_core)
+  perf_core_cstate_num=$(perf list | grep "Kernel PMU event" | grep -c cstate_core)
   for ((i = 1; i <= perf_core_cstate_num; i++)); do
-    perf_core_cstate=$(perf list | grep cstate_core | sed -n "$i, 1p")
+    perf_core_cstate=$(perf list | grep "Kernel PMU event" | grep cstate_core | sed -n "$i, 1p")
     if [[ $perf_core_cstate =~ c1 ]] && [[ $tc_out_cstate_list =~ CPU%c1 ]]; then
       test_print_trc "$perf_core_cstate is supported and aligned with turbostat"
     elif [[ $perf_core_cstate =~ c6 ]] && [[ $tc_out_cstate_list =~ CPU%c6 ]]; then
@@ -470,9 +470,9 @@ perf_server_cstate_list() {
     fi
   done
 
-  perf_pkg_cstate_num=$(perf list | grep -c cstate_pkg)
+  perf_pkg_cstate_num=$(perf list | grep "Kernel PMU event" | grep -c cstate_pkg)
   for ((i = 1; i <= perf_pkg_cstate_num; i++)); do
-    perf_pkg_cstate=$(perf list | grep cstate_pkg | sed -n "$i, 1p")
+    perf_pkg_cstate=$(perf list | grep "Kernel PMU event" | grep cstate_pkg | sed -n "$i, 1p")
     if [[ $perf_pkg_cstate =~ c2 ]] && [[ $tc_out_cstate_list =~ Pkg%pc2 ]]; then
       test_print_trc "$perf_pkg_cstate is supported and aligned with turbostat"
     elif [[ $perf_pkg_cstate =~ c6 ]] && [[ $tc_out_cstate_list =~ Pkg%pc6 ]]; then
@@ -487,8 +487,8 @@ perf_server_cstate_list() {
 perf_server_cstat_update() {
   local cstate_name=$1
 
-  perf_cstates=$(perf list | grep "$cstate_name" 2>&1)
-  perf_cstates_num=$(perf list | grep -c "$cstate_name" 2>&1)
+  perf_cstates=$(perf list | grep "Kernel PMU event" | grep "$cstate_name" 2>&1)
+  perf_cstates_num=$(perf list | grep "Kernel PMU event" | grep -c "$cstate_name" 2>&1)
   [[ -n $perf_cstates ]] || block_test "Did not get $cstate_name event by perf list"
 
   # Sleep 20 seconds to capture the cstate counter update
