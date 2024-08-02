@@ -1,3 +1,4 @@
+##!/bin/bash
 # Some examples on how to trigger the cpuid and capture #VE.
 # Register the kretprobe.
 echo kretprobe > /sys/kernel/debug/tdx/tdx-tests
