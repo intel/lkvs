@@ -429,7 +429,7 @@ while getopts ":o:d:f:t:s:c:h" opt; do
       [[ "$CMDFILES" == "$TESTS_SERVER" ]] && list_all_test_files "$CMDFILES"
 
       for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
-        check_test_file_legal "$cmdfile"
+        check_test_file_legal "$cmdfile" || continue
 
         check_dep_feature "$cmdfile" || {
           append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
@@ -455,7 +455,7 @@ while getopts ":o:d:f:t:s:c:h" opt; do
       test_files=$(find "$SCENARIO_FOLDER" -name "tests-*")
       [[ -z "$test_files" ]] && append_log "No tests-* files under $SCENARIO_FOLDER"
       for cmdfile in $test_files; do
-        check_test_file_legal "$cmdfile"
+        check_test_file_legal "$cmdfile" || continue
 
         check_dep_feature "$cmdfile" || {
           append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
