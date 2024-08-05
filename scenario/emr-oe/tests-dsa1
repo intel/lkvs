@@ -1,23 +1,63 @@
 #DSA_XS_FUNC_USER_MEMMOVE_1D2G2Q
 dsa_user_test.sh -c 1d2g2q_user -o 0x03
+#DSA_XS_FUNC_USER_MEMMOVE_1D4G8Q
+dsa_user_test.sh -c 1d4g8q_user -o 0x03
 #DSA_XS_FUNC_USER_MEMMOVE_4D4G4Q
 dsa_user_test.sh -c 4d4g4q_user -o 0x03
+#DSA_XS_FUNC_USER_MEMMOVE_4D16G32Q
+dsa_user_test.sh -c 4d16g32q_user -o 0x03
+#DSA_XS_FUNC_USER_MEMMOVE_8D8G8Q
+dsa_user_test.sh -c 8d8g8q_user -o 0x03
+#DSA_XS_FUNC_USER_MEMMOVE_8D32G64Q
+dsa_user_test.sh -c 8d32g64q_user -o 0x03
 #DSA_XS_FUNC_USER_MEMFILL_1D2G2Q
 dsa_user_test.sh -c 1d2g2q_user -o 0x04
+#DSA_XS_FUNC_USER_MEMFILL_1D4G8Q
+dsa_user_test.sh -c 1d4g8q_user -o 0x04
 #DSA_XS_FUNC_USER_MEMFILL_4D4G4Q
 dsa_user_test.sh -c 4d4g4q_user -o 0x04
+#DSA_XS_FUNC_USER_MEMFILL_4D16G32Q
+dsa_user_test.sh -c 4d16g32q_user -o 0x04
+#DSA_XS_FUNC_USER_MEMFILL_8D8G8Q
+dsa_user_test.sh -c 8d8g8q_user -o 0x04
+#DSA_XS_FUNC_USER_MEMFILL_8D32G64Q
+dsa_user_test.sh -c 8d32g64q_user -o 0x04
 #DSA_XS_FUNC_USER_COMPARE_1D2G2Q
 dsa_user_test.sh -c 1d2g2q_user -o 0x05
+#DSA_XS_FUNC_USER_COMPARE_1D4G8Q
+dsa_user_test.sh -c 1d4g8q_user -o 0x05
 #DSA_XS_FUNC_USER_COMPARE_4D4G4Q
 dsa_user_test.sh -c 4d4g4q_user -o 0x05
+#DSA_XS_FUNC_USER_COMPARE_4D16G32Q
+dsa_user_test.sh -c 4d16g32q_user -o 0x05
+#DSA_XS_FUNC_USER_COMPARE_8D8G8Q
+dsa_user_test.sh -c 8d8g8q_user -o 0x05
+#DSA_XS_FUNC_USER_COMPARE_8D32G64Q
+dsa_user_test.sh -c 8d32g64q_user -o 0x05
 #DSA_XS_FUNC_USER_COMPVAL_1D2G2Q
 dsa_user_test.sh -c 1d2g2q_user -o 0x06
+#DSA_XS_FUNC_USER_COMPVAL_1D4G8Q
+dsa_user_test.sh -c 1d4g8q_user -o 0x06
 #DSA_XS_FUNC_USER_COMPVAL_4D4G4Q
 dsa_user_test.sh -c 4d4g4q_user -o 0x06
+#DSA_XS_FUNC_USER_COMPVAL_4D16G32Q
+dsa_user_test.sh -c 4d16g32q_user -o 0x06
+#DSA_XS_FUNC_USER_COMPVAL_8D8G8Q
+dsa_user_test.sh -c 8d8g8q_user -o 0x06
+#DSA_XS_FUNC_USER_COMPVAL_8D32G64Q
+dsa_user_test.sh -c 8d32g64q_user -o 0x06
 #DSA_XS_FUNC_USER_DUALCAST_1D2G2Q
 dsa_user_test.sh -c 1d2g2q_user -o 0x09
+#DSA_XS_FUNC_USER_DUALCAST_1D4G8Q
+dsa_user_test.sh -c 1d4g8q_user -o 0x09
 #DSA_XS_FUNC_USER_DUALCAST_4D4G4Q
 dsa_user_test.sh -c 4d4g4q_user -o 0x09
+#DSA_XS_FUNC_USER_DUALCAST_4D16G32Q
+dsa_user_test.sh -c 4d16g32q_user -o 0x09
+#DSA_XS_FUNC_USER_DUALCAST_8D8G8Q
+dsa_user_test.sh -c 8d8g8q_user -o 0x09
+#DSA_XS_FUNC_USER_DUALCAST_8D32G64Q
+dsa_user_test.sh -c 8d32g64q_user -o 0x09
 #DSA_XS_FUNC_USER_NOOP_1D2G2Q
 dsa_user_test.sh -c 1d2g2q_user -o 0x0
 #DSA_XS_FUNC_USER_NOOP_1D4G8Q

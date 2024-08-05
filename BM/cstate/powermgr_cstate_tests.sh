@@ -42,63 +42,6 @@ else
   block_test "msr-tools is required to run CSTATE cases."
 fi
 
-# stress tool is required to run cstate cases
-if which stress 1>/dev/null 2>&1; then
-  stress --help 1>/dev/null || block_test "Failed to run stress tool,
-please check stress tool error message."
-else
-  block_test "stress tool is required to run cstate cases,
-please get it from latest upstream kernel-tools."
-fi
-
-# This function is used to kill stress process if it is still running.
-# We do this to release cpu resource.
-do_kill_pid() {
-  [[ $# -ne 1 ]] && die "You must supply 1 parameter"
-  local upid="$1"
-  upid=$(ps -e | awk '{if($1~/'"$upid"'/) print $1}')
-  [[ -n "$upid" ]] && do_cmd "kill -9 $upid"
-}
-
-# Function to check tuned.service is enabled or disabled
-# This may impact the cpu frequency when a workload is running
-check_tuned_service() {
-  # Check the status of tuned.service using systemctl
-  if systemctl is-enabled --quiet tuned.service; then
-    test_print_trc "tuned.service is enabled, which may change the performance profile and impact the CPU frequency,\
-please consider disabling it with the command: 'sudo systemctl disable tuned.service', then reboot the system."
-  else
-    test_print_trc "tuned.service is disabled, so it will not impact the CPU frequency."
-  fi
-}
-
-# Function to check if there is any package and core power limitation being asserted
-# When CPU Frequency is lower than the expected value.
-power_limit_check() {
-  pkg_power_limitation_log=$(rdmsr -p 1 0x1b1 -f 11:11 2>/dev/null)
-  test_print_trc "The power limitation log from package thermal status 0x1b1 bit 11 is: \
-$pkg_power_limitation_log"
-
-  core_power_limitation_log=$(rdmsr -p 1 0x19c -f 11:11 2>/dev/null)
-  test_print_trc "The power limitation log from IA32 thermal status 0x19c bit 11 is: \
-$core_power_limitation_log"
-
-  hwp_cap_value=$(rdmsr -a 0x771)
-  test_print_trc "MSR HWP Capabilities shows: $hwp_cap_value"
-
-  hwp_req_value=$(rdmsr -a 0x774)
-  test_print_trc "MSR HWP Request shows: $hwp_req_value"
-
-  core_perf_limit_reason=$(rdmsr -a 0x64f 2>/dev/null)
-  test_print_trc "The core perf limit reasons msr 0x64f value is: $core_perf_limit_reason"
-
-  if [ "${pkg_power_limitation_log}" == "1" ] && [ "${core_power_limitation_log}" == "1" ]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
 # Function to verify if Intel_idle driver refer to BIOS _CST table
 test_cstate_table_name() {
   local cstate_name=""
@@ -391,12 +334,12 @@ perf_client_cstate_list() {
   test_print_trc "turbostat tool output: $tc_out"
   tc_out_cstate_list=$(echo "$tc_out" | grep -E "^POLL")
 
-  perf_cstates=$(perf list | grep cstate | grep "Kernel PMU event")
+  perf_cstates=$(perf list | grep cstate)
   [[ -n "$perf_cstates" ]] || block_test "Did not get cstate events by perf list"
   test_print_trc "perf list shows cstate events: $perf_cstates"
-  perf_core_cstate_num=$(perf list | grep "Kernel PMU event" | grep -c cstate_core)
+  perf_core_cstate_num=$(perf list | grep -c cstate_core)
   for ((i = 1; i <= perf_core_cstate_num; i++)); do
-    perf_core_cstate=$(perf list | grep "Kernel PMU event" | grep cstate_core | sed -n "$i, 1p")
+    perf_core_cstate=$(perf list | grep cstate_core | sed -n "$i, 1p")
     if [[ $perf_core_cstate =~ c1 ]] && [[ $tc_out_cstate_list =~ CPU%c1 ]]; then
       test_print_trc "$perf_core_cstate is supported and aligned with turbostat"
     elif [[ $perf_core_cstate =~ c6 ]] && [[ $tc_out_cstate_list =~ CPU%c6 ]]; then
@@ -408,9 +351,9 @@ perf_client_cstate_list() {
     fi
   done
 
-  perf_pkg_cstate_num=$(perf list | grep "Kernel PMU event" | grep -c cstate_pkg)
+  perf_pkg_cstate_num=$(perf list | grep -c cstate_pkg)
   for ((i = 1; i <= perf_pkg_cstate_num; i++)); do
-    perf_pkg_cstate=$(perf list | grep "Kernel PMU event" | grep cstate_pkg | sed -n "$i, 1p")
+    perf_pkg_cstate=$(perf list | grep cstate_pkg | sed -n "$i, 1p")
     if [[ $perf_pkg_cstate =~ c2 ]] && [[ $tc_out_cstate_list =~ Pkg%pc2 ]]; then
       test_print_trc "$perf_pkg_cstate is supported and aligned with turbostat"
     elif [[ $perf_pkg_cstate =~ c3 ]] && [[ $tc_out_cstate_list =~ Pkg%pc3 ]]; then
@@ -455,12 +398,12 @@ perf_server_cstate_list() {
   test_print_trc "turbostat tool output: $tc_out"
   tc_out_cstate_list=$(echo "$tc_out" | grep -E "^POLL")
 
-  perf_cstates=$(perf list | grep cstate | grep "Kernel PMU event")
+  perf_cstates=$(perf list | grep cstate)
   [[ -n "$perf_cstates" ]] || block_test "Did not get cstate events by perf list"
   test_print_trc "perf list shows cstate events: $perf_cstates"
-  perf_core_cstate_num=$(perf list | grep "Kernel PMU event" | grep -c cstate_core)
+  perf_core_cstate_num=$(perf list | grep -c cstate_core)
   for ((i = 1; i <= perf_core_cstate_num; i++)); do
-    perf_core_cstate=$(perf list | grep "Kernel PMU event" | grep cstate_core | sed -n "$i, 1p")
+    perf_core_cstate=$(perf list | grep cstate_core | sed -n "$i, 1p")
     if [[ $perf_core_cstate =~ c1 ]] && [[ $tc_out_cstate_list =~ CPU%c1 ]]; then
       test_print_trc "$perf_core_cstate is supported and aligned with turbostat"
     elif [[ $perf_core_cstate =~ c6 ]] && [[ $tc_out_cstate_list =~ CPU%c6 ]]; then
@@ -470,9 +413,9 @@ perf_server_cstate_list() {
     fi
   done
 
-  perf_pkg_cstate_num=$(perf list | grep "Kernel PMU event" | grep -c cstate_pkg)
+  perf_pkg_cstate_num=$(perf list | grep -c cstate_pkg)
   for ((i = 1; i <= perf_pkg_cstate_num; i++)); do
-    perf_pkg_cstate=$(perf list | grep "Kernel PMU event" | grep cstate_pkg | sed -n "$i, 1p")
+    perf_pkg_cstate=$(perf list | grep cstate_pkg | sed -n "$i, 1p")
     if [[ $perf_pkg_cstate =~ c2 ]] && [[ $tc_out_cstate_list =~ Pkg%pc2 ]]; then
       test_print_trc "$perf_pkg_cstate is supported and aligned with turbostat"
     elif [[ $perf_pkg_cstate =~ c6 ]] && [[ $tc_out_cstate_list =~ Pkg%pc6 ]]; then
@@ -487,8 +430,8 @@ perf_server_cstate_list() {
 perf_server_cstat_update() {
   local cstate_name=$1
 
-  perf_cstates=$(perf list | grep "Kernel PMU event" | grep "$cstate_name" 2>&1)
-  perf_cstates_num=$(perf list | grep "Kernel PMU event" | grep -c "$cstate_name" 2>&1)
+  perf_cstates=$(perf list | grep "$cstate_name" 2>&1)
+  perf_cstates_num=$(perf list | grep -c "$cstate_name" 2>&1)
   [[ -n $perf_cstates ]] || block_test "Did not get $cstate_name event by perf list"
 
   # Sleep 20 seconds to capture the cstate counter update
@@ -754,131 +697,6 @@ ccstate_res_offline_online() {
   fi
 }
 
-# Function to check one CPU turbo freqency when other CPUs are in active idle state
-verify_single_cpu_freq() {
-  local stress_pid=""
-  local cpu_stat=""
-  local max_freq=""
-  local current_freq=""
-  local delta=0
-  local turbo_on=""
-  local cpu_no_turbo_mode="/sys/devices/system/cpu/intel_pstate/no_turbo"
-
-  # Get the CPUs num and the deepest idle cstate number
-  cpus_num=$(lscpu | grep "On-line CPU(s) list" | awk '{print $NF}' | awk -F "-" '{print $2}')
-  states=($(grep . /sys/devices/system/cpu/cpu0/cpuidle/state*/name | awk -F "/" '{print $(NF-1)}'))
-
-  length=${#states[@]}
-
-  turbo_on=$(cat "$cpu_no_turbo_mode")
-
-  test_print_trc "Executing stress -c 1 -t 90 & in background"
-  taskset -c 1 stress -c 1 -t 90 &
-  stress_pid=$!
-
-  cpu_stat_debug=$(turbostat -i 1 sleep 1 2>&1)
-  test_print_trc "Turbostat debug output is:"
-  test_print_trc "$cpu_stat_debug"
-  cpu_stat=$(turbostat -q -i 1 sleep 1 2>&1)
-  test_print_trc "Turbostat output is:"
-  test_print_trc "$cpu_stat"
-
-  if [[ "$turbo_on" -eq 0 ]]; then
-    max_freq=$(echo "$cpu_stat_debug" |
-      grep "MHz max turbo" | tail -n 1 | awk '{print $5}')
-    test_print_trc "Max_freq_turbo_On: $max_freq"
-  else
-    max_freq=$(echo "$cpu_stat_debug" |
-      grep "base frequency" |
-      awk '{print $5}')
-    test_print_trc "Max_freq_turbo_off: $max_freq"
-  fi
-
-  current_freq=$(echo "$cpu_stat" |
-    awk '{for(k=0;++k<=NF;)a[k]=a[k]?a[k] FS $k:$k} END{for(k=0;k++<NF;)print a[k]}' |
-    grep "Bzy_MHz" | awk -F " " '{print $2}')
-  do_cmd "do_kill_pid $stress_pid"
-  test_print_trc "current freq: $current_freq"
-  test_print_trc "max freq: $max_freq"
-
-  [[ -n "$max_freq" ]] || {
-    echo "$cpu_stat"
-    die "Cannot get the max freq"
-  }
-  [[ -n "$current_freq" ]] || {
-    echo "$cpu_stat"
-    die "Cannot get current freq"
-  }
-  delta=$(awk -v x="$max_freq" -v y="$current_freq" \
-    'BEGIN{printf "%.1f\n", x-y}')
-  test_print_trc "Delta freq between max_freq and current_freq is:$delta MHz"
-
-  # Enable all the CPUs idle cstate
-  for ((i = 0; i < length; i++)); do
-    for ((j = 0; j < cpus_num; j++)); do
-      do_cmd "echo 0 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
-    done
-  done
-
-  if [[ $(echo "$delta > 100" | bc) -eq 1 ]]; then
-    if power_limit_check; then
-      test_print_trc "The package and core power limitation is asserted."
-      test_print_trc "$current_freq is lower than $max_freq with power limitation assert"
-    else
-      test_print_trc "The package and core power limitation is NOT assert."
-      check_tuned_service
-      die "$current_freq is lower than $max_freq without power limitation assert"
-    fi
-  else
-    test_print_trc "checking single cpu freq when other CPUs are in idle: PASS"
-  fi
-}
-
-# Function to verify the turbo frequency of a single CPU
-# when all CPUs are in P0, L1, C1, or C1E states
-turbo_freq_when_idle() {
-  local cpu_num=""
-  local idle_state=$1
-
-  # Get the CPUs num and the deepest idle cstate number
-  cpus_num=$(lscpu | grep "On-line CPU(s) list" | awk '{print $NF}' | awk -F "-" '{print $2}')
-  states=($(grep . /sys/devices/system/cpu/cpu0/cpuidle/state*/name | awk -F "/" '{print $(NF-1)}'))
-
-  length=${#states[@]}
-  test_print_trc "The deepest core cstate num is: $length"
-
-  # Enable the idle state for all the CPUs
-  # If test idle state is POLL/C1/C1E, then disable all the other deeper idle cstate
-  if [[ "$idle_state" == POLL ]]; then
-    for ((i = 1; i < length; i++)); do
-      for ((j = 0; j < cpus_num; j++)); do
-        do_cmd "echo 1 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
-      done
-    done
-  elif [[ "$idle_state" == C1 ]]; then
-    for ((i = 2; i < length; i++)); do
-      for ((j = 0; j < cpus_num; j++)); do
-        do_cmd "echo 1 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
-      done
-    done
-  elif [[ "$idle_state" == C1E ]]; then
-    if grep -q 'C1E' /sys/devices/system/cpu/cpu0/cpuidle/state*/name; then
-      for ((i = 3; i < length; i++)); do
-        for ((j = 0; j < cpus_num; j++)); do
-          do_cmd "echo 1 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
-        done
-      done
-    else
-      block_test "The C1E state is not present"
-    fi
-  fi
-
-  # Run a 100% stress workload exclusively on CPU0 and verify the turbo frequency
-  # If the turbo frequency does not meet the expected value
-  # Then determine whether a thermal limitation has been reached
-  verify_single_cpu_freq
-}
-
 # Function to do CPU offline and online short stress
 cpu_off_on_stress() {
   local cycle=$1
@@ -989,18 +807,6 @@ core_cstate_test() {
     ;;
   verify_ccstate_res_offline_online)
     ccstate_res_offline_online 0x10 0x660 0x3fd
-    ;;
-  verify_turbo_freq_in_default)
-    verify_single_cpu_freq
-    ;;
-  verify_turbo_freq_in_poll)
-    turbo_freq_when_idle POLL
-    ;;
-  verify_turbo_freq_in_c1)
-    turbo_freq_when_idle C1
-    ;;
-  verify_turbo_freq_in_c1e)
-    turbo_freq_when_idle C1E
     ;;
   verify_cpu_offline_online_stress)
     cpu_off_on_stress 5

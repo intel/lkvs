@@ -158,14 +158,6 @@ block_test() {
   exit 2
 }
 
-skip_test() {
-  caller_info="${BASH_SOURCE[1]##*/}:${BASH_LINENO[0]}:${FUNCNAME[1]}()"
-  test_print_wrg "skip_test() is called by $caller_info"
-  test_print_wrg "SKIPPING TEST: $*"
-  exec_teardown
-  exit 0
-}
-
 # Wrapper function to mark a test as not applicable,
 # it accepts a string to explain why the test is not
 # applicable. exec_teardown is called before exiting with 32.
@@ -660,26 +652,4 @@ check_turbostat_ver() {
     block_test "Please ensure you are using the most recent version of turbostat by recompiling
 2024 version from the latest upstream kernel source located at: tools/power/x86/turbostat"
   fi
-}
-
-# Check module existence. If not, try to load module
-# Arguments: $1 module name
-# Output: 0 for module exists or loaded succss; 1 for module loaded failure
-check_module() {
-  local module_name=$1
-
-  module_exist=$(lsmod | grep -w "$module_name")
-  if [[ -n "$module_exist" ]]; then
-    test_print_trc "Module $module_name is already loaded"
-  else
-    modprobe $module_name
-    if [ $? -eq 0 ]; then
-      test_print_trc "Module $module_name is loaded"
-    else
-      block_test "Module $module_name cannot be loaded"
-      return 1
-    fi
-  fi
-
-  return 0
 }

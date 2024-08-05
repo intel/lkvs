@@ -1,9 +1,0 @@
-# This file collects Intel TPM(Trust Platform Module) tests on
-# Intel® Architecture-based platforms.
-# @hw_dep: [ -e "/dev/tpm0" ] @ No /dev/tpm0 device node to support TPM
-# @other_dep: general_test.sh -t kconfig -k "CONFIG_TCG_TPM=y" @ No TPM kconfig CONFIG_TCG_TPM=y
-# @other_warn: [ -e "/dev/tpmrm0" ] @ No /dev/tpmrm0 device node test_async.sh will skip with return 4
-
-test_smoke.sh
-test_space.sh
-test_async.sh

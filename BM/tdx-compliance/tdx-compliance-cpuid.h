@@ -53,8 +53,8 @@ extern void initial_cpuid(void);
 void initial_cpuid(void)
 {
 	/* CPUID(0x0) */
-	EXP_CPUID_BYTE(0x0, 0, eax, 0x00000021, VER1_0);	//"MaxIndex"
-	EXP_CPUID_BYTE(0x0, 0, eax, 0x00000023, VER1_5 | VER2_0);	//"MaxIndex"
+	EXP_CPUID_BYTE(0x0, 0, eax, 0x00000021, VER1_0 | VER2_0);	//"MaxIndex"
+	EXP_CPUID_BYTE(0x0, 0, eax, 0x00000023, VER1_5);	//"MaxIndex"
 	EXP_CPUID_BYTE(0x0, 0, ebx, 0x756e6547, VER1_5);	//"Genu"
 	EXP_CPUID_BYTE(0x0, 0, ecx, 0x6c65746e, VER1_5);	//"ntel"
 	EXP_CPUID_BYTE(0x0, 0, edx, 0x49656e69, VER1_5);	//"ineI"
@@ -240,8 +240,8 @@ void initial_cpuid(void)
 	EXP_CPUID_RES_BITS(0x4, 4, edx, 3, 31, VER1_0 | VER1_5 | VER2_0);		//Reserved
 
 	/* CPUID(0x7, 0x0).EAX */
-	EXP_CPUID_BYTE(0x7, 0, eax, 2, VER1_5 | VER2_0);			//Max Sub-Leaves
-	EXP_CPUID_BYTE(0x7, 0, eax, 1, VER1_0);			//Max Sub-Leaves
+	EXP_CPUID_BYTE(0x7, 0, eax, 2, VER1_5);			//Max Sub-Leaves
+	EXP_CPUID_BYTE(0x7, 0, eax, 1, VER1_0 | VER2_0);			//Max Sub-Leaves
 
 	/* CPUID(0x7, 0x0).EBX */
 	EXP_CPUID_BIT(0x7, 0x0, ebx, 0, 1, VER1_0 | VER1_5 | VER2_0);		//FSGSBASE
@@ -291,9 +291,7 @@ void initial_cpuid(void)
 	EXP_CPUID_BIT(0x7, 0x1, eax, 7, 0, VER1_5 | VER2_0);		//Reserved
 	EXP_CPUID_BIT(0x7, 0x1, eax, 8, 0, VER2_0);		//Reserved
 	EXP_CPUID_BIT(0x7, 0x1, eax, 9, 0, VER1_5 | VER2_0);		//Reserved
-	EXP_CPUID_RES_BITS(0x7, 0x1, eax, 13, 21, VER1_0 | VER1_5);	//Reserved
-	EXP_CPUID_RES_BITS(0x7, 0x1, eax, 13, 18, VER2_0);	//Reserved
-	EXP_CPUID_BIT(0x7, 0x1, eax, 20, 0, VER2_0);		//HRESET
+	EXP_CPUID_RES_BITS(0x7, 0x1, eax, 13, 21, VER1_0 | VER1_5 | VER2_0);	//Reserved
 	EXP_CPUID_BIT(0x7, 0x1, eax, 22, 0, VER1_0 | VER1_5 | VER2_0);		//HRESET
 	EXP_CPUID_RES_BITS(0x7, 0x1, eax, 23, 31, VER1_0);	//Reserved
 	EXP_CPUID_RES_BITS(0x7, 0x1, eax, 23, 25, VER1_5 | VER2_0);	//Reserved
@@ -306,8 +304,7 @@ void initial_cpuid(void)
 	EXP_CPUID_RES_BITS(0x7, 0x1, ecx, 0, 31, VER1_0 | VER1_5 | VER2_0);	//Reserved
 
 	/* CPUID(0x7, 0x1).EDX */
-//TODO: big change here.
-//	EXP_CPUID_RES_BITS(0x7, 0x1, edx, 0, 31, VER2_0);	//Reserved
+	EXP_CPUID_RES_BITS(0x7, 0x1, edx, 0, 31, VER2_0);	//Reserved
 	EXP_CPUID_BIT(0x7, 0x1, edx, 4, 1, VER1_5);
 	EXP_CPUID_BIT(0x7, 0x1, edx, 5, 1, VER1_5);
 
@@ -335,8 +332,7 @@ void initial_cpuid(void)
 
 	/* CPUID(0xa, 0x0).EDX */
 	EXP_CPUID_RES_BITS(0xa, 0x0, edx, 13, 14, VER1_5 | VER2_0);	//Reserved
-//TODO: Need check Attributes & Native	PERFMON
-//	EXP_CPUID_BIT(0xa, 0x0, edx, 15, 1, VER1_5 | VER2_0);		//AnyThread Deprecation
+	EXP_CPUID_BIT(0xa, 0x0, edx, 15, 1, VER1_5 | VER2_0);		//AnyThread Deprecation
 	EXP_CPUID_RES_BITS(0xa, 0x0, edx, 16, 31, VER1_5 | VER2_0);	//Reserved
 
 	/* CPUID(0xd, 0x0).EAX */
