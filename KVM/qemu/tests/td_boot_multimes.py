@@ -15,7 +15,7 @@ from virttest import error_context
 def run(test, params, env):
     """
     Boot TD by multiple times:
-    1) Boot up one TDVM
+    1) Boot up TDVM
     2) Shutdown TDVM
     3) repeat step1 and step2 multiple times
 
@@ -24,17 +24,19 @@ def run(test, params, env):
     :param env: Dictionary with test environment
     """
 
-    params["start_vm"] = 'yes'
     timeout = params.get_numeric("login_timeout", 240)
+    serial_login = params.get("serial_login", "no") == "yes"
     iterations = params.get_numeric("iterations")
     for i in range(iterations):
-        error_context.context("The iteration %s of booting TDVM" % i, test.log.info)
-        vm_name = params['main_vm']
-        try:
-            env_process.preprocess_vm(test, params, env, vm_name)
-        except:
-            raise
-        vm = env.get_vm(vm_name)
-        vm.verify_alive()
-        session = vm.wait_for_login(timeout=timeout)
-        vm.destroy()
+        error_context.context("The iteration %s of booting TDVM(s)" % i, test.log.info)
+        vms = env.get_all_vms()
+        for vm in vms:
+            vm.create()
+        for vm in vms:
+            vm.verify_alive()
+            if serial_login:
+                session = vm.wait_for_serial_login(timeout=timeout)
+            else:
+                session = vm.wait_for_login(timeout=timeout)
+            session.close()
+            vm.destroy()
