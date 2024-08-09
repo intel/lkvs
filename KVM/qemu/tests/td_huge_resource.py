@@ -19,29 +19,46 @@ def run(test, params, env):
     """
     Boot TD with huge CPU and memory:
     1) Caculate the host online CPU number and usable memory size
-    2) Boot up one TDVM with half resource of host
+    2) Boot up one TDVM with huge resource of host
     3) Shutdown TDVM
 
     :param test: QEMU test object
     :param params: Dictionary with the test parameters
     :param env: Dictionary with test environment
     """
+    xfail = False
+    if (params.get("xfail") is not None) and (params.get("xfail") == "yes"):
+        xfail = True
 
     timeout = params.get_numeric("login_timeout", 240)
     params["start_vm"] = 'yes'
     host_cpu = cpu.online_count()
     host_free_mem = utils_misc.get_usable_memory_size()
-    params['smp'] = params['vcpu_maxcpus'] = host_cpu//2
     params['mem'] = host_free_mem//2
+
+    if (params.get("check_host_cpu") is not None) and (params['check_host_cpu'] == 'yes'):
+        params['smp'] = params['vcpu_maxcpus'] = host_cpu
+    elif (params.get("overrange_host_cpu") is not None) and (params['overrange_host_cpu'] == 'yes'):
+        params['smp'] = params['vcpu_maxcpus'] = host_cpu+1
+    else:
+        params['smp'] = params['vcpu_maxcpus'] = host_cpu//2
 
     error_context.context("Booting TDVM with large CPU and memory", test.log.info)
     vm_name = params['main_vm']
+    has_error = False
     try:
         env_process.preprocess_vm(test, params, env, vm_name)
     except:
-        raise
-    vm = env.get_vm(vm_name)
-    vm.verify_alive()
-    session = vm.wait_for_login(timeout=timeout)
-    vm.destroy()
-    session.close()
+        has_error = True
+        if xfail is False:
+            raise
+
+    if (has_error is False) and (xfail is True):
+        test.fail("Test was expected to fail, but it didn't")
+
+    if xfail is False:
+        vm = env.get_vm(vm_name)
+        vm.verify_alive()
+        session = vm.wait_for_login(timeout=timeout)
+        session.close()
+        vm.destroy()
