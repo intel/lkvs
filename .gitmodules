@@ -3,3 +3,6 @@
 	url = https://github.com/intel/idxd-config.git
 	active = true
 	branch = stable
+[submodule "BM/ras/mce-test"]
+	path = BM/ras/mce-test
+	url = https://github.com/laifryiee/mce-test.git
