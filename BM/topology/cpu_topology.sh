@@ -529,11 +529,15 @@ generic_sched_domain_names() {
               test_print_trc "CPU$i sched_domain$j name $name_j is expected."
             elif [[ $name_j == CLS ]]; then
               disable_sched_domain_debug
+              test_print_trc "Print CPU0 topology files:"
+              grep . /sys/devices/system/cpu/cpu0/topology/*
               die "CPU$i sched_domain$j name $name_j is on unknown SKU."
             elif [[ $name_j == MC ]] && [[ $TYPE_VALUE != Atom ]]; then
               test_print_trc "CPU$i sched_domain$j name $name_j is expected on SMT disable Pcore"
             else
               disable_sched_domain_debug
+              test_print_trc "Print CPU0 topology files:"
+              grep . /sys/devices/system/cpu/cpu0/topology/*
               die "CPU$i sched_domain$j name shows $name_j is on unknown SKU."
             fi
             # Test sched_domain1 if supports
@@ -545,8 +549,14 @@ generic_sched_domain_names() {
               test_print_trc "CPU$i sched_domain$j name $name_j is expected on most SKU."
             elif [[ $name_j == PKG ]] && [[ $HYBRID_VALUE == true ]] && [[ $LL3_VALUE == false ]]; then
               test_print_trc "CPU$i sched_domain$j name $name_j is expected on CPUs lack of LL3 SKU."
+            # Server SKU will not have PKG sched_domain name, but NUMA
+            elif [[ $name_j == NUMA ]] && [[ $smt_enable -ne 1 ]] &&
+              [[ $HYBRID_VALUE == false ]] && [[ $LL3_PER_SOCKET == no ]]; then
+              test_print_trc "CPU$i sched_domain$j name $name_j is expected on SMT disabled Server SKU."
             else
               disable_sched_domain_debug
+              test_print_trc "Print CPU0 topology files:"
+              grep . /sys/devices/system/cpu/cpu0/topology/*
               die "CPU$i sched_domain$j name $name_j is on unknown SKU."
             fi
             # Test sched_domain2 if supports
@@ -566,6 +576,8 @@ generic_sched_domain_names() {
               test_print_trc "CPU$i sched_domain$j name $name_j is expected on hybrid Client SKU"
             else
               disable_sched_domain_debug
+              test_print_trc "Print CPU0 topology files:"
+              grep . /sys/devices/system/cpu/cpu0/topology/*
               die "CPU$i sched_domain$j name $name_j is on unknown SKU."
             fi
             # Test sched_domain3 if supports
@@ -581,6 +593,8 @@ generic_sched_domain_names() {
               test_print_trc "CPU$i sched_domain$j name $name_j is expected on SNC enabled SKU"
             else
               disable_sched_domain_debug
+              test_print_trc "Print CPU0 topology files:"
+              grep . /sys/devices/system/cpu/cpu0/topology/*
               die "CPU$i sched_domain$j name $name_j is on unknown SKU."
             fi
           # Test sched_domain4 if supports
@@ -596,6 +610,8 @@ generic_sched_domain_names() {
               test_print_trc "CPU$i sched_domain$j name $name_j is expected on SNC enabled SKU"
             else
               disable_sched_domain_debug
+              test_print_trc "Print CPU0 topology files:"
+              grep . /sys/devices/system/cpu/cpu0/topology/*
               die "CPU$i sched_domain$j name $name_j is on unknown SKU."
             fi
           fi
