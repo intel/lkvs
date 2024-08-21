@@ -1,0 +1,28 @@
+#DSA_XS_FUNC_USER_MEMMOVE_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x03
+#DSA_XS_FUNC_USER_MEMFILL_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x04
+#DSA_XS_FUNC_USER_COMPARE_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x05
+#DSA_XS_FUNC_USER_COMPVAL_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x06
+#DSA_XS_FUNC_USER_DUALCAST_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x09
+#DSA_XS_FUNC_USER_NOOP_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x0
+#DSA_XS_FUNC_USER_DRAIN_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x2
+#DSA_XS_FUNC_USER_CRCGEN_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x10
+#DSA_XS_FUNC_USER_COPYCRC_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x11
+#DSA_XS_FUNC_USER_CFLUSH_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x20
+#DSA_XS_FUNC_USER_DIFCHECK_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x12
+#DSA_XS_FUNC_USER_DIFINS_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x13
+#DSA_XS_FUNC_USER_DIFSTRP_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x14
+#DSA_XS_FUNC_USER_DIFUPDT_1D2G2Q
+dsa_user_test.sh -c 1d2g2q_user -o 0x15
