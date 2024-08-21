@@ -30,18 +30,7 @@ run_ifs_tests() {
   local err=""
 
   [[ -z "$NAME" ]] && block_test "There is no ifs test name:$NAME"
-
-  is_spr
-  if [[ "$IS_SPR" == "$TRUE" ]]; then
-    test_print_trc "it's SPR CPU, interval time:1860."
-    export INTERVAL_TIME=1860
-  elif [[ "$IS_SPR" == "$FALSE" ]]; then
-    test_print_trc "CPU is not SPR, interval time:2."
-    export INTERVAL_TIME=2
-  else
-    test_print_wrg "IS_SPR is not true or false!!! Set interval time:1860! DDT BUG!"
-    export INTERVAL_TIME=1860
-  fi
+  check_cpu_ifs_support_interval_time
 
   is_atom
   [[ "$IS_ATOM" == "$TRUE" ]] && {
@@ -96,10 +85,8 @@ run_ifs_tests() {
       modprobe -r "$IFS_NAME"
       enable_ifs_trace
       do_cmd "echo $BATCH_NUM > ${IFS_PATH}/${BATCH}"
-      # Need to wait after boot up 1800s, then could test ifs
-      wait_up_time
-      # At least sleep 2 for common situation
-      do_cmd "sleep 2"
+      # Make sure the interval time before ifs scan
+      do_cmd "sleep $INTERVAL_TIME"
       # Execute normal scan test in first round and need to wait cooling time
       test_print_trc "***** Will run 1st round normal scan: *****"
       init_log "${CASE_NORM}_${BATCH_NUM}"
@@ -115,8 +102,7 @@ run_ifs_tests() {
 
       # Execute the second round scan test in short time
       test_print_trc "***** Will run 2nd round scan in short time: *****"
-      do_cmd "sleep 2"
-      sleep 2
+      do_cmd "sleep $INTERVAL_TIME"
       init_log "$CASE_TWICE"
       dump_ifs_test "$NAME"
       # Record the end time after test which is the real correct end time record

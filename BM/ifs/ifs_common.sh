@@ -49,6 +49,13 @@ export BATCH_NUM=""
 export ERR_ARRAYS="failed error segfault"
 IFS_DMESG_OFFLINE="Other thread could not join"
 
+# Matches arch/x86/include/asm/intel-family.h and
+# drivers/platform/x86/intel/ifs/core.c requirement as follows
+readonly SAPPHIRERAPIDS_X="8f"
+readonly EMERALDRAPIDS_X="cf"
+
+readonly INTEL_FAM6="06"
+
 # CPU_LIST and REMOVE_LIST should be all cpu lists
 ALL_CPUS=""
 CPU_LIST=""
@@ -59,7 +66,11 @@ SIBLINGS="/tmp/siblings"
 TIME_FILE="/tmp/time_ifs"
 export LAST_TIME_FILE="/tmp/time_ifs_bak"
 TIME_FILE_RECORD="/tmp/time_ifs_record"
-INTERVAL_TIME=1860
+FML=""
+MODEL=""
+STEPPING=""
+export CPU_FMS=""
+INTERVAL_TIME=1800
 ERR_NUM=0
 export TRUE="true"
 export FALSE="false"
@@ -157,6 +168,38 @@ is_atom() {
     test_print_trc "IS_ATOM:$IS_ATOM is null will check."
     cpuid_check_atom
   }
+}
+
+get_cpu_fms()
+{
+  FML=$(grep -m 1 "family" /proc/cpuinfo | awk -F ":" '{printf "%02x",$2;}')
+  MODEL=$(grep -m 1 "model" /proc/cpuinfo | awk -F ":" '{printf "%02x",$2;}')
+  STEPPING=$(grep -m 1 "stepping" /proc/cpuinfo | awk -F ":" '{printf "%02x",$2;}')
+  CPU_FMS="${FML}-${MODEL}-${STEPPING}"
+}
+
+check_cpu_ifs_support_interval_time()
+{
+  get_cpu_fms
+
+  if [[ "$FML" != "$INTEL_FAM6" ]]; then
+    test_exit "CPU family:$FML does not support IFS" "$KSFT_SKIP"
+  fi
+
+  # Ucode has time interval requirement for IFS scan on same CPU as follows:
+  case $MODEL in
+    "$SAPPHIRERAPIDS_X")
+      export INTERVAL_TIME=1800;
+      ;;
+    "$EMERALDRAPIDS_X")
+      export INTERVAL_TIME=30;
+      ;;
+    *)
+      # Set default interval time for other platforms
+      export INTERVAL_TIME=1;
+      append_log "[$INFO] CPU FML:$FML model:0x$MODEL, default: 1s interval time"
+      ;;
+  esac
 }
 
 # Check file content should exist or not
