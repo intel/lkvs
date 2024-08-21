@@ -1,0 +1,20 @@
+# This file contains basic test cases designed to
+# evaluate the performance of Intel_pstate and cpufreq
+# scaling drivers on Intel® Architecture-based platforms
+# For a deeper understanding of HW P-state related MSRs,
+# Users may refer to the Intel® Software Developer Manual.
+# @hw_dep:
+# @other_dep: general_test.sh -t turbostat @ The latest 2024 version turbostat tool is required
+# @other_warn: which stress 2>/dev/null @ stress tool is required, please install stress-ng.x86_64 and run command: ln -s /usr/bin/stress-ng /usr/bin/stress
+
+intel_pstate_tests.sh -t verify_default_gov_epp
+intel_pstate_tests.sh -t verify_gov_perf_epp_perf
+intel_pstate_tests.sh -t verify_gov_powersave_epp_perf
+intel_pstate_tests.sh -t verify_gov_powersave_epp_balance_perf
+intel_pstate_tests.sh -t verify_gov_powersave_epp_balance_power
+intel_pstate_tests.sh -t verify_gov_powersave_epp_power
+intel_pstate_tests.sh -t verify_cpufreq_with_governor_perf
+intel_pstate_tests.sh -t verify_cpufreq_with_governor_powersave
+intel_pstate_tests.sh -t verify_max_cpufreq_perf_turbo
+intel_pstate_tests.sh -t verify_max_cpufreq_passive_perf_turbo
+intel_pstate_tests.sh -t verify_max_cpufreq_perf_non_turbo
