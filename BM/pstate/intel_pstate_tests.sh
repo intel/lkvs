@@ -779,6 +779,10 @@ check_epp_req() {
   local ret_num=0
   local stress_pid=""
   local num_cpus=""
+  local cpu_model=""
+
+  cpu_model=$(lscpu | grep Model: | awk '{print $2}')
+  test_print_trc "CPU Model is: $cpu_model"
 
   num_cpus=$(ls -d /sys/devices/system/cpu/cpu[0-9]* | wc -l) ||
     die "Failed to get cpus number from sysfs"
@@ -795,9 +799,13 @@ check_epp_req() {
   performance)
     epp_req=0
     ;;
-
+  # SPR and EMR will use 32 for balance_performance EPP value
   balance_performance)
-    epp_req=128
+    if [ "$cpu_model" == 143 ] || [ "$cpu_model" == 207 ]; then
+      epp_req=32
+    else
+      epp_req=128
+    fi
     ;;
 
   balance_power)
