@@ -25,9 +25,13 @@ echo "$SCRIPT_DIR"
 GCOV="off"
 # timeout control in case of TD VM booting hang
 SECONDS=0
-TIMEOUT=900
+TIMEOUT=1200
 # EXEC_FLAG=0 shows test_executor being called
 EXEC_FLAG=1
+# KEXEC_CNT=0 by default, pos-integer values indicate normal kexec test cycle count
+KEXEC_CNT=0
+# MEM_DRAIN=NA by default, only used for tdx guest kexec test with yes or no option
+MEM_DRAIN="NA"
 
 # ERR_STR and ERR_FLAG definition
 # for any unexpected error/warning/call trace handling
@@ -68,6 +72,8 @@ NOTE!! args passed here will override params in json config file
   -i [optional] path under guest-test to standalone common.json file
   -j [optional] path under guest-test to standalone qemu.config.json file
   -r [optioanl] abs. path to single rpm file: kernel-img, kernel-devel or kernel-headers
+  -o [optional] memory drained option yes or no
+  -k [optional] default value 0, non-zero value matches normal kexec test cycle count
   -h HELP info
 EOF
 }
@@ -114,7 +120,7 @@ echo PORT="$PORT" > "$SCRIPT_DIR"/test_params.py
 # used across test_launcher.sh, qemu_runner.py, test_executor.sh
 
 # get args for QEMU boot configurable parameters
-while getopts :v:s:m:d:t:e:f:x:c:p:g:i:j:r:h arg; do
+while getopts :v:s:m:d:t:e:f:x:c:p:g:i:j:r:o:k:h arg; do
   case $arg in
     v)
       VCPU=$OPTARG
@@ -171,6 +177,14 @@ while getopts :v:s:m:d:t:e:f:x:c:p:g:i:j:r:h arg; do
     r)
       RPM=$OPTARG
       echo RPM="\"$RPM\"" >> "$SCRIPT_DIR"/test_params.py
+      ;;
+    o)
+      MEM_DRAIN=$OPTARG
+      echo MEM_DRAIN="\"$MEM_DRAIN\"" >> "$SCRIPT_DIR"/test_params.py
+      ;;
+    k)
+      KEXEC_CNT=$OPTARG
+      echo KEXEC_CNT="$KEXEC_CNT" >> "$SCRIPT_DIR"/test_params.py
       ;;
     h)
       usage && exit 0
@@ -235,15 +249,42 @@ export GCOV
 cd "$SCRIPT_DIR" || die "fail to switch to $SCRIPT_DIR"
 rm -rf /root/.ssh/known_hosts
 while read -r line; do
-  echo "[${VM_TYPE}_vm]: $line"
+  if [[ "$MEM_DRAIN" != "NA" ]]; then
+    echo "[${VM_TYPE}_vm_$KEXEC_CNT]: $line"
+  else
+    echo "[${VM_TYPE}_vm]: $line"
+  fi
   # within $TIMEOUT but bypass the very first 2 seconds to avoid unexpected $BOOT_PATTERN match (from parameter handling logic)
   if [[ $SECONDS -lt $TIMEOUT ]] && [[ $SECONDS -ge 2 ]]; then
     if [[ "$line" == @($BOOT_PATTERN) ]] && [[ $EXEC_FLAG -ne 0 ]]; then
       test_print_trc "VM_TYPE: $VM_TYPE, VCPU: $VCPU, SOCKETS: $SOCKETS, MEM: $MEM, DEBUG: $DEBUG, PMU: $PMU, CMDLINE: $CMDLINE, \
-      FEATURE: $FEATURE, TESTCASE: $TESTCASE, SECONDS: $SECONDS"
-      EXEC_FLAG=0
-      if ! ./guest.test_executor.sh; then EXEC_FLAG=1 && break; fi # break while read loop in case of guest.test_executor.sh test failure
-      if [[ "$GCOV" == "on" ]]; then break; fi # break in case of GCOV on and move to VM lifecycle management since VM keep alive
+      FEATURE: $FEATURE, TESTCASE: $TESTCASE, SECONDS: $SECONDS, MEM_DRAIN: $MEM_DRAIN, KEXEC_CNT: $KEXEC_CNT"
+      if [[ "$KEXEC_CNT" -eq 0 ]]; then
+        if [[  "$MEM_DRAIN" == "yes" ]]; then
+          TESTCASE=TD_KEXEC_MEM_DRAIN_"$VCPU"C_"$MEM"G_CYCLE_"$KEXEC_CNT"
+        elif [[ "$MEM_DRAIN" == "no" ]]; then
+          TESTCASE=TD_KEXEC_NO_MEM_DRAIN_"$VCPU"C_"$MEM"G_CYCLE_"$KEXEC_CNT"
+        fi
+        echo TESTCASE="\"$TESTCASE\"" >> "$SCRIPT_DIR"/test_params.py
+        echo KEXEC_CNT="$KEXEC_CNT" >> "$SCRIPT_DIR"/test_params.py
+        EXEC_FLAG=0
+        if ! ./guest.test_executor.sh; then EXEC_FLAG=1 && break; fi # break while read loop in case of guest.test_executor.sh test failure
+        if [[ "$GCOV" == "on" ]]; then break; fi # break in case of GCOV on and move to VM lifecycle management since VM keep alive
+      # keep in while read loop in case of pos-integer $KEXEC_CNT value
+      elif [[ "$KEXEC_CNT" -gt 0 ]]; then # $KEXEC_CNT pos-integer value indicates normal kexec test cycle count
+        ./guest.test_executor.sh &
+        test_print_trc "guest kernel kexec test triggered @cycles: $KEXEC_CNT"
+        if [[ "$MEM_DRAIN" == "yes" ]]; then
+          TESTCASE=TD_KEXEC_MEM_DRAIN_"$VCPU"C_"$MEM"G_CYCLE_"$KEXEC_CNT"
+        elif [[ "$MEM_DRAIN" == "no" ]]; then
+          TESTCASE=TD_KEXEC_NO_MEM_DRAIN_"$VCPU"C_"$MEM"G_CYCLE_"$KEXEC_CNT"
+        fi
+        echo TESTCASE="\"$TESTCASE\"" >> "$SCRIPT_DIR"/test_params.py
+        echo KEXEC_CNT="$KEXEC_CNT" >> "$SCRIPT_DIR"/test_params.py
+        KEXEC_CNT=$((KEXEC_CNT-1))
+      else
+        die "abnormal kexec test cycle count $KEXEC_CNT, please check"
+      fi
     # err_handlers string matching
     elif [[ "$line" == @($ERR_STR1) ]]; then
       test_print_err "There is $ERR_STR1, test is not fully PASS"
@@ -269,7 +310,13 @@ done < <(
   if [ "$GCOV" == "off" ]; then
     # keep timeout process run foreground for direct script execution correctness
     # handle timeout effect case SIGTERM impact on terminal no type-in prompt issue
-    timeout --foreground "$TIMEOUT" ./guest.qemu_runner.sh || reset
+    if ! timeout --foreground "$TIMEOUT" ./guest.qemu_runner.sh; then
+      reset
+      test_print_err "${VM_TYPE}vm_$PORT $TESTCASE TIMEOUT!!"
+      sleep 3
+      # terminate all test processes in case of timeout
+      kill 0
+    fi
   else
     test_print_trc "${VM_TYPE}vm_$PORT keep alive for gcov data collection" && ./guest.qemu_runner.sh
   fi
