@@ -773,7 +773,7 @@ verify_single_cpu_freq() {
   turbo_on=$(cat "$cpu_no_turbo_mode")
 
   test_print_trc "Executing stress -c 1 -t 90 & in background"
-  taskset -c 1 stress -c 1 -t 90 &
+  taskset -c 0 stress -c 1 -t 90 &
   stress_pid=$!
 
   cpu_stat_debug=$(turbostat -i 1 sleep 1 2>&1)
@@ -796,7 +796,7 @@ verify_single_cpu_freq() {
 
   current_freq=$(echo "$cpu_stat" |
     awk '{for(k=0;++k<=NF;)a[k]=a[k]?a[k] FS $k:$k} END{for(k=0;k++<NF;)print a[k]}' |
-    grep "Bzy_MHz" | awk -F " " '{print $2}')
+    grep "Bzy_MHz" | awk -F " " '{print $3}')
   do_cmd "do_kill_pid $stress_pid"
   test_print_trc "current freq: $current_freq"
   test_print_trc "max freq: $max_freq"
