@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (c) 2024 Intel Corporation
 # Author: Yi Lai <yi1.lai@intel.com>
-# @Desc  Test script to verify Intel RAS functionality
+# @Desc  Test script to verify Intel RAS error injection functionality
 
 # Prerequisite
 if ! rpm -q screen &> /dev/null; then
@@ -21,17 +21,17 @@ usage() {
 __EOF
 }
 
-ras_check_result() {
+mce_check_result() {
   local testcase=$1
 
-  if [ $? -eq 0 ]; then
+  if [ $2 -eq 0 ]; then
     test_print_trc "${testcase} Test PASS"
   else
     die "${testcase} Test FAIL"
   fi
 }
 
-ras_test() {
+mce_test() {
   case $TEST_SCENARIO in
   apei-inj)
     cd mce-test/cases/function/apei-inj/
@@ -66,7 +66,7 @@ ras_test() {
     sh runtest.sh
     ;;
   esac
-  ras_check_result $TEST_SCENARIO
+  mce_check_result $TEST_SCENARIO $?
 }
 
 while getopts :t:H arg; do
@@ -88,4 +88,4 @@ while getopts :t:H arg; do
   esac
 done
 
-ras_test
+mce_test
