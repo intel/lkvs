@@ -2,11 +2,11 @@
 # Intel® Architecture-based platforms.
 # @other_dep: general_test.sh -t module -p einj @ No module einj
 
-ras_test.sh -t apei-inj
-ras_test.sh -t core_recovery_ifu
-ras_test.sh -t core_recovery_dcu
-ras_test.sh -t edac
-ras_test.sh -t einj-ext
-ras_test.sh -t emca-inj
-ras_test.sh -t erst-inject
-ras_test.sh -t pfa
+mce_test.sh -t apei-inj
+mce_test.sh -t core_recovery_ifu
+mce_test.sh -t core_recovery_dcu
+mce_test.sh -t edac
+mce_test.sh -t einj-ext
+mce_test.sh -t emca-inj
+mce_test.sh -t erst-inject
+mce_test.sh -t pfa
