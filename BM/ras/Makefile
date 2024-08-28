@@ -1,4 +1,4 @@
-SUBDIRS := mce-test
+SUBDIRS := mce-test ras-tools
 
 .PHONY: all
 all: $(SUBDIRS)
@@ -10,7 +10,11 @@ $(SUBDIRS):
 .PHONY: install
 install:
 	for dir in $(SUBDIRS); do \
-		$(MAKE) -C $$dir install; \
+		if [ "$$dir" = "mce-test" ]; then \
+			$(MAKE) -C $$dir install; \
+		else \
+			echo "Skipping install in $$dir"; \
+		fi \
 	done
 
 .PHONY: clean

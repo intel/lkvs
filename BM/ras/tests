@@ -2,6 +2,7 @@
 # Intel® Architecture-based platforms.
 # @other_dep: general_test.sh -t module -p einj @ No module einj
 
+# error injection test cases
 mce_test.sh -t apei-inj
 mce_test.sh -t core_recovery_ifu
 mce_test.sh -t core_recovery_dcu
@@ -10,3 +11,26 @@ mce_test.sh -t einj-ext
 mce_test.sh -t emca-inj
 mce_test.sh -t erst-inject
 mce_test.sh -t pfa
+
+# LMCE test cases - three-dimensional matrix
+# error-injected addresses: same address vs. different address
+# CPUs that threads run on: same core, different core but same socket vs. different socket
+# acess type to trigger the fault (Instruction Fetch/Data Access): INSTR/INSTR, INSTR/DATA vs. DATA/DATA
+lmce_test.sh -t sameaddr_samecore_instr/instr
+lmce_test.sh -t sameaddr_samecore_instr/data
+lmce_test.sh -t sameaddr_samecore_data/data
+lmce_test.sh -t sameaddr_samesocket_instr/instr
+lmce_test.sh -t sameaddr_samesocket_instr/data
+lmce_test.sh -t sameaddr_samesocket_data/data
+lmce_test.sh -t sameaddr_diffsocket_instr/instr
+lmce_test.sh -t sameaddr_diffsocket_instr/data
+lmce_test.sh -t sameaddr_diffsocket_data/data
+lmce_test.sh -t diffaddr_samecore_instr/instr
+lmce_test.sh -t diffaddr_samecore_instr/data
+lmce_test.sh -t diffaddr_samecore_data/data
+lmce_test.sh -t diffaddr_samesocket_instr/instr
+lmce_test.sh -t diffaddr_samesocket_instr/data
+lmce_test.sh -t diffaddr_samesocket_data/data
+lmce_test.sh -t diffaddr_diffsocket_instr/instr
+lmce_test.sh -t diffaddr_diffsocket_instr/data
+lmce_test.sh -t diffddr_diffsocket_data/data
