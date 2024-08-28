@@ -4,14 +4,9 @@
 # Author: Yi Lai <yi1.lai@intel.com>
 # @Desc  Test script to verify Intel RAS error injection functionality
 
-# Prerequisite
-if ! rpm -q screen &> /dev/null; then
-    echo "screen is not installed. Installing now..."
-    sudo yum install -y screen
-fi
-
 cd "$(dirname "$0")" 2>/dev/null || exit 1
 source ../.env
+source ./ras_common.sh
 
 usage() {
   cat <<__EOF
@@ -98,4 +93,5 @@ while getopts :t:H arg; do
   esac
 done
 
+pkg_check_install screen
 mce_test
