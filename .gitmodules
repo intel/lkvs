@@ -6,3 +6,6 @@
 [submodule "BM/ras/mce-test"]
 	path = BM/ras/mce-test
 	url = https://github.com/laifryiee/mce-test.git
+[submodule "BM/ras/ras-tools"]
+	path = BM/ras/ras-tools
+	url = https://git.kernel.org/pub/scm/linux/kernel/git/aegl/ras-tools.git
