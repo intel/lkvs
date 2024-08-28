@@ -31,9 +31,18 @@ mce_check_result() {
   fi
 }
 
+load_edac_driver() {
+  for i in $(find /lib/modules/$(uname -r) -type f | grep edac); do
+    filename=${i##*/}
+    edac_driver=${filename%.ko.xz}
+    modprobe $edac_driver
+  done
+}
+
 mce_test() {
   case $TEST_SCENARIO in
   apei-inj)
+    load_edac_driver
     cd mce-test/cases/function/apei-inj/
     sh runtest.sh
     ;;
@@ -50,6 +59,7 @@ mce_test() {
     sh runtest.sh
     ;;
   einj-ext)
+    load_edac_driver
     cd mce-test/cases/function/einj-ext/
     sh runtest.sh
     ;;
