@@ -15,6 +15,7 @@ You can run the cases one by one, e.g. command
 
 ```
 ./mce_test.sh -t apei-inj
+./lmce_test.sh -t sameaddr_samecore_instr/instr
 ```
 You also can run the cases together with runtests command, e.g.
 
