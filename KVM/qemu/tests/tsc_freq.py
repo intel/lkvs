@@ -25,9 +25,7 @@ def get_tsc_freq(params, test, session=None):
     if session:
         # Set up guest environment
         if session.cmd_status("rpm -qa|grep %s" % cpuid_pkg):
-            try:
-                session.cmd_status("yum -y install %s" % cpuid_pkg)
-            except Exception:
+            if session.cmd_status("yum -y install %s" % cpuid_pkg):
                 test.cancel("Fail to install package cpuid, please retest"
                             "this case again.")
     else:
