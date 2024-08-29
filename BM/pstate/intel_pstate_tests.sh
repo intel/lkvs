@@ -106,6 +106,18 @@ cpufreq_sysfs_attr() {
   fi
 }
 
+# Function to check tuned.service is enabled or disabled
+# This may impact the cpu frequency when a workload is running
+check_tuned_service() {
+  # Check the status of tuned.service using systemctl
+  if systemctl is-enabled --quiet tuned.service; then
+    test_print_trc "tuned.service is enabled, which may change the performance profile and impact the CPU frequency,\
+please consider disabling it with the command: 'sudo systemctl disable tuned.service', then reboot the system."
+  else
+    test_print_trc "tuned.service is disabled, so it will not impact the CPU frequency."
+  fi
+}
+
 # Function to check if there is any package and core power limitation being asserted
 # When CPU Frequency is lower than the expected value.
 power_limit_check() {
@@ -350,6 +362,7 @@ check_max_cores_freq() {
       test_print_trc "$current_freq is lower than $max_freq with power limitation asserted"
     else
       test_print_trc "The package and core power limitation is NOT being asserted."
+      check_tuned_service
       die "$current_freq is lower than $max_freq without power limitation asserted"
     fi
   else
@@ -421,14 +434,14 @@ check_pstate_turbo() {
   test_print_trc "Getting freq of cpu1 from turbostat"
   cpu_freq_noturbo=$(echo "$cpu_stat" | grep -E "^-" -A 2 | sed -n "2, 1p" | awk '{print $5}')
   test_print_trc "Actual max freq of cpu1 is: $cpu_freq_noturbo Mhz, \
-  when turbo mode is disabled and cpu1 has 100% workload"
+when turbo mode is disabled and cpu1 has 100% workload"
   [ -n "$stress_pid" ] && do_cmd "do_kill_pid $stress_pid"
 
   # Enable turbo mode
   test_print_trc "Enable turbo mode"
   do_cmd "echo 0 > $CPU_SYSFS_PATH/intel_pstate/no_turbo"
   test_print_trc "Executing stress -c 1 -t 90 & in background"
-  takset -c 1 stress -c 1 -t 90 &
+  taskset -c 1 stress -c 1 -t 90 &
   stress_pid=$!
   test_print_trc "Executing turbostat --show Core,CPU,Avg_MHz,Busy%,Bzy_MHz,PkgWatt -i 10 sleep 30 2>&1"
   cpu_stat=$(get_cpu_stat)
@@ -437,7 +450,7 @@ check_pstate_turbo() {
   test_print_trc "Getting cpu freq from turbostat"
   cpu_freq_turbo=$(echo "$cpu_stat" | grep -E "^-" -A 2 | sed -n "2, 1p" | awk '{print $5}')
   test_print_trc "Actual max freq of cpu1 is: $cpu_freq_turbo Mhz, \
-  when turbo mode is enabled and cpu1 has 100% workload"
+when turbo mode is enabled and cpu1 has 100% workload"
 
   if [[ -n "$stress_pid" ]]; then
     do_cmd "do_kill_pid $stress_pid"
@@ -766,6 +779,10 @@ check_epp_req() {
   local ret_num=0
   local stress_pid=""
   local num_cpus=""
+  local cpu_model=""
+
+  cpu_model=$(lscpu | grep Model: | awk '{print $2}')
+  test_print_trc "CPU Model is: $cpu_model"
 
   num_cpus=$(ls -d /sys/devices/system/cpu/cpu[0-9]* | wc -l) ||
     die "Failed to get cpus number from sysfs"
@@ -782,9 +799,13 @@ check_epp_req() {
   performance)
     epp_req=0
     ;;
-
+  # SPR and EMR will use 32 for balance_performance EPP value
   balance_performance)
-    epp_req=128
+    if [ "$cpu_model" == 143 ] || [ "$cpu_model" == 207 ]; then
+      epp_req=32
+    else
+      epp_req=128
+    fi
     ;;
 
   balance_power)

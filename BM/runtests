@@ -43,6 +43,7 @@ Usage: ${0##*/} [-f CMDFILES] [-c CMDLINE] [-o LOGFILE]
   -d DEPENDENCE_FILE check dependence for specified feature tests
   -t TYPE_FILE  check test type like tests-server|tests-client
   -c CMDLINE    execute test case
+  -s SCENARIO_FOLDER  all tests-* files under target folder
   -o LOGFILE    redirect output of tests to file
 
 Examples:
@@ -51,6 +52,7 @@ Examples:
   ./runtests -t tests-client  // type like tests-client|tests for all subfolders
   ./runtests -t tests-server  // type like tests-server|tests for all subfolders
   ./runtests -c ./cet/quick_test -o cet_quick_test.log
+  ./runtests -s ../scenario/emr-oe  // scenario test files folder
   ./runtests -d cet/tests     // check cet dependence
   ./runtests -d tests-server  // check tests-server/tests for all subfolders dependence
 _EOF
@@ -99,9 +101,9 @@ init_dep_log() {
   cat /dev/null > "$dep_log"
   {
     echo "-----------------------------------------------------------------"
-    printf "%-16s%-13s%-16s%-13s%-20s\n" "Feature" "|HW_support" "|Other_support" \
+    printf "%-35s%-13s%-16s%-13s%-20s\n" "Feature" "|HW_support" "|Other_support" \
       "|Other_WARN" "|Reason"
-    printf "%-16s%-13s%-16s%-13s%-20s\n" "-------" "-----------" "--------------" \
+    printf "%-35s%-13s%-16s%-13s%-20s\n" "-------" "-----------" "--------------" \
       "-----------" "-------"
   } >> "$dep_log"
 }
@@ -196,33 +198,33 @@ check_dep_feature() {
   other_dep_info=$(grep "$MARK_OTHER_DEP" "$cmdfile" | awk -F "$MARK_OTHER_DEP" '{print $2}' | sed -e 's/^ *//g')
   other_warn_info=$(grep "$MARK_WARN_DEP" "$cmdfile" | awk -F "$MARK_WARN_DEP" '{print $2}' | sed -e 's/^ *//g')
 
-  check_dep_info "$hw_dep_info" "$subfolder" "$MARK_HW_DEP"
+  check_dep_info "$hw_dep_info" "$cmdfile" "$MARK_HW_DEP"
   ret=$?
   hw_sta=$(get_ret_status "$ret")
   [[ "$ret" == "$NA_CODE" || "$ret" == "$BLOCK_CODE" ]] && {
-    printf "%-16s%-13s%-16s%-13s%-20s\n" "$subfolder" "|$hw_sta" "|$SKIP" "|$SKIP" \
+    printf "%-35s%-13s%-16s%-13s%-20s\n" "$cmdfile" "|$hw_sta" "|$SKIP" "|$SKIP" \
       "|$REASON" >> "$DEP_LOG"
     return "$ret"
   }
 
-  check_dep_info "$other_dep_info" "$subfolder" "$MARK_OTHER_DEP"
+  check_dep_info "$other_dep_info" "$cmdfile" "$MARK_OTHER_DEP"
   ret=$?
   other_sta=$(get_ret_status "$ret")
   [[ "$ret" == "$NA_CODE" || "$ret" == "$BLOCK_CODE" ]] && {
-    printf "%-16s%-13s%-16s%-13s%-20s\n" "$subfolder" "|$hw_sta" "|$other_sta" "|$SKIP" \
+    printf "%-35s%-13s%-16s%-13s%-20s\n" "$cmdfile" "|$hw_sta" "|$other_sta" "|$SKIP" \
       "|$REASON" >> "$DEP_LOG"
     return "$ret"
   }
 
   # It's a warning, will not block the subfolder test cases
-  check_dep_info "$other_warn_info" "$subfolder" "$MARK_WARN_DEP"
+  check_dep_info "$other_warn_info" "$cmdfile" "$MARK_WARN_DEP"
   ret=$?
   warn_sta=$(get_ret_status "$ret")
   # warn_sta does not set the block, just NA to fail in some cases of this feature
   [[ "$ret" == "$BLOCK_CODE" ]] && warn_sta="$NA"
 
-  [[ -z "$REASON" || "$ret" == "$PASS_CODE" ]] && REASON="No dependence for $subfolder"
-  printf "%-16s%-13s%-16s%-13s%-20s\n" "$subfolder" "|$hw_sta" "|$other_sta" "|$warn_sta" \
+  [[ -z "$REASON" || "$ret" == "$PASS_CODE" ]] && REASON="No dependence for $cmdfile"
+  printf "%-35s%-13s%-16s%-13s%-20s\n" "$cmdfile" "|$hw_sta" "|$other_sta" "|$warn_sta" \
     "|$REASON" >> "$DEP_LOG"
   return 0
 }
@@ -398,9 +400,10 @@ run_tests() {
 
     check_dep_feature "$cmdfile" || {
       append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
+      DEP_EXIT=$BLOCK_CODE
       continue
     }
-
+    append_log "Next run cases from $cmdfile" "$LOGFILE"
     runcmdfile "$cmdfile" "$LOGFILE"
   done
 
@@ -414,7 +417,7 @@ run_tests() {
 : CMDFILES=""
 : CMDLINE=""
 
-while getopts ":o:d:f:t:c:h" opt; do
+while getopts ":o:d:f:t:s:c:h" opt; do
   case "$opt" in
     o)
       LOGFILE=$OPTARG
@@ -422,11 +425,12 @@ while getopts ":o:d:f:t:c:h" opt; do
     d)
       init_dep_log "$DEP_LOG"
       CMDFILES=$OPTARG
+
       # If tests-server type will list tests-server in all subfolders
-      [[ "$CMDFILES" == *"-"* ]] && list_all_test_files "$CMDFILES"
+      [[ "$CMDFILES" == "$TESTS_SERVER" ]] && list_all_test_files "$CMDFILES"
 
       for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
-        check_test_file_legal "$cmdfile"
+        check_test_file_legal "$cmdfile" || continue
 
         check_dep_feature "$cmdfile" || {
           append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
@@ -443,6 +447,20 @@ while getopts ":o:d:f:t:c:h" opt; do
     t)
       # If tests-server type will list tests-server in all subfolders
       [[ "$CMDFILES" == *"-"* ]] && list_all_test_files "$CMDFILES"
+      ;;
+    s)
+      test_files=""
+
+      SCENARIO_FOLDER=$OPTARG
+      [[ -d "$SCENARIO_FOLDER" ]] || usage
+      test_files=$(find "$SCENARIO_FOLDER" -name "tests-*")
+      [[ -z "$test_files" ]] && {
+        append_log "No tests-* files under $SCENARIO_FOLDER"
+        exit 2
+      }
+      for cmdfile in $test_files; do
+        CMDFILES="$CMDFILES,$cmdfile"
+      done
       ;;
     c)
       CMDLINE=$OPTARG

@@ -1,9 +1,8 @@
-
 #DSA_XS_FUNC_USER_TRANSLFETCH_1D2G2Q 
-./dsa_user_test.sh -c 1d2g2q_user -o 0xa
+dsa_user_test.sh -c 1d2g2q_user -o 0xa
 #DSA_XS_FUNC_USER_TRANSLFETCH_1D4G8Q 
-./dsa_user_test.sh -c 1d4g8q_user -o 0xa
+dsa_user_test.sh -c 1d4g8q_user -o 0xa
 #DSA_XS_FUNC_USER_DIXGEN_1D2G2Q 
-./dsa_user_test.sh -c 1d2g2q_user -o 0x17
+dsa_user_test.sh -c 1d2g2q_user -o 0x17
 #DSA_XS_FUNC_USER_DIXGEN_1D4G8Q 
-./dsa_user_test.sh -c 1d4g8q_user -o 0x17
+dsa_user_test.sh -c 1d4g8q_user -o 0x17

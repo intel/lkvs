@@ -4,12 +4,13 @@
 # @other_dep:
 # @other_warn: which turbostat 2>/dev/null @ turbostat tool is required
 # @other_warn: which perf 2>/dev/null @ perf tool is required, please install perf.x86_64 package
+# @other_warn: which rdmsr 2>/dev/null @ rdmsr tool is required, please install msr-tools
+# @other_warn: which stress 2>/dev/null @ stress tool is required, please install stress.x86_64 or stress-ng.x86_64
 
 powermgr_cstate_tests.sh -t verify_cstate_name
 powermgr_cstate_tests.sh -t verify_server_all_cores_cstate6
 powermgr_cstate_tests.sh -t verify_server_all_cpus_mc6
 powermgr_cstate_tests.sh -t verify_server_core_cstate6_residency
-powermgr_cstate_tests.sh -t verify_residency_latency_override
 powermgr_cstate_tests.sh -t verify_server_cstate_list
 powermgr_cstate_tests.sh -t verify_server_perf_core_cstat_update
 powermgr_cstate_tests.sh -t verify_server_perf_pkg_cstat_update
@@ -17,5 +18,15 @@ powermgr_cstate_tests.sh -t verify_server_perf_module_cstat_update
 powermgr_cstate_tests.sh -t verify_server_pc2_entry
 powermgr_cstate_tests.sh -t verify_server_pc6_entry
 powermgr_cstate_tests.sh -t verify_server_pc6_residency
+# Below case is to verify the PC6 entry or not after CPUs offline
 powermgr_cstate_tests.sh -t verify_offline_cpu_deepest_pc
+# Below case is to verify the CC1 and CC6 residency after CPUs offline and online
+powermgr_cstate_tests.sh -t verify_ccstate_res_offline_online
+# Below case are to verify whether a single CPU can reach the turbo frequecy
+# When other CPUs are all in POLL or C1 or C1E
+powermgr_cstate_tests.sh -t verify_turbo_freq_in_default
+powermgr_cstate_tests.sh -t verify_turbo_freq_in_poll
+powermgr_cstate_tests.sh -t verify_turbo_freq_in_c1
+powermgr_cstate_tests.sh -t verify_turbo_freq_in_c1e
+# Below case is verify the CPUs offline and online stress
 powermgr_cstate_tests.sh -t verify_cpu_offline_online_stress

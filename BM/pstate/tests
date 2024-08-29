@@ -4,8 +4,8 @@
 # For a deeper understanding of HW P-state related MSRs,
 # Users may refer to the Intel® Software Developer Manual.
 # @hw_dep:
-# @other_dep:
-# @other_warn:
+# @other_dep: general_test.sh -t turbostat @ The latest 2024 version turbostat tool is required
+# @other_warn: which stress 2>/dev/null @ stress tool is required, please install stress-ng.x86_64 and run command: ln -s /usr/bin/stress-ng /usr/bin/stress
 
 intel_pstate_tests.sh -t verify_sysfs_atts
 intel_pstate_tests.sh -t verify_turbo_enable_disable

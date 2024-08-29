@@ -1,0 +1,69 @@
+# This file collects the AMX(Advanced Matrix eXtension) related instruction tests on
+# Intel® Architecture-based platforms.
+# @hw_dep: cpuid_check 7 0 0 0 d 24 @ CPU doesn't support AMX-TILE - CPUID.(7.0).EDX[24]
+# @hw_dep: cpuid_check 7 0 0 0 d 25 @ CPU doesn't support AMX-INT8 - CPUID.(7.0).EDX[25]
+# @hw_dep: cpuid_check 7 0 0 0 d 22 @ CPU doesn't support AMX-BF16 - CPUID.(7.0).EDX[22]
+# @hw_dep: cpuid_check 7 0 1 0 a 21 @ CPU doesn't support AMX-FP16 - CPUID.(7.1).EAX[21]
+# @hw_dep: cpuid_check d 0 1 0 a 4 @ CPU doesn't support AMX XFD - CPUID.(d.1).EAX[4]
+# @other_warn: echo 'int main() { asm volatile("tdpfp16ps %tmm2, %tmm1, %tmm0"); return 0; }' | gcc -x c -o /dev/null - \
+# @ gcc no support AMX_FP16 ins., refer to README for compile option, amx_fp16 related tests can't be executed
+
+# Usage:./tmul [OPTIONS]
+#  -b, --break-reason [1 - 5]
+#      0: break by nothing
+#      1: break by yield
+#      2: break by sleep
+#      3: break by trap
+#      4: break by signal
+#      5: break by futex
+#  -t, --thread-count [Should not be less than 1]
+#  -c, --cycle-number [Should not be less than 1]
+#  -i, --instruction-type [0:TDPBF16PS 1:TDPBSSD 2:TDPBSUD 3:TDPBUSD 4:TDPBUUD 5:TDPFP16PS]
+
+# functional tests
+tmul -b 0 -t 2 -c 2 -i 0
+tmul -b 1 -t 2 -c 2 -i 0
+tmul -b 2 -t 2 -c 2 -i 0
+tmul -b 3 -t 2 -c 2 -i 0
+tmul -b 4 -t 2 -c 10 -i 0
+tmul -b 5 -t 2 -c 2 -i 0
+tmul -b 0 -t 2 -c 2 -i 1
+tmul -b 1 -t 2 -c 2 -i 1
+tmul -b 2 -t 2 -c 2 -i 1
+tmul -b 3 -t 2 -c 2 -i 1
+tmul -b 4 -t 2 -c 10 -i 1
+tmul -b 5 -t 2 -c 2 -i 1
+tmul -b 0 -t 2 -c 2 -i 2
+tmul -b 1 -t 2 -c 2 -i 2
+tmul -b 2 -t 2 -c 2 -i 2
+tmul -b 3 -t 2 -c 2 -i 2
+tmul -b 4 -t 2 -c 10 -i 2
+tmul -b 5 -t 2 -c 2 -i 2
+tmul -b 0 -t 2 -c 2 -i 3
+tmul -b 1 -t 2 -c 2 -i 3
+tmul -b 2 -t 2 -c 2 -i 3
+tmul -b 3 -t 2 -c 2 -i 3
+tmul -b 4 -t 2 -c 10 -i 3
+tmul -b 5 -t 2 -c 2 -i 3
+tmul -b 0 -t 2 -c 2 -i 4
+tmul -b 1 -t 2 -c 2 -i 4
+tmul -b 2 -t 2 -c 2 -i 4
+tmul -b 3 -t 2 -c 2 -i 4
+tmul -b 4 -t 2 -c 10 -i 4
+tmul -b 5 -t 2 -c 2 -i 4
+# amx_fp16 instruction based tests
+tmul -b 0 -t 2 -c 2 -i 5
+tmul -b 1 -t 2 -c 2 -i 5
+tmul -b 2 -t 2 -c 2 -i 5
+tmul -b 3 -t 2 -c 2 -i 5
+tmul -b 4 -t 2 -c 10 -i 5
+tmul -b 5 -t 2 -c 2 -i 5
+
+# stress tests all skipped to simplify test execution
+# tmul -b 1 -t 10000 -c 10 -i 0
+# tmul -b 1 -t 10000 -c 10 -i 1
+# tmul -b 1 -t 10000 -c 10 -i 2
+# tmul -b 1 -t 10000 -c 10 -i 3
+# tmul -b 1 -t 10000 -c 10 -i 4
+# amx_fp16 instruction based tests
+# tmul -b 1 -t 10000 -c 10 -i 5

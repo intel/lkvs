@@ -18,3 +18,6 @@ ifs_tests.sh -m 1 -p ran -n ifs_array_off_sib -t 10
 ifs_tests.sh -m 1 -p ran -n ifs_array_offran -t 5
 ifs_tests.sh -m 1 -p ran -n ifs_array_cpuran_fullload -t 10
 ifs_tests.sh -m 1 -p ran -b 1 -n ifs_loop -t 500
+
+# Test ifs_0 all available image scan and ifs_1 scan
+test_ifs.sh

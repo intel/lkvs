@@ -77,6 +77,18 @@ isst_legacy_driver_interface() {
   done
 }
 
+# Function to check tuned.service is enabled or disabled
+# This may impact the cpu frequency when a workload is running
+check_tuned_service() {
+  # Check the status of tuned.service using systemctl
+  if systemctl is-enabled --quiet tuned.service; then
+    test_print_trc "tuned.service is enabled, which may change the performance profile and impact the CPU frequency,\
+please consider disabling it with the command: 'sudo systemctl disable tuned.service', then reboot the system."
+  else
+    test_print_trc "tuned.service is disabled, so it will not impact the CPU frequency."
+  fi
+}
+
 power_limit_check() {
   pkg_power_limitation_log=$(rdmsr -p 1 0x1b1 -f 11:11 2>/dev/null)
   test_print_trc "The power limitation log from package thermal status 0x1b1 bit 11 is: \
@@ -214,6 +226,62 @@ isst_pp_level_change() {
 
   test_print_trc "Recover the config level to the default setting: 0"
   do_cmd "intel-speed-select -o pp.out perf-profile set-config-level -l 0 -o"
+}
+
+# Function to do different supported perf profile levels change by cgroup v2 solution
+# Input:
+#        $1: select different perf profile level
+isst_pp_level_change_cgroup() {
+  local level_id=$1
+  do_cmd "intel-speed-select -o pp.out perf-profile get-config-current-level"
+  test_print_trc "The system perf profile config current level info:"
+  do_cmd "cat pp.out"
+
+  cur_level=$(grep get-config-current_level pp.out | awk -F ":" '{print $2}')
+  cur_level_num=$(grep get-config-current_level pp.out | awk -F ":" '{print $2}' | wc -l)
+
+  test_print_trc "Will change the config level from $cur_level to $level_id:"
+  do_cmd "intel-speed-select -o pp.out -g perf-profile set-config-level -l $level_id"
+  test_print_trc "The system perf profile config level change log:"
+  do_cmd "cat pp.out"
+
+  set_tdp_level_status=$(grep set_tdp_level pp.out | awk -F ":" '{print $2}')
+  set_tdp_level_status_num=$(grep set_tdp_level pp.out | awk -F ":" '{print $2}' | wc -l)
+
+  for ((i = 1; i <= set_tdp_level_status_num; i++)); do
+    j=$(("$i" - 1))
+    set_tdp_level_status_by_num=$(echo "$set_tdp_level_status" | sed -n "$i, 1p")
+    if [ "$set_tdp_level_status_by_num" = success ]; then
+      test_print_trc "The system package $j set tdp level status is $set_tdp_level_status_by_num"
+      test_print_trc "The system package $j set tdp level success."
+    else
+      test_print_trc "The system package $j set tdp level status is $set_tdp_level_status_by_num"
+      die "The system package $j set tdp level fails"
+    fi
+  done
+
+  test_print_trc "Confirm the changed config current level:"
+  do_cmd "intel-speed-select -o pp.out perf-profile get-config-current-level"
+  test_print_trc "The system perf profile config current level info:"
+  do_cmd "cat pp.out"
+
+  cur_level=$(grep get-config-current_level pp.out | awk -F ":" '{print $2}')
+  cur_level_num=$(grep get-config-current_level pp.out | awk -F ":" '{print $2}' | wc -l)
+
+  for ((i = 1; i <= cur_level_num; i++)); do
+    j=$(("$i" - 1))
+    cur_level_by_num=$(echo "$cur_level" | sed -n "$i, 1p")
+    if [ "$cur_level_by_num" -eq "$level_id" ]; then
+      test_print_trc "The system package $j config current level: $cur_level_by_num"
+      test_print_trc "The system package $j config current level is $level_id after successfully setting"
+    else
+      test_print_trc "The system package $j config current level: $cur_level_by_num"
+      die "The system package $j set tdp level fails"
+    fi
+  done
+
+  test_print_trc "Recover the config level to the default setting: 0"
+  do_cmd "intel-speed-select -o pp.out -g perf-profile set-config-level -l 0"
 }
 
 # Function to check the base frequency alignment between sysfs and isst tool for each profile level
@@ -556,6 +624,7 @@ isst_bf_baseline_test() {
 with power limitation log observed."
     else
       test_print_trc "The package and core power limitation is not assert."
+      check_tuned_service
       die "The CPUs base freq is 100Mhz larger than expected base_freq without power limitation assert."
     fi
   else
@@ -684,6 +753,7 @@ isst_bf_freq_test() {
         test_print_trc "The 2nd and 3rd CPUs of package$j did not reach ISST HP base freq when power limitation assert."
       else
         test_print_trc "The package$j and core power limitation is not assert."
+        check_tuned_service
         die "The 2nd and 3rd CPUs of package$j did not reach ISST HP base freq without power limitation assert."
       fi
     else
@@ -804,6 +874,7 @@ isst_tf_freq_test() {
       die "The test CPUs did not reach ISST HP turbo freq when power limitation assert."
     else
       test_print_trc "The package and core power limitation is not assert."
+      check_tuned_service
       die "The test CPUs did not reach ISST HP turbo freq without power limitation assert."
     fi
   else
@@ -836,6 +907,18 @@ isst_test() {
     ;;
   isst_pp_config_level4_config)
     isst_pp_level_change 4
+    ;;
+  isst_pp_config_level1_config_cgroup)
+    isst_pp_level_change_cgroup 1
+    ;;
+  isst_pp_config_level2_config_cgroup)
+    isst_pp_level_change_cgroup 2
+    ;;
+  isst_pp_config_level3_config_cgroup)
+    isst_pp_level_change_cgroup 3
+    ;;
+  isst_pp_config_level4_config_cgroup)
+    isst_pp_level_change_cgroup 4
     ;;
   isst_base_freq_pp_level1_change)
     isst_base_freq_pp_level_change 1
