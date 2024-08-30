@@ -21,12 +21,8 @@ def get_tdx_kids(params, test):
     :param test: QEMU test object
     """
     msr_pkg = params.get("msr_pkg")
-    s, o = process.getstatusoutput("rpm -qa | grep %s" % msr_pkg,
-                                   shell=True)
-    if s != 0:
-        install_status = utils_package.package_install(msr_pkg)
-        if not install_status:
-            test.cancel("Failed to install %s." % msr_pkg)
+    if not utils_package.package_install(msr_pkg):
+        test.cancel("Failed to install package %s." % msr_pkg)
 
     output = process.getoutput(params.get("rdmsr_cmd"))
     # Bit [63:32]:   Number of TDX private KeyIDs

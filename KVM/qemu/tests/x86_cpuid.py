@@ -53,17 +53,11 @@ def prepare_cpuid(test, params, src_dir, vm=None, session=None):
     if session:
         test_dir = params["test_dir"]
         vm.copy_files_to(src_cpuid, test_dir)
-        if session.cmd_status("rpm -q gcc"):
-            if session.cmd_status("yum -y install gcc"):
-                test.cancel("Fail to install gcc in vm, please retest "
-                            "this case again.")
     else:
         test_dir = src_dir
-        s, o = process.getstatusoutput("rpm -q gcc", shell=True)
-        if s != 0:
-            install_status = utils_package.package_install("gcc")
-            if not install_status:
-                test.cancel("Failed to install gcc")
+
+    if not utils_package.package_install("gcc", session):
+        test.cancel("Failed to install package gcc.")
 
     compile_cmd = "cd %s && gcc %s -o %s" % (test_dir, source_file, exec_file)
     if session:
