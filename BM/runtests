@@ -25,6 +25,7 @@ TEST_FILES=""
 SUB_FOLDERS=""
 TEST_LIST_FILE="/tmp/tests"
 OLD_IFS=""
+SKIP_DEP_CHECK="false"
 
 # For dependence check parameters, set skip for unknow staus as default
 readonly MARK_HW_DEP="@hw_dep:"
@@ -45,6 +46,7 @@ Usage: ${0##*/} [-f CMDFILES] [-c CMDLINE] [-o LOGFILE]
   -c CMDLINE    execute test case
   -s SCENARIO_FOLDER  all tests-* files under target folder
   -o LOGFILE    redirect output of tests to file
+  -k            skip dependence check
 
 Examples:
   ./runtests -f cet/tests
@@ -398,11 +400,13 @@ run_tests() {
   for cmdfile in $(tr "," " " <<< "$CMDFILES"); do
     check_test_file_legal "$cmdfile" || continue
 
-    check_dep_feature "$cmdfile" || {
-      append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
-      DEP_EXIT=$BLOCK_CODE
-      continue
-    }
+    if [ "$SKIP_DEP_CHECK" == "false" ]; then
+      check_dep_feature "$cmdfile" || {
+        append_log "Skip $cmdfile due to dependece, please check $DEP_LOG" "$LOGFILE"
+        DEP_EXIT=$BLOCK_CODE
+        continue
+      }
+    fi
     append_log "Next run cases from $cmdfile" "$LOGFILE"
     runcmdfile "$cmdfile" "$LOGFILE"
   done
@@ -417,7 +421,7 @@ run_tests() {
 : CMDFILES=""
 : CMDLINE=""
 
-while getopts ":o:d:f:t:s:c:h" opt; do
+while getopts ":o:d:f:t:s:c:kh" opt; do
   case "$opt" in
     o)
       LOGFILE=$OPTARG
@@ -464,6 +468,9 @@ while getopts ":o:d:f:t:s:c:h" opt; do
       ;;
     c)
       CMDLINE=$OPTARG
+      ;;
+    k)
+      SKIP_DEP_CHECK="true"
       ;;
     h)
       usage
