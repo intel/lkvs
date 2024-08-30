@@ -22,19 +22,9 @@ def get_tsc_freq(params, test, session=None):
     :param session: guest session
     """
     cpuid_pkg = params.get("cpuid_pkg")
-    if session:
-        # Set up guest environment
-        if session.cmd_status("rpm -qa|grep %s" % cpuid_pkg):
-            if session.cmd_status("yum -y install %s" % cpuid_pkg):
-                test.cancel("Fail to install package cpuid, please retest"
-                            "this case again.")
-    else:
-        s, o = process.getstatusoutput("rpm -qa | grep %s" % cpuid_pkg,
-                                       shell=True)
-        if s != 0:
-            install_status = utils_package.package_install(cpuid_pkg)
-            if not install_status:
-                test.cancel("Failed to install %s." % cpuid_pkg)
+    # Set up guest environment
+    if not utils_package.package_install(cpuid_pkg, session):
+        test.cancel("Failed to install package %s." % cpuid_pkg)
 
     check_cpuid_entry_cmd = params.get("cpuid_entry_cmd")
     func = process.getoutput
