@@ -799,9 +799,9 @@ check_epp_req() {
   performance)
     epp_req=0
     ;;
-  # SPR and EMR will use 32 for balance_performance EPP value
+  # SPR will use 32 for balance_performance EPP value
   balance_performance)
-    if [ "$cpu_model" == 143 ] || [ "$cpu_model" == 207 ]; then
+    if [ "$cpu_model" == 143 ]; then
       epp_req=32
     else
       epp_req=128
