@@ -1,8 +1,8 @@
 # This file collects PCIe tests on Intel® Architecture-based platforms.
 
 # case info: PCIe gen4 device capability check
-./pcie_check.sh gen4
+pcie_check.sh gen4
 # case info: PCIe gen5 device capability check
-./pcie_check.sh gen5
+pcie_check.sh gen5
 # case info: PCIe gen6 device capability check
-./pcie_check.sh gen6
+pcie_check.sh gen6
