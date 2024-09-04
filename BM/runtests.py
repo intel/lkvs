@@ -70,7 +70,7 @@ def create_runnables_from_file(ftests):
 
             # Split command line parameters.
             cmd_line = shlex.split(line_str)
-            runnable = Runnable("exec-test", *cmd_line)
+            runnable = Runnable("exec-test", *cmd_line, identifier = line_str)
             tests.append(runnable)
     return tests
 
