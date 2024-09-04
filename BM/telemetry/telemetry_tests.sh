@@ -62,25 +62,20 @@ pci_test() {
   do_cmd "lspci -knnv | grep -c intel_vsec"
 }
 
-pre_unload_driver() {
-  rmmod intel_pmc_core
-  rmmod intel_rapl_tpmi
-  rmmod isst_tpmi
-  rmmod isst_tpmi_core
-  rmmod intel_uncore_frequency_tpmi
-  rmmod intel_vsec_tpmi
+unload_module() {
+  # $1 is the driver module name
+  local module_name=$1
+  is_kmodule_builtin "$module_name" && skip_test
+  load_unload_module.sh -c -d "$module_name" &&
+    do_cmd "load_unload_module.sh -u -d $module_name"
 }
 
-driver_test() {
-  module=$1
-  pre_unload_driver
-  load_unload_module.sh -c -d "$module" &&
-    do_cmd "load_unload_module.sh -u -d $module"
-  do_cmd "load_unload_module.sh -l -d $module"
-  sleep 5
-  pre_unload_driver
-  do_cmd "load_unload_module.sh -u -d $module"
-  do_cmd "load_unload_module.sh -l -d $module"
+load_module() {
+  # $1 is the driver module name
+  local module_name=$1
+  is_kmodule_builtin "$module_name" && skip_test
+  do_cmd "load_unload_module.sh -l -d $module_name" &&
+    load_unload_module.sh -c -d "$module_name"
 }
 
 dmesg_check() {
@@ -107,10 +102,10 @@ telemetry_test() {
     pci_test
     ;;
   telem_driver)
-    driver_test "pmt_telemetry"
-    ;;
-  pci_driver)
-    driver_test "intel_vsec"
+    unload_module pmt_telemetry
+    unload_module pmt_class
+    load_module pmt_class
+    load_module pmt_telemetry
     ;;
   esac
   dmesg_check

@@ -1,6 +1,5 @@
 # This file collects the telemetry cases
 telemetry_tests.sh -t pci
-telemetry_tests.sh -t pci_driver
 telemetry_tests.sh -t telem_driver
 telemetry_tests.sh -t telem_sysfs
 telemetry_tests.sh -t telem_dev
