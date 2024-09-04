@@ -257,11 +257,11 @@ static int __init fred_test_driver_init(void)
 	}
 	/* Creating struct class */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
-	// For kernel versions 2.6.26 and later
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
+	// For kernel versions lower than 6.3-rc1
 	dev_class = class_create(THIS_MODULE, "fred_test_class");
 #else
-	// For older kernel versions
+	// For kernel versions 6.3-rc1 and above
 	dev_class = class_create("fred_test_class");
 #endif
 
