@@ -7,6 +7,8 @@ More details please refer to following.
 
 
 ## How to run KVM test
+For more details about installation and configuration, please refer to [lkvs_on_avocado](KVM/docs/lkvs_on_avocado.md).
+
 lkvs KVM is a seperate test provider for avocado/avocado-vt.
 
 1) Install avocado and avocado-vt
