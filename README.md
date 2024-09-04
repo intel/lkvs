@@ -21,7 +21,6 @@ More details please refer to following.
   * [IFS(In Field Scan)](BM/ifs/README.md)
   * [ISST](BM/isst/README.md)
   * [PMU](BM/pmu/README.md)
-  * [PREFETCHI(Code SW Prefetch)](BM/prefetchi/README.md)
   * [pstate](BM/pstate/README.md)
   * [Intel_PT](BM/pt/README.md)
   * [RAPL](BM/rapl/README.md)
