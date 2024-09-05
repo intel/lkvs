@@ -30,11 +30,13 @@ static struct class *cl;
 
 static int my_open(struct inode *i, struct file *f)
 {
+	pr_info("Device opened\n");
 	return 0;
 }
 
 static int my_close(struct inode *i, struct file *f)
 {
+	pr_info("Device closed\n");
 	return 0;
 }
 
@@ -155,14 +157,18 @@ static int __init cet_ioctl_init(void)
 
 	pr_info("Load cet_ioctl start\n");
 	ret = alloc_chrdev_region(&dev, FIRST_MINOR, MINOR_CNT, mod_name);
-	if (ret < 0)
+	if (ret < 0) {
+		pr_info("alloc_chrdev_region failed\n");
 		return ret;
+	}
 
 	cdev_init(&c_dev, &query_fops);
 
 	ret = cdev_add(&c_dev, dev, MINOR_CNT);
-	if (ret < 0)
+	if (ret < 0) {
+		pr_info("cdev_add failed\n");
 		return ret;
+	}
 
 	/*
 	 * From v6.3-rc1: dcfbb67e48a2becfce7990386e985b9c45098ee5,
@@ -170,8 +176,12 @@ static int __init cet_ioctl_init(void)
 	 * If the host kernel version is lower than v6.3-rc1, please change
 	 * the code as follows:
 	 * cl = class_create(THIS_MODULE, "char");
+	 * mod_name is allocated from stack so released after this function.
+	 * Othwise it will cause "BUG: unable to handle page fault for address:
+	 * ffffc9000447fbd4" issue. So use string instead and it's "kernel" way:
+	 * use plain string here.
 	 */
-	cl = class_create(mod_name);
+	cl = class_create("cet_ioctl");
 	if (IS_ERR(cl)) {
 		cdev_del(&c_dev);
 		unregister_chrdev_region(dev, MINOR_CNT);
@@ -191,11 +201,23 @@ static int __init cet_ioctl_init(void)
 
 static void __exit cet_ioctl_exit(void)
 {
-	pr_info("Unload cet_ioctl, bye.\n");
+	pr_info("Will unload driver.\n");
+	if (!cl)
+		pr_err("Class pointer 'cl' is NULL\n");
+	else
+		pr_info("Class pointer 'cl' is valid: cl:%p\n", (void *)cl);
+
+	if (!dev)
+		pr_err("Device pointer 'dev' is NULL\n");
+	else
+		pr_info("Device pointer 'dev' is valid &dev:%p, dev:%d\n", &dev, dev);
+
 	device_destroy(cl, dev);
+	pr_info("Device destroyed\n");
 	class_destroy(cl);
 	cdev_del(&c_dev);
 	unregister_chrdev_region(dev, MINOR_CNT);
+	pr_info("Driver uninstall completed.\n");
 }
 
 module_init(cet_ioctl_init);
