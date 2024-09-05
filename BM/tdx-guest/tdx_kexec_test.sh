@@ -55,13 +55,15 @@ memory_drain() {
 
 # function to load kexec target kenrel image and trigger kexec switch to target kernel
 kexec_load_switch() {
+  # stop systemd to avoid unexpected stuck
+  systemctl stop systemd*
   # load kexec target kernel image and initrd, reuse kernel cmdline
   if ! kexec -d -l "/boot/vmlinuz-$(uname -r)" --initrd="/boot/initramfs-$(uname -r).img" --reuse-cmdline; then
     die "failed to load kexec target kernel image, test failed"
   else
     test_print_trc "kexec target kernel image loaded"
   fi
-  sleep 45
+  sleep 5
   # trigger kexec switch to target kernel
   test_print_trc "kexec switch to target kernel triggered"
   kexec -d -e &
@@ -162,11 +164,13 @@ if [[ "$KEXEC_SSH" != "yes" ]]; then
     fi
   elif [[ "$KEXEC_CNT" -eq 0 ]]; then
     test_print_trc "skip kexec load and switch in final test loop"
+    test_print_trc "TDVM to shutdown after all kexec test completed"
+    shutdown now || die "failed to shutdown TDVM in final test loop"
   else
     die "unsupported kexec test cycle count: $KEXEC_CNT"
   fi
 else # $KEXEC_SSH == "yes", run kexec via ssh standalone to bypass abnormal kexec stuck
   test_print_trc "run kexec_load_switch via ssh standalone"
-  sleep 45
+  sleep 5
   kexec_load_switch || die "failed on kexec_load_switch ssh standalone"
 fi
