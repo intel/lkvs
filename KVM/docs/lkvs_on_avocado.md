@@ -179,7 +179,7 @@ Prepare your guest image well, make sure it can be boot as td guest with your ho
 
 ## 4.2 Config file
 
-Copy this template tdx_temp.cfg to /root/avocado/data/avocado-vt/backends/qemu/cfg/
+Copy this template [tdx_temp.cfg](tdx_temp.cfg) to /root/avocado/data/avocado-vt/backends/qemu/cfg/
 
 ### 4.2.1 Guest OS
 
