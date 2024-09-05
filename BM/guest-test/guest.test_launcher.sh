@@ -313,9 +313,6 @@ done < <(
     if ! timeout --foreground "$TIMEOUT" ./guest.qemu_runner.sh; then
       reset
       test_print_err "${VM_TYPE}vm_$PORT $TESTCASE TIMEOUT!!"
-      sleep 3
-      # terminate all test processes in case of timeout
-      kill 0
     fi
   else
     test_print_trc "${VM_TYPE}vm_$PORT keep alive for gcov data collection" && ./guest.qemu_runner.sh
