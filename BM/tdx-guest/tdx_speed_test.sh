@@ -46,6 +46,8 @@ fi
 # get nearest server ID for test
 while [[ "$RETRY_ID" -gt 0 ]]; do
   ID=$(speedtest-cli --list | awk -F')' 'NR==2 {print $1; exit}')
+  # remove potential whitespace before or after server ID
+  ID=$(echo "$ID" | awk '{$1=$1; print}')
   if [[ "$ID" =~ ^[0-9]+$ ]]; then
     if [ "$ID" -gt 0 ]; then
       test_print_trc "BW test server ID: $ID @RETRY: $RETRY_ID"
