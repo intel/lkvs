@@ -63,11 +63,11 @@ sleep 3
 # prepare and trigger kexec in target TDX guest OS image
 if [[ "$MEM_DRAIN" == "yes" ]]; then
   ./guest-test/guest.test_launcher.sh -v "$VCPU" -s 1 -m "$MEM" -d "$DEBUG" -t tdx -e tdx-guest -f tdx \
-    -x TD_KEXEC_MEM_DRAIN_"$VCPU"C_"$MEM"G_CYCLE_"$KEXEC_CNT" -c "accept_memory=lazy crashkernel=1G-4G:256M,4G-64G:384M,64G-:512M" -p off -o yes -k "$KEXEC_CNT" || \
+    -x TD_KEXEC_MEM_DRAIN_"$VCPU"C_"$MEM"G_CYCLE_"$KEXEC_CNT" -c "console= accept_memory=lazy" -p off -o yes -k "$KEXEC_CNT" || \
     die "Failed on kexec test"
 elif [[ "$MEM_DRAIN" == "no" ]]; then
   ./guest-test/guest.test_launcher.sh -v "$VCPU" -s 1 -m "$MEM" -d "$DEBUG" -t tdx -e tdx-guest -f tdx \
-    -x TD_KEXEC_NO_MEM_DRAIN_"$VCPU"C_"$MEM"G_CYCLE_"$KEXEC_CNT" -c "accept_memory=lazy" -p off -o no -k "$KEXEC_CNT" || \
+    -x TD_KEXEC_NO_MEM_DRAIN_"$VCPU"C_"$MEM"G_CYCLE_"$KEXEC_CNT" -c "console= accept_memory=lazy" -p off -o no -k "$KEXEC_CNT" || \
     die "Failed on kexec test"
 else
   die "Invalid memory drained option"
