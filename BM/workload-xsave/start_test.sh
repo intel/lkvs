@@ -22,8 +22,7 @@ fi
 # mode1: test workloads in specific break_reason
 test_single () {
   echo "trace-cmd record -e x86_fpu -F ./yogini -b $break_reason -r $repeat $option"
-  trace-cmd record -e x86_fpu -F ./yogini -b $break_reason -r $repeat $option
-  if [ $? -ne 0 ]; then
+  if ! trace-cmd record -e x86_fpu -F ./yogini -b $break_reason -r $repeat $option; then
     echo "Failed to execute trace-cmd record."
     exit 1
   fi
@@ -32,9 +31,9 @@ test_single () {
 
 # mode2: test workloads in all break_reason
 test_all () {
-for ((i=1; i<=5; i++))
+break_reasons=("yield" "sleep" "trap" "signal" "futex")
+for break_reason in "${break_reasons[@]}";
 do
-  break_reason=$i
   test_single
 done
 }
