@@ -12,29 +12,13 @@ import sys
 from avocado.utils import process
 from avocado.core import exceptions
 from virttest import error_context, env_process
-from virttest import data_dir, asset
 from virttest import utils_package
+from provider.test_utils import get_baremetal_dir
 
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 check_dir = "%s/../../../BM/instruction-check" % curr_dir
 sys.path.append(check_dir)
 from feature_list import cpuid_info
-
-
-def get_baremetal_dir(params):
-    """
-    Get the test provider's BM absolute path.
-    :param params: Dictionary with the test parameters
-    """
-    provider = params["provider"]
-    provider_info = asset.get_test_provider_info(provider)
-    if provider_info["uri"].startswith("file://"):
-        provider_dir = provider_info["uri"][7:]
-    else:
-        provider_dir = data_dir.get_test_provider_dir(provider)
-    baremetal_dir = os.path.join(provider_dir, "BM")
-
-    return baremetal_dir
 
 
 def prepare_cpuid(test, params, src_dir, vm=None, session=None):
