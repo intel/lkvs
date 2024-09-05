@@ -400,9 +400,6 @@ case "$TESTCASE" in
     guest_test_prepare tdx_kexec_test.sh
     guest_test_entry tdx_kexec_test.sh "-v $VCPU -m $MEM -o no -k $KEXEC_CNT" || \
       die "Failed on $TESTCASE tdx_kexec_test.sh -v $VCPU -m $MEM -o no -k $KEXEC_CNT"
-    if [[ "$GCOV" == "off" ]]; then
-      guest_test_close
-    fi
     ;;
   # continous TD KEXEC test group with $VCPU VCPU $MEM GB mem and mem drain
   TD_KEXEC_MEM_DRAIN_"$VCPU"C_"$MEM"G_CYCLE_2 | TD_KEXEC_MEM_DRAIN_"$VCPU"C_"$MEM"G_CYCLE_1)
@@ -416,9 +413,6 @@ case "$TESTCASE" in
     guest_test_prepare tdx_kexec_test.sh
     guest_test_entry tdx_kexec_test.sh "-v $VCPU -m $MEM -o yes -k $KEXEC_CNT" || \
       die "Failed on $TESTCASE tdx_kexec_test.sh -v $VCPU -m $MEM -o yes -k $KEXEC_CNT"
-    if [[ "$GCOV" == "off" ]]; then
-      guest_test_close
-    fi
     ;;
   :)
     test_print_err "Must specify the test scenario option by [-t]"
