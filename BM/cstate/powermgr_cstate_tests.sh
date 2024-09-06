@@ -815,7 +815,7 @@ verify_single_cpu_freq() {
 
   # Enable all the CPUs idle cstate
   for ((i = 0; i < length; i++)); do
-    for ((j = 0; j < cpus_num; j++)); do
+    for ((j = 0; j <= cpus_num; j++)); do
       do_cmd "echo 0 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
     done
   done
@@ -851,20 +851,20 @@ turbo_freq_when_idle() {
   # If test idle state is POLL/C1/C1E, then disable all the other deeper idle cstate
   if [[ "$idle_state" == POLL ]]; then
     for ((i = 1; i < length; i++)); do
-      for ((j = 0; j < cpus_num; j++)); do
+      for ((j = 0; j <= cpus_num; j++)); do
         do_cmd "echo 1 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
       done
     done
   elif [[ "$idle_state" == C1 ]]; then
     for ((i = 2; i < length; i++)); do
-      for ((j = 0; j < cpus_num; j++)); do
+      for ((j = 0; j <= cpus_num; j++)); do
         do_cmd "echo 1 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
       done
     done
   elif [[ "$idle_state" == C1E ]]; then
     if grep -q 'C1E' /sys/devices/system/cpu/cpu0/cpuidle/state*/name; then
       for ((i = 3; i < length; i++)); do
-        for ((j = 0; j < cpus_num; j++)); do
+        for ((j = 0; j <= cpus_num; j++)); do
           do_cmd "echo 1 > grep . /sys/devices/system/cpu/cpu$j/cpuidle/state$i/disable"
         done
       done
