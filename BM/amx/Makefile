@@ -1,25 +1,18 @@
-# SPDX-License-Identifier: GPL-2.0-only
-# Copyright (c) 2022 Intel Corporation.
-
-SUBDIRS = $(shell ls -d */)
-
-PROXY :=
+# SPDX-License-Identifier: GPL-2.0
+CFLAG = -O2 -W -Wall -g -fno-strict-aliasing
+LIBS = -lpthread
+CC = gcc
+BIN_AMX = tmul
+CFILES_AMX = tmul.c
 
 all:
-	@for dir in $(SUBDIRS); do			\
-		if [ -f "$$dir/Makefile" ]; then	\
-			cd $$dir &&			\
-			make || {			\
-				cd ..;			\
-				continue;		\
-			};				\
-			cd ..;				\
-		fi					\
-	done
+	$(CC) $(CFLAG) $(CFILES_AMX) -o $(BIN_AMX) $(LIBS)
+
+fp16: CFLAG += -g -DFP16
+fp16: all
 
 clean:
-	@for dir in $(SUBDIRS); do 				\
-		if [ -f "$$dir/Makefile" ]; then		\
-			make -C $$dir clean || continue;	\
-		fi						\
-	done
+	-rm $(BIN_AMX)
+
+.PHONY: clean
+
