@@ -538,8 +538,10 @@ int scan_pci(void)
 
 				if ((*ptrdata != ptr_content) && (*ptrdata != 0)) {
 					if (recognize_pcie(ptrdata) == 2) {
-						printf("%02x:%02x.%x debug:pcie_check a %x %x %x\n",
-						       bus, dev, fun, bus, dev, fun);
+						printf("[ERROR] PCI %02x:%02x.%x offset 0xff,",
+						       bus, dev, fun);
+						printf("please debug:pcie_check a %x %x %x\n",
+						       bus, dev, fun);
 						munmap(ptrdata, LEN_SIZE);
 						close(fd);
 						return 2;
@@ -790,11 +792,11 @@ int find_pcie_reg(u16 cap, u32 offset, u32 size)
 						check_pcie_register(cap, offset, size);
 					} else if (result == 2) {
 						/* This PCIe ended with unknown CAP ff, mark it */
-						printf("%02x:%02x.%x debug:pcie_check a %x %x %x\n",
-						       bus, dev, func, bus, dev, func);
-						munmap(ptrdata, LEN_SIZE);
-						close(fd);
-						return 2;
+						printf("[WARN] PCIe %02x:%02x.%x error PCI CAP ff,",
+						       bus, dev, func);
+						printf("please debug:pcie_check a %x %x %x\n",
+						       bus, dev, func);
+						continue;
 					}
 				}
 				munmap(ptrdata, LEN_SIZE);
@@ -964,11 +966,11 @@ int find_pci_reg(u16 cap, u32 offset, u32 size)
 						check_pci_register((u8)cap, (u8)offset, size);
 					} else if (result == 1) {
 						/* This PCI ended with unknown CAP ff so mark it */
-						printf("%02x:%02x.%x debug:pcie_check a %x %x %x\n",
-						       bus, dev, func, bus, dev, func);
-						munmap(ptrdata, LEN_SIZE);
-						close(fd);
-						return 2;
+						printf("[WARN] PCI %02x:%02x.%x unknown CAP ff,",
+						       bus, dev, func);
+						printf("please debug:pcie_check a %x %x %x\n",
+						       bus, dev, func);
+						continue;
 					}
 				}
 				munmap(ptrdata, LEN_SIZE);
