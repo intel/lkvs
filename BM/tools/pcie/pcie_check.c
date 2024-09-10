@@ -411,8 +411,9 @@ int recognize_pcie(u32 *ptrdata)
 	/* 0x34/4 is capability pointer in PCI */
 	nextpoint = (u8)(*(ptrdata + PCI_CAP_START / 4));
 
+	/* If 0x34 next point is 0, will continue and code is 3 */
 	if (nextpoint == 0)
-		return 0;
+		return 3;
 
 	ptrsearch = ptrdata + nextpoint / 4;
 	while (1) {
@@ -511,7 +512,7 @@ int scan_pci(void)
 	u32 bus, dev, fun;
 	// Must 32bit for data check!
 	u32 *ptrdata = malloc(sizeof(unsigned long) * 4096);
-	int fd;
+	int fd, ret;
 
 	fd = open("/dev/mem", O_RDWR);
 
@@ -537,7 +538,8 @@ int scan_pci(void)
 				}
 
 				if ((*ptrdata != ptr_content) && (*ptrdata != 0)) {
-					if (recognize_pcie(ptrdata) == 2) {
+					ret = recognize_pcie(ptrdata);
+					if (ret == 2) {
 						printf("[ERROR] PCI %02x:%02x.%x offset 0xff,",
 						       bus, dev, fun);
 						printf("please debug:pcie_check a %x %x %x\n",
@@ -545,6 +547,8 @@ int scan_pci(void)
 						munmap(ptrdata, LEN_SIZE);
 						close(fd);
 						return 2;
+					} else if (ret == 3) {
+						continue;
 					}
 
 					if (is_pcie == 0)
@@ -589,6 +593,9 @@ int specific_pcie_cap(u32 *ptrdata, u16 cap)
 		 *	PCI_CAP_START, ptrdata, *ptrdata);
 		 */
 		return 2;
+	/* If 0x34 next point is 0, will continue and code is 3 */
+	} else if (nextpoint == 0) {
+		return 3;
 	}
 
 	cap_value = (u16)(*(ptrdata + next / 4));
@@ -797,6 +804,8 @@ int find_pcie_reg(u16 cap, u32 offset, u32 size)
 						printf("please debug:pcie_check a %x %x %x\n",
 						       bus, dev, func);
 						continue;
+					} else if (result == 3) {
+						continue;
 					}
 				}
 				munmap(ptrdata, LEN_SIZE);
@@ -970,6 +979,8 @@ int find_pci_reg(u16 cap, u32 offset, u32 size)
 						       bus, dev, func);
 						printf("please debug:pcie_check a %x %x %x\n",
 						       bus, dev, func);
+						continue;
+					} else if (result == 3) {
 						continue;
 					}
 				}
