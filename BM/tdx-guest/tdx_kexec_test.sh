@@ -74,9 +74,13 @@ vcpu_mem_check() {
   # check vcpu and socket number
   vcpu_td=$(lscpu | grep "CPU(s)" | head -1 | awk '{print $2}')
   test_print_trc "vcpu_td: $vcpu_td"
+  vcpu_offline=$(lscpu | grep "Off-line CPU(s)" | awk '{print $NF}')
+  vcpu_online=$(lscpu | grep "On-line CPU(s)" | awk '{print $NF}')
 
   if [[ "$vcpu_td" -ne "$VCPU" ]]; then
     die "Guest TD VM boot with vcpu: $vcpu_td (expected $VCPU)"
+  elif [[ -n "$vcpu_offline" ]]; then
+    die "Guest TD VM boot with offline vcpu: $vcpu_offline"
   fi
 
   # check memory size
@@ -96,7 +100,7 @@ vcpu_mem_check() {
   fi
 
   test_print_trc "Guest TD VM boot up successfully with config:"
-  test_print_trc "vcpu $VCPU, memory $MEM GB"
+  test_print_trc "vcpu $VCPU on-line $vcpu_online, memory $MEM GB"
 }
 
 # function to free memory by clear memory page caches
