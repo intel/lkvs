@@ -1,0 +1,21 @@
+# This file collects the LAM(Linear Address Masking) tests on
+# Intel® Architecture-based platforms.
+# @hw_dep: cpuid_check 7 1 0 0 a 26 @ CPU support LAM
+
+# malloc
+lam -t 0x1
+# max_bits
+lam -t 0x2
+# mmap
+lam -t 0x4
+# syscall
+lam -t 0x8
+# io_uring
+lam -t 0x10
+# inherit
+lam -t 0x20
+# pasid
+lam -t 0x40
+# cpuid
+lam -t 0x80
+

@@ -1,0 +1,9 @@
+# This file collects the LAM cases
+lam -t 0x1    # malloc
+lam -t 0x2    # max_bits
+lam -t 0x4    # mmap
+lam -t 0x8    # syscall
+lam -t 0x10   # io_uring
+lam -t 0x20   # inherit
+lam -t 0x40   # pasid
+lam -t 0x80   # cpuid
