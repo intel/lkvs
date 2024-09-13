@@ -178,15 +178,19 @@ int find_bar(void)
 	}
 	fclose(maps);
 
+	/*
+	 * In CXL QEMU environment, MMIO base address is incorrect,
+	 * so will not use dmesg check way to detect the MMIO base
+	 * address, will use mcfg way instead.
+	 * if (BASE_ADDR == 0) {
+	 * BASE_ADDR = find_base_from_dmesg();
+	 * }
+	 */
 	if (BASE_ADDR == 0) {
-		//printf("Check kconfig CONFIG_IO_STRICT_DEVMEM or v6.9 or newer kernel!\n");
-		BASE_ADDR = find_base_from_dmesg();
+		BASE_ADDR = find_base_from_mcfg();
 		if (BASE_ADDR == 0) {
-			BASE_ADDR = find_base_from_mcfg();
-			if (BASE_ADDR == 0) {
-				printf("No MMIO in dmesg, /proc/iomem and mcfg, check acpidump.\n");
-				exit(2);
-			}
+			printf("No MMIO in dmesg, /proc/iomem and mcfg, check acpidump.\n");
+			exit(2);
 		}
 	}
 #endif
