@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import os
-from feature_list import cpuid_info
+from feature_list import feature_list
+from feature_list import get_platform
 
 # Template string, used to generate code for each test class
 class_template = """
@@ -29,8 +30,14 @@ file_name = "cpuid_check"
 expected_result = 0
 ''')
         # For each feature in feature_list.py generates a test class
-        for feature, args in cpuid_info.items():
-            class_code = class_template.format(class_name=feature, args=args)
-            f.write(class_code)
+        feature_name_list = feature_list.keys()
+        platform = get_platform()
+        for feature_name in feature_name_list:
+            if platform in feature_list[feature_name]["platforms"]:
+                args = feature_list[feature_name]["cpuid"]
+                class_code =  class_template.format(class_name=feature_name, args=args)
+                f.write(class_code)
+            else:
+                continue
 
 generate_cpuid_tests()
