@@ -1,0 +1,21 @@
+# This file collects the LASS (Linear Address Space Separation) tests on
+# Intel® Architecture-based platforms.
+# @other_dep: general_test.sh -t kconfig -k "CONFIG_X86_LASS|CONFIG_LEGACY_VSYSCALL_EMULATE|CONFIG_LEGACY_VSYSCALL_XONLY|CONFIG_LEGACY_VSYSCALL_NONE=y"
+# @other_warn:
+
+#Test get vsyscall address maps.
+lass m
+#Test execute vsyscall addr 0xffffffffff600000.
+lass m
+#Test call vsyscall
+lass g
+#Test call vsyscall api gettimeofday
+lass t
+#Test read vsyscall 0xffffffffff600000
+lass r
+#Test read random kernel space.
+lass i
+#Test process_vm_readv read address 0xffffffffff600000.[negative]
+lass v
+#Test vsyscall emulation.
+lass e
