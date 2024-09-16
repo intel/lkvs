@@ -2,11 +2,13 @@
 // Copyright (c) 2024 Intel Corporation.
 
 /*
- * lass.c:   
+ * lass.c:
  *
- * Author: Pengfei, Xu <pengfei.xu@intel.com>, Weihong,Zhang <weihong.zhang@intel.com>, Xuelian, Guo <xuelian.guo@intel.com>
+ * Author: Pengfei, Xu <pengfei.xu@intel.com>,
+ *         Weihong,Zhang <weihong.zhang@intel.com>,
+ *         Xuelian, Guo <xuelian.guo@intel.com>
  *********************************************************
- * Usage: [| m | d | g | t | r | i | v | e | a | h |]
+ * Usage: m | d | g | t | r | i | v | e | a | h
  *       m       Test get vsyscall address maps.
  *       d       Test execute vsyscall addr 0xffffffffff600000.
  *       g       Test call vsyscall
@@ -45,9 +47,8 @@
 
 #include <cpuid.h>
 
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-
-#define X86_EFLAGS_TF (1UL << 8)
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#define BIT(nr) (1UL << (nr))
 #define MAPS_LINE_LEN 128
 
 #define KERNEL_START_ADDR 0xffff800000000000
@@ -58,21 +59,21 @@
 #ifdef __x86_64__
 #define VSYS(x) (x)
 #else
-#define VSYS(x) 0
+#define VSYS(x) (0 * (x))
 #endif
 
 static sig_atomic_t num_vsyscall_traps;
 static int instruction_num, pass_num, fail_num;
 static jmp_buf jmpbuf;
 
-static bool lass_enable = false;
+static bool lass_enable;
 static bool no_vsys_map = true;
-static bool vsyscall_none = false;
-static bool vsyscall_xonly = false;
-static bool vsyscall_emulate = false;
-static bool vsyscall_default = false;
+static bool vsyscall_none;
+static bool vsyscall_xonly;
+static bool vsyscall_emulate;
+static bool vsyscall_default;
 /*
- * /proc/self/maps, r means readable, x means excutable
+ * /proc/self/maps, r means readable, x means executable
  * vsyscall map: ffffffffff600000-ffffffffff601000
  */
 bool vsyscall_map_r = false, vsyscall_map_x = false;
@@ -84,15 +85,14 @@ const gtod_t vgtod = (gtod_t)VSYS(VSYS_START_ADDR);
 typedef long (*time_func_t)(time_t *t);
 const time_func_t vtime = (time_func_t)VSYS(0xffffffffff600400);
 
-struct testcases
-{
+struct testcases {
 	char param; /* 2: SIGSEGV Error; 1: other errors */
 	const char *msg;
 	int (*test_func)();
 };
 
-int usage(void);
-int run_all(void);
+static int usage(void);
+static int run_all(void);
 
 /* syscalls */
 static inline long sys_gtod(struct timeval *tv, struct timezone *tz)
@@ -135,9 +135,9 @@ static bool check_lass_enable(void)
 	bool rv = false;
 
 	FILE *cmd = popen(command, "r");
-	if (cmd)
-	{
-		while (fgets(buf, sizeof(buf) - 1, cmd) != NULL)
+
+	if (cmd) {
+		while (fgets(buf, sizeof(buf) - 1, cmd))
 			;
 		// printf("Get buff:%s\n", buf);
 		pclose(cmd);
@@ -151,35 +151,31 @@ static bool check_lass_enable(void)
 /* Get information from /proc/cmdline */
 static bool check_vsyscall_status(void)
 {
-        char buf[256] = {0};
-        char command[256] = "cat /proc/cmdline";
-        bool rv = false;
+	char buf[256] = {0};
+	char command[256] = "cat /proc/cmdline";
+	bool rv = false;
 
-        FILE *cmd = popen(command, "r");
-        if (cmd)
-        {
-                while (fgets(buf, sizeof(buf) - 1, cmd) != NULL)
+	FILE *cmd = popen(command, "r");
+
+	if (cmd) {
+		while (fgets(buf, sizeof(buf) - 1, cmd))
 			;
-                pclose(cmd);
-		
+		pclose(cmd);
+
 		rv = (strstr(buf, " vsyscall") != 0);
 		if (!rv)
-                        vsyscall_default = true;
-
-                rv = (strstr(buf, " vsyscall=emulate") != 0);
-		if (rv) 
+			vsyscall_default = true;
+		rv = (strstr(buf, " vsyscall=emulate") != 0);
+		if (rv)
 			vsyscall_emulate = true;
-
 		rv = (strstr(buf, " vsyscall=xonly") != 0);
-                if (rv)
-                        vsyscall_xonly = true;
-
+		if (rv)
+			vsyscall_xonly = true;
 		rv = (strstr(buf, " vsyscall=none") != 0);
-                if (rv)
-                        vsyscall_none = true;
-        }
-
-        return rv;
+		if (rv)
+			vsyscall_none = true;
+	}
+	return rv;
 }
 
 static int get_vsys_map(void)
@@ -188,15 +184,13 @@ static int get_vsys_map(void)
 	char line[MAPS_LINE_LEN];
 
 	maps = fopen("/proc/self/maps", "r");
-	if (!maps)
-	{
+	if (!maps) {
 		printf("[WARN]\tCould not open /proc/self/maps\n");
 		vsyscall_map_r = false;
 		return 0;
 	}
 
-	while (fgets(line, MAPS_LINE_LEN, maps))
-	{
+	while (fgets(line, MAPS_LINE_LEN, maps)) {
 		char r, x;
 		void *start, *end;
 		char name[MAPS_LINE_LEN];
@@ -212,8 +206,7 @@ static int get_vsys_map(void)
 		printf("\tvsyscall map: %s", line);
 
 		if (start != (void *)VSYS_START_ADDR ||
-		    end != (void *)VSYS_END_ADDR)
-		{
+		    end != (void *)VSYS_END_ADDR) {
 			fail_case("address range is nonsense\n");
 		}
 
@@ -228,8 +221,7 @@ static int get_vsys_map(void)
 	}
 	fclose(maps);
 
-	if (no_vsys_map)
-	{
+	if (no_vsys_map) {
 		printf("[WARN]\tno vsyscall map in /proc/self/maps\n");
 		vsyscall_map_r = false;
 		vsyscall_map_x = false;
@@ -240,22 +232,16 @@ static int get_vsys_map(void)
 static int test_read_vsys_map(void)
 {
 	get_vsys_map();
-	if (no_vsys_map)
-	{
-		if (lass_enable && vsyscall_none) {
-			pass_case("lass vsyscall=none, disable vsyscall address map as expected.");
-		}
-		else {
-			fail_case("lass vsyscall=emulate/xonly/default, syscall address map should not be disabled.");
-		}
-	}
-	else {
-		if (lass_enable && vsyscall_none) {
-			fail_case("lass vsyscall=none, Vsyscall address map should not be enabled.");
-		}
-		else {
-			pass_case("lass vsyscall=emulate/xonly/default, vsyscall address map is enabled as expected.");
-		}
+	if (no_vsys_map) {
+		if (lass_enable && vsyscall_none)
+			pass_case("vsyscall=none, vsyscall address map OK");
+		else
+			fail_case("vsyscall=emulate/xonly/default, vsyscall address map OK");
+	} else {
+		if (lass_enable && vsyscall_none)
+			fail_case("vsyscall=none, vsyscall address map NG");
+		else
+			pass_case("lass vsyscall=emulate/xonly/default, vsyscall addr map OK");
 	}
 
 	return 0;
@@ -268,8 +254,7 @@ void dump_buffer(unsigned char *buf, int size)
 	printf("-----------------------------------------------------\n");
 	printf("buf addr:%p size = %d (%03xh)\n", buf, size, size);
 
-	for (i = 0; i < size; i += 16)
-	{
+	for (i = 0; i < size; i += 16) {
 		printf("%04x: ", i);
 
 		for (j = i; ((j < i + 16) && (j < size)); j++)
@@ -284,37 +269,30 @@ static int test_read_vsys_address(void)
 	bool can_read;
 	int a = 0;
 
-	if (sigsetjmp(jmpbuf, 1) == 0)
-	{
+	if (sigsetjmp(jmpbuf, 1) == 0) {
 		printf("Access 0x%lx\n", VSYS_START_ADDR);
 		a = *(int *)VSYS_START_ADDR;
 		printf("0x%lx content:0x%x\n", VSYS_START_ADDR, a);
 		can_read = true;
-	}
-	else
-	{
+	} else {
 		can_read = false;
 	}
 	printf("can_read:%d, vsyscall_map_r:%d\n", can_read, vsyscall_map_r);
 
 	// when LASS enable, the vsyscall page is unreadable except vsyscall=emulate
-	if (lass_enable && vsyscall_emulate) {
+	if (lass_enable && vsyscall_emulate)
 		vsyscall_map_r = true;
-        }
-	else {
+	else
 		vsyscall_map_r = false;
-	}
 
-        // vsyscall_map_r = true;
+	// vsyscall_map_r = true;
 	// can_read = true;
 	printf("can_read:%d, vsyscall_map_r:%d\n", can_read, vsyscall_map_r);
- 
-	if (vsyscall_map_r == can_read) {
-		pass_case("Could read vsyscall addr is as expected");
-	}
-	else {
-		fail_case("Could not read vsyscall addr is not as expected");
-	}
+
+	if (vsyscall_map_r == can_read)
+		pass_case("Could read vsyscall addr is expected");
+	else
+		fail_case("Could not read vsyscall addr is not expected");
 
 	return 0;
 }
@@ -331,8 +309,6 @@ static void sethandler(int sig, void (*handler)(int, siginfo_t *, void *),
 
 	if (sigaction(sig, &sa, 0))
 		err(1, "sigaction");
-
-	return;
 }
 
 static void sigsegv(int sig, siginfo_t *info, void *ctx_void)
@@ -363,56 +339,40 @@ static int test_process_vm_readv_vsys_address(void)
 
 	ret = process_vm_readv(getpid(), &local, 1, &remote, 1, 0);
 	printf("After process_vm_readv copy to buf\n");
-	// when LASS enable, the vsyscall page is unreadable
-	if (lass_enable == true)
+	//when LASS enable, the vsyscall page is unreadable
+	if (lass_enable)
 		vsyscall_map_r = false;
 
-	if (ret != READ_LEN)
-	{
+	if (ret != READ_LEN) {
 		perror("Get error:");
 		if (vsyscall_map_r) {
-			if (lass_enable && vsyscall_emulate) {
-				fail_case("Readable vsyscall address is as expected when lass vsyscall=emulate, but read date is wrong");
-			}
-		        else {
-				fail_case("Readable vsyscall address is not as expected when vsyscall!=emulate");
-			}
+			if (lass_enable && vsyscall_emulate)
+				fail_case("vsyscall=emulate, Read vsyscall addr OK, read date NG");
+			else
+				fail_case("vsyscall!=emulate, Readable vsyscall addr NG");
+		} else {
+			if (lass_enable && vsyscall_emulate)
+				fail_case("vsyscall=emulate, process_vm_readv NG");
+			else
+				pass_case("vsyscall!=emulate, process_vm_readv OK");
 		}
-		else {
-			if (lass_enable && vsyscall_emulate) {
-				fail_case("Could not process_vm_readv is not as expected when lass vsyscall=emulate");
-			}
-			else {
-				pass_case("Could not process_vm_readv as expected when lass vsyscall!=emulate");
-			}
-		}
-	}
-	else
-	{
+	} else {
 		dump_buffer(buf, 0x100);
-		if (vsyscall_map_r)
-		{
-			if (memcmp(buf, (const void *)VSYS_START_ADDR, READ_LEN))
-			{
+		if (vsyscall_map_r) {
+			if (memcmp(buf, (const void *)VSYS_START_ADDR, READ_LEN)) {
 				printf("[WARN]\t Read incorrect data\n");
 				fail_case("read vsyscall data is not acceptable in lass");
+			} else {
+				if (lass_enable && vsyscall_emulate)
+					pass_case("vsyscall=emulate, Read vsyscall data OK");
+				else
+					fail_case("vsyscall!=emulate, Read vsyscall data NG");
 			}
-			else {
-				if (lass_enable && vsyscall_emulate) {
-					pass_case("read vsyscall date is as expected when lass vsyscall=emulate.");
-				} 
-				else {
-					fail_case("Read vsyscall data is not as expcted when lass vsyscall!=emulate.");
-				}
-			}
-		}
-		else {
-			if (lass_enable && vsyscall_emulate) {
-				pass_case("readable vsyscall address is as expected when lass vsyscall=emulate, and read data is correct");
-			}
-			else {
+		} else {
+			if (lass_enable && vsyscall_emulate)
+				pass_case("vsyscall=emulate,read vsyscall addr OK,read data NG");
+			else
 				fail_case("Read vsyscall data is unexpected.");
-			}
 		}
 	}
 
@@ -447,40 +407,33 @@ static int test_vsys_address_executable(void)
 		printf("vsyscall address is not executable!\n");
 
 	printf("[RUN]\tMake sure that vsyscalls is executable\n");
-	if (sigsetjmp(jmpbuf, 1) == 0)
-	{
+	if (sigsetjmp(jmpbuf, 1) == 0) {
 		vgtod(&tv, &tz);
 		executed = true;
-	}
-	else
+	} else {
 		executed = false;
+	}
 
-	if (executed)
-	{
+	if (executed) {
 		printf("Get time: tv_sys.sec:%ld usec:%ld\n", tv.tv_sec, tv.tv_usec);
 
-		if (lass_enable && vsyscall_none)
-			fail_case("lass vsyscall=none,executed vsyscall address is unexpected!");
-		else
-		{
+		if (lass_enable && vsyscall_none) {
+			fail_case("vsyscall=none,exe vsyscall addr unexpected!");
+		} else {
 			if (vsyscall_map_x)
-				pass_case("Executed vsyscall address is expected!");
+				pass_case("Exe vsyscall address is expected");
 			else
 				fail_case("Should trigger wrong page fault!");
 		}
-	}
-	else
-	{ /* INSTR */
+	} else { /* INSTR */
 		printf("Failed to get time\n");
-
-		if (lass_enable && vsyscall_none)
-			pass_case("lass vsyscall=none,unsupport execute vsyscall address!");
-		else
-		{
+		if (lass_enable && vsyscall_none) {
+			pass_case("vsyscall=none,not support exe vsyscall addr");
+		} else {
 			if (vsyscall_map_x)
-				fail_case("Should be execute vsyscall address!");
+				fail_case("Should be execute vsyscall address");
 			else
-				pass_case("Failed to execute vsyscall is expected!");
+				pass_case("Fail to exe vsyscall is expected!");
 		}
 	}
 
@@ -499,9 +452,9 @@ static unsigned long get_eflags(void)
 static void set_eflags(unsigned long eflags)
 {
 	asm volatile("pushq %0\n\tpopfq"
-		     :
-		     : "rm"(eflags)
-		     : "flags");
+				:
+				: "rm"(eflags)
+				: "flags");
 }
 
 static void sigtrap(int sig, siginfo_t *info, void *ctx_void)
@@ -514,11 +467,11 @@ static void sigtrap(int sig, siginfo_t *info, void *ctx_void)
 	/* Check sig number and rip rbp status. */
 	if (((ip ^ 0xffffffffff600000UL) & ~0xfffUL) == 0) {
 		printf("Got sig:%d,si_code:%d,ip:%lx,rbp:%lx,ins_num:%d\n",
-			sig, info->si_code, ip, bp, instruction_num);
+		       sig, info->si_code, ip, bp, instruction_num);
 		num_vsyscall_traps++;
 	} else if (instruction_num < 16) {
 		printf("instruction_num:%02d, ip:%lx, rbp:%lx\n",
-			instruction_num, ip, bp);
+		       instruction_num, ip, bp);
 	}
 }
 
@@ -528,8 +481,7 @@ static int test_vsys_emulation(void)
 	bool is_native;
 
 	num_vsyscall_traps = 0;
-	if (!vsyscall_map_x)
-	{
+	if (!vsyscall_map_x) {
 		printf("Could not execute vsyscall\n");
 		pass_case("Sysfile: vsyscall could not be executed\n");
 		return 1;
@@ -538,15 +490,18 @@ static int test_vsys_emulation(void)
 	printf("[RUN]\tchecking vsyscall is emulated\n");
 	sethandler(SIGTRAP, sigtrap, 0);
 	printf("&tmp:%p, tmp:%lx\n", &tmp, tmp);
-	set_eflags(get_eflags() | X86_EFLAGS_TF);
+	//set_eflags(get_eflags() | X86_EFLAGS_TF);
+	set_eflags(get_eflags() | BIT(8));
+
 	/*
 	 * Single step signal checking, don't add any steps between
 	 * set_eflags() and vtime() to avoid confuse.
 	 */
 	vtime(&tmp);
 	printf("&tmp:%p, tmp:%lx, ins_num:%d\n",
-		&tmp, tmp, instruction_num);
-	set_eflags(get_eflags() & ~X86_EFLAGS_TF);
+	       &tmp, tmp, instruction_num);
+	//set_eflags(get_eflags() & ~X86_EFLAGS_TF);
+	set_eflags(get_eflags() & ~BIT(8));
 
 	/*
 	 * If vsyscalls are emulated, we expect a single trap in the
@@ -578,10 +533,9 @@ int test_vsys_syscall_gtod(void)
 	struct timezone tz_sys;
 
 	ret_vsys = sys_gtod(&tv_sys, &tz_sys);
-	if (ret_vsys)
+	if (ret_vsys) {
 		fail_case("Failed to test syscall gettimeofday!");
-	else
-	{
+	} else {
 		printf("Sysvall: gettimeofday\n");
 		printf("Get time. tv_sys.sec:%ld usec:%ld\n",
 		       tv_sys.tv_sec, tv_sys.tv_usec);
@@ -596,7 +550,7 @@ int test_read_kernel_linear(void)
 	unsigned long a, b;
 	unsigned long kernel_random_addr;
 	int addr_content;
-	bool readed = 0;
+	bool read_done = 0;
 
 	/* this is for some special time test
 	 * srand((unsigned) (time(NULL)));
@@ -605,89 +559,84 @@ int test_read_kernel_linear(void)
 	b = rand();
 	kernel_random_addr = ((a << 32) | 0xffff800000000000ul) | b;
 
-	if (kernel_random_addr < KERNEL_START_ADDR)
-	{
+	if (kernel_random_addr < KERNEL_START_ADDR) {
 		printf("addr:0x%lx is smaller than 0x%lx\n",
 		       kernel_random_addr, KERNEL_START_ADDR);
 		fail_case("Set addr error!");
 		return 1;
 	}
 	printf("Kernel linear addr:0x%lx\n", kernel_random_addr);
-	if (sigsetjmp(jmpbuf, 1) == 0)
-	{
+	if (sigsetjmp(jmpbuf, 1) == 0) {
 		addr_content = *(const int *)kernel_random_addr;
-		readed = true;
+		read_done = true;
+	} else {
+		read_done = false;
 	}
-	else
-		readed = false;
 
-	if (readed)
-	{
+	if (read_done) {
 		printf("Get content:0x%x (0x%lx)\n", addr_content, kernel_random_addr);
 
 		fail_case("Kernel address could not read from user space!");
-	}
-	else
-	{ /* INSTR */
+	} else { /* INSTR */
 		printf("Failed to read kernel space.\n");
 
-		pass_case("LASS unsupport access to read kernel address!");
+		pass_case("LASS not support access to read kernel address!");
 	}
 
 	return 0;
 }
 
 static struct testcases lass_cases[] = {
-    {
-	.param = 'm',
-	.test_func = test_read_vsys_map,
-	.msg = "Test get vsyscall address maps.",
-    },
-    {
-	.param = 'd',
-	.test_func = test_vsys_address_executable,
-	.msg = "Test execute vsyscall addr 0xffffffffff600000.",
-    },
-    {
-	.param = 'g',
-	.test_func = test_vsys_syscall_gtod,
-	.msg = "Test call vsyscall",
-    },
-    {
-	.param = 't',
-	.test_func = test_vsys_api_gtod,
-	.msg = "Test call vsyscall api gettimeofday",
-    },
-    {
-	.param = 'r',
-	.test_func = test_read_vsys_address,
-	.msg = "Test read vsyscall 0xffffffffff600000.",
-    },
-    {
-	.param = 'i',
-	.test_func = test_read_kernel_linear,
-	.msg = "Test read random kernel space.",
-    },
-    {
-	.param = 'v',
-	.test_func = test_process_vm_readv_vsys_address,
-	.msg = "Test process_vm_readv read address 0xffffffffff600000.[negative]",
-    },
-    {
-	.param = 'e',
-	.test_func = test_vsys_emulation,
-	.msg = "Test vsyscall emulation.",
-    },
-    {
-	.param = 'a',
-	.test_func = run_all,
-	.msg = "Test all.",
-    },
-    {
-	.param = 'h',
-	.test_func = usage,
-	.msg = "Help",
-    }};
+	{
+		.param = 'm',
+		.test_func = test_read_vsys_map,
+		.msg = "Test get vsyscall address maps.",
+		},
+		{
+		.param = 'd',
+		.test_func = test_vsys_address_executable,
+		.msg = "Test execute vsyscall addr 0xffffffffff600000.",
+		},
+		{
+		.param = 'g',
+		.test_func = test_vsys_syscall_gtod,
+		.msg = "Test call vsyscall",
+		},
+	{
+		.param = 't',
+		.test_func = test_vsys_api_gtod,
+		.msg = "Test call vsyscall api gettimeofday",
+	},
+	{
+		.param = 'r',
+		.test_func = test_read_vsys_address,
+		.msg = "Test read vsyscall 0xffffffffff600000.",
+	},
+	{
+		.param = 'i',
+		.test_func = test_read_kernel_linear,
+		.msg = "Test read random kernel space.",
+		},
+		{
+		.param = 'v',
+		.test_func = test_process_vm_readv_vsys_address,
+		.msg = "Test process_vm_readv read address 0xffffffffff600000.[negative]",
+		},
+		{
+		.param = 'e',
+		.test_func = test_vsys_emulation,
+		.msg = "Test vsyscall emulation.",
+	},
+	{
+		.param = 'a',
+		.test_func = run_all,
+		.msg = "Test all.",
+	},
+	{
+		.param = 'h',
+		.test_func = usage,
+		.msg = "Help",
+	}};
 
 int usage(void)
 {
@@ -711,8 +660,7 @@ int run_test_case(char opt)
 	int cnt = ARRAY_SIZE(lass_cases);
 	int ret = 0;
 
-	for (int i = 0; i < cnt; i++)
-	{
+	for (int i = 0; i < cnt; i++) {
 		if (lass_cases[i].param != opt)
 			continue;
 
@@ -732,8 +680,7 @@ int run_all(void)
 	int cnt = ARRAY_SIZE(lass_cases);
 	int ret = 0;
 
-	for (int i = 0; i < cnt; i++)
-	{
+	for (int i = 0; i < cnt; i++) {
 		if (lass_cases[i].param == 'h' || lass_cases[i].param == 'a')
 			continue;
 
@@ -752,10 +699,8 @@ int check_param(char opt)
 	int cnt = ARRAY_SIZE(lass_cases);
 	int ret = 0;
 
-	for (int i = 0; i < cnt; i++)
-	{
-		if (lass_cases[i].param != opt)
-		{
+	for (int i = 0; i < cnt; i++) {
+		if (lass_cases[i].param != opt) {
 			ret = 1;
 			break;
 		}
@@ -766,45 +711,41 @@ int check_param(char opt)
 
 int main(int argc, char *argv[])
 {
-	char parm;
+	char param;
 
-	if (!cpu_has_lass())
-	{
+	if (!cpu_has_lass()) {
 		printf("Unsupported LASS feature!\n");
 		return 1;
 	}
 
-	if (!check_lass_enable())
-	{
+	if (!check_lass_enable()) {
 		lass_enable = false;
-		printf("LASS feature is under default mode without lass defined in cmdline.\n");
+		printf(" under default mode without lass defined in cmdline.\n");
 	}
 	lass_enable = true;
 
-        check_vsyscall_status();
+	check_vsyscall_status();
 
-	if (argc == 2)
-	{
-		if (sscanf(argv[1], "%c", &parm) != 1)
-		{
-			printf("Invalid parm:%c\n", parm);
+	if (argc == 2) {
+		if (sscanf(argv[1], "%c", &param) != 1) {
+			printf("Invalid param:%c\n", param);
 			usage();
 		}
-		printf("parm:%c\n", parm);
-	}
-	else
+		printf("param:%c\n", param);
+	} else {
 		usage();
+	}
 
-	if (!check_param(parm))
+	if (!check_param(param))
 		usage();
 
 	sethandler(SIGSEGV, sigsegv, 0);
 	get_vsys_map();
 
-	run_test_case(parm);
+	run_test_case(param);
 
 	printf("[Results] pass_num:%d, fail_num:%d\n",
 	       pass_num, fail_num);
 
-	return !(!fail_num);
+	return 0;
 }
