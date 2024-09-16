@@ -6,7 +6,7 @@
 #Test get vsyscall address maps.
 lass m
 #Test execute vsyscall addr 0xffffffffff600000.
-lass m
+lass d
 #Test call vsyscall
 lass g
 #Test call vsyscall api gettimeofday
