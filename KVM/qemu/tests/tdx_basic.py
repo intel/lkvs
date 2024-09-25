@@ -8,7 +8,7 @@
 # History:  May. 2024 - Xudong Hao - creation
 
 from avocado.utils import process, cpu
-from virttest import error_context
+from virttest import error_context, env_process
 from provider.cpu_utils import check_cpu_flags
 
 
@@ -41,6 +41,8 @@ def run(test, params, env):
     if tdx_value != "Y":
         test.fail("TDX is not supported in KVM")
 
+    params["start_vm"] = "yes"
+    env_process.preprocess_vm(test, params, env, params["main_vm"])
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
     timeout = params.get_numeric("login_timeout", 240)
