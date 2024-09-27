@@ -7,16 +7,11 @@
 cmake_minimum_required(VERSION 3.12)
 project(Yogini)
 
-# Set the compiler
-set(CMAKE_C_COMPILER ${CROSS_COMPILE}gcc)
-
 # Set the build output directory
 set(BUILD_OUTPUT ${CMAKE_CURRENT_BINARY_DIR})
 
 # Set the installation prefix
-if(NOT CMAKE_INSTALL_PREFIX)
-    set(CMAKE_INSTALL_PREFIX /usr)
-endif()
+set(CMAKE_INSTALL_PREFIX /usr/local/bin)
 
 # Set the source files
 set(SRC
@@ -42,7 +37,7 @@ execute_process(
 )
 
 # Print information about the target CPU
-message(STATUS "Target CPU: ${TARGET_CPU}")
+# message(STATUS "Target CPU: ${TARGET_CPU}")
 
 # Function to check for CPU feature and add source files and compile definition if the feature is enabled
 function(check_cpu_feature)
@@ -92,4 +87,4 @@ add_executable(yogini ${SRC})
 target_link_libraries(yogini m pthread)
 
 # Install the program
-install(TARGETS yogini DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS yogini DESTINATION ${CMAKE_INSTALL_PREFIX})
