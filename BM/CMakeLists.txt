@@ -6,7 +6,7 @@
 cmake_minimum_required(VERSION 3.12)
 project(lkvs)
 
-set(SUBFOLDER amx/tmul avx512vbmi cet cmpccxadd pt 
+set(SUBFOLDER amx avx512vbmi cet cmpccxadd pt 
               splitlock telemetry th tools/cpuid_check 
 	      tools/pcie umip workload-xsave xsave)
 
