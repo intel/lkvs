@@ -69,7 +69,7 @@ def get_test_results(test, output, vm, session):
     :param session: Guest session
     """
     remove_str = "job.log"
-    guest_log = re.sub(remove_str, "", output.splitlines()[1].split(":")[1].strip())
+    guest_log = re.sub(remove_str, "", re.search(r'.*JOB LOG\s*:\s(.*)', output).group(1))
     # Delete the symbolic link to avoid remote copy failure
     session.cmd("rm %s/test-results/by-status -rf" % guest_log, ignore_all_errors=True)
 
