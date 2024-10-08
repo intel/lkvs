@@ -18,7 +18,7 @@ from provider.test_utils import get_baremetal_dir
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 check_dir = "%s/../../../BM/instruction-check" % curr_dir
 sys.path.append(check_dir)
-from feature_list import cpuid_info
+from feature_list import feature_list
 
 
 def prepare_cpuid(test, params, src_dir, vm=None, session=None):
@@ -62,7 +62,7 @@ def check_cpuid(params, feature, exec_bin, session=None):
     :param exec_bin: The execuable bianry tool with absolute path
     :param session: Guest session
     """
-    args = cpuid_info[feature]
+    args = feature_list[feature]["cpuid"]
     args_str = ' '.join(args)
 
     check_cmd = '%s %s' % (exec_bin, args_str)
