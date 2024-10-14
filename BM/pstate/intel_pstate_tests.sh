@@ -20,6 +20,7 @@ CPU_CPUFREQ_ATTR="affected_cpus cpuinfo_max_freq cpuinfo_min_freq
   cpuinfo_transition_latency related_cpus scaling_available_governors
   scaling_cur_freq scaling_driver scaling_governor scaling_max_freq
   scaling_min_freq scaling_setspeed"
+DEFAULT_SCALING_GOV=$(cat $CPU_SYSFS_PATH/cpu0/cpufreq/scaling_governor)
 
 # rdmsr tool is required to run pstate cases
 if which rdmsr 1>/dev/null 2>&1; then
@@ -151,9 +152,11 @@ set_scaling_governor() {
   local mode=$1
   local cpus=""
 
+  test_print_trc "The default scaling governor is: $DEFAULT_SCALING_GOV"
+
   # Validate mode parameter
-  if [[ $mode != "performance" && $mode != "powersave" ]]; then
-    die "Invalid scaling governor mode. Mode must be 'performance' or 'powersave'."
+  if [[ $mode != "performance" && $mode != "powersave" && $mode != "schedutil" ]]; then
+    die "Invalid scaling govencrnor mode. Mode must be 'performance' or 'powersave' or 'schedutil'."
   fi
 
   # Get the number of CPUs
@@ -346,10 +349,12 @@ check_max_cores_freq() {
   fi
 
   [[ -n "$max_freq" ]] || {
+    set_scaling_governor $DEFAULT_SCALING_GOV
     echo "$cpu_stat"
     die "Cannot get the max freq"
   }
   [[ -n "$current_freq" ]] || {
+    set_scaling_governor $DEFAULT_SCALING_GOV
     echo "$cpu_stat"
     die "Cannot get current freq"
   }
@@ -358,14 +363,17 @@ check_max_cores_freq() {
 
   if [[ $(echo "$delta > 100" | bc) -eq 1 ]]; then
     if power_limit_check; then
+      set_scaling_governor $DEFAULT_SCALING_GOV
       test_print_trc "The package and core power limitation is being asserted."
       test_print_trc "$current_freq is lower than $max_freq with power limitation asserted"
     else
+      set_scaling_governor $DEFAULT_SCALING_GOV
       test_print_trc "The package and core power limitation is NOT being asserted."
       check_tuned_service
       die "$current_freq is lower than $max_freq without power limitation asserted"
     fi
   else
+    set_scaling_governor $DEFAULT_SCALING_GOV
     test_print_trc "No thermal limitation, check all CPUs freq: PASS"
   fi
 }
