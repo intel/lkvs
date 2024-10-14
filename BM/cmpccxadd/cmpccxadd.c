@@ -139,30 +139,36 @@ DEF_FUNC_SIGNED(cmp_ns_add, CMPNSXADD, op1, op2, op3);
 DEF_FUNC_UNSIGNED(cmp_z_add, CMPZXADD, op1, op2, op3);
 DEF_FUNC_UNSIGNED(cmp_nz_add, CMPNZXADD, op1, op2, op3);
 
-void cmp_target_unsigned(unsigned long rax, unsigned long rbx,
-						unsigned long rcx, unsigned long rflags,
-						unsigned long rax_t, unsigned long rbx_t,
-						unsigned long rcx_t, unsigned long rflags_t)
+int cmp_target_unsigned(unsigned long rax, unsigned long rbx,
+			unsigned long rcx, unsigned long rflags,
+			unsigned long rax_t, unsigned long rbx_t,
+			unsigned long rcx_t, unsigned long rflags_t)
 {
 	printf("target: *(rax) = %d, rbx = %d, rcx = %d, rflags = 0x%lx\n",
-			rax_t, rbx_t, rcx_t, rflags_t);
+	       rax_t, rbx_t, rcx_t, rflags_t);
 
-	if (rax == rax_t && rbx == rbx_t && rcx == rcx_t && rflags == rflags_t)
+	if (rax == rax_t && rbx == rbx_t && rcx == rcx_t && rflags == rflags_t) {
 		printf("Test passed\n\n");
-	else
+	} else {
 		fprintf(stderr, "Test failed\n\n");
+		return 1;
+	}
+	return 0;
 }
 
-void cmp_target_signed(long rax, long rbx, long rcx, unsigned long rflags,
-				long rax_t, long rbx_t, long rcx_t, unsigned long rflags_t)
+int cmp_target_signed(long rax, long rbx, long rcx, unsigned long rflags,
+		      long rax_t, long rbx_t, long rcx_t, unsigned long rflags_t)
 {
 	printf("target: *(rax) = %d, rbx = %d, rcx = %d, rflags = 0x%lx\n",
-			rax_t, rbx_t, rcx_t, rflags_t);
+	       rax_t, rbx_t, rcx_t, rflags_t);
 
-	if (rax == rax_t && rbx == rbx_t && rcx == rcx_t && rflags == rflags_t)
+	if (rax == rax_t && rbx == rbx_t && rcx == rcx_t && rflags == rflags_t) {
 		printf("Test passed\n\n");
-	else
+	} else {
 		fprintf(stderr, "Test failed\n\n");
+		return 1;
+	}
+	return 0;
 }
 
 unsigned long uop1, uop2, uop3;
@@ -170,499 +176,655 @@ long op1, op2, op3;
 struct output_unsigned uoutput;
 struct output_signed output;
 
-void cmpbexadd_above(void)
+int cmpbexadd_above(void)
 {
+	int ret = 0;
+
 	uop1 = 2;
 	uop2 = 1;
 	uop3 = 3;
 	uoutput = cmp_be_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 2, 2, 3, 0x202);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 2, 2, 3, 0x202);
+	return ret;
 }
 
-void cmpbexadd_below(void)
+int cmpbexadd_below(void)
 {
+	int ret = 0;
+
 	uop1 = 1;
 	uop2 = 2;
 	uop3 = 3;
 	uoutput = cmp_be_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 4, 1, 3, 0x297);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 4, 1, 3, 0x297);
+	return ret;
 }
 
-void cmpbexadd_equal(void)
+int cmpbexadd_equal(void)
 {
+	int ret = 0;
+
 	uop1 = 2;
 	uop2 = 2;
 	uop3 = 3;
 	uoutput = cmp_be_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 5, 2, 3, 0x246);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 5, 2, 3, 0x246);
+	return ret;
 }
 
-void cmpbxadd_above(void)
+int cmpbxadd_above(void)
 {
+	int ret = 0;
+
 	uop1 = 2;
 	uop2 = 1;
 	uop3 = 3;
 	uoutput = cmp_b_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 2, 2, 3, 0x202);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 2, 2, 3, 0x202);
+	return ret;
 }
 
-void cmpbxadd_below(void)
+int cmpbxadd_below(void)
 {
+	int ret = 0;
+
 	uop1 = 1;
 	uop2 = 2;
 	uop3 = 3;
 	uoutput = cmp_b_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 4, 1, 3, 0x297);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 4, 1, 3, 0x297);
+	return ret;
 }
 
-void cmpbxadd_equal(void)
+int cmpbxadd_equal(void)
 {
+	int ret = 0;
+
 	uop1 = 2;
 	uop2 = 2;
 	uop3 = 3;
 	uoutput = cmp_b_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 2, 2, 3, 0x246);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 2, 2, 3, 0x246);
+	return ret;
 }
 
-void cmplexadd_equal(void)
+int cmplexadd_equal(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = -1;
 	op3 = 2;
 	output = cmp_le_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x246);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x246);
+	return ret;
 }
 
-void cmplexadd_less(void)
+int cmplexadd_less(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = 1;
 	op3 = 2;
 	output = cmp_le_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x282);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x282);
+	return ret;
 }
 
-void cmplexadd_more(void)
+int cmplexadd_more(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = -2;
 	op3 = 2;
 	output = cmp_le_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, -1, -1, 2, 0x202);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx,
+				output.rflags, -1, -1, 2, 0x202);
+	return ret;
 }
 
-void cmplxadd_equal(void)
+int cmplxadd_equal(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = -1;
 	op3 = 2;
 	output = cmp_l_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, -1, -1, 2, 0x246);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx,
+				output.rflags, -1, -1, 2, 0x246);
+	return ret;
 }
 
-void cmplxadd_less(void)
+int cmplxadd_less(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = 1;
 	op3 = 2;
 	output = cmp_l_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x282);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x282);
+	return ret;
 }
 
-void cmplxadd_more(void)
+int cmplxadd_more(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = -2;
 	op3 = 2;
 	output = cmp_l_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, -1, -1, 2, 0x202);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx,
+				output.rflags, -1, -1, 2, 0x202);
+	return ret;
 }
 
-void cmpnbexadd_above(void)
+int cmpnbexadd_above(void)
 {
+	int ret = 0;
+
+	op1 = -1;
 	uop1 = 2;
 	uop2 = 1;
 	uop3 = 3;
 	uoutput = cmp_nbe_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 5, 2, 3, 0x202);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 5, 2, 3, 0x202);
+	return ret;
 }
 
-void cmpnbexadd_below(void)
+int cmpnbexadd_below(void)
 {
+	int ret = 0;
+
 	uop1 = 1;
 	uop2 = 2;
 	uop3 = 3;
 	uoutput = cmp_nbe_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 1, 1, 3, 0x297);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 1, 1, 3, 0x297);
+	return ret;
 }
 
-void cmpnbexadd_equal(void)
+int cmpnbexadd_equal(void)
 {
+	int ret = 0;
+
 	uop1 = 2;
 	uop2 = 2;
 	uop3 = 3;
 	uoutput = cmp_nbe_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 2, 2, 3, 0x246);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 2, 2, 3, 0x246);
+	return ret;
 }
 
-void cmpnbxadd_above(void)
+int cmpnbxadd_above(void)
 {
+	int ret = 0;
+
 	uop1 = 2;
 	uop2 = 1;
 	uop3 = 3;
 	uoutput = cmp_nb_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 5, 2, 3, 0x202);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 5, 2, 3, 0x202);
+	return ret;
 }
 
-void cmpnbxadd_below(void)
+int cmpnbxadd_below(void)
 {
+	int ret = 0;
+
 	uop1 = 1;
 	uop2 = 2;
 	uop3 = 3;
 	uoutput = cmp_nb_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 1, 1, 3, 0x297);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 1, 1, 3, 0x297);
+	return ret;
 }
 
-void cmpnbxadd_equal(void)
+int cmpnbxadd_equal(void)
 {
+	int ret = 0;
+
 	uop1 = 2;
 	uop2 = 2;
 	uop3 = 3;
 	uoutput = cmp_nb_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 5, 2, 3, 0x246);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 5, 2, 3, 0x246);
+	return ret;
 }
 
-void cmpnlexadd_equal(void)
+int cmpnlexadd_equal(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = -1;
 	op3 = 2;
 	output = cmp_nle_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, -1, -1, 2, 0x246);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx,
+				output.rflags, -1, -1, 2, 0x246);
+	return ret;
 }
 
-void cmpnlexadd_less(void)
+int cmpnlexadd_less(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = 1;
 	op3 = 2;
 	output = cmp_nle_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, -1, -1, 2, 0x282);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx,
+				output.rflags, -1, -1, 2, 0x282);
+	return ret;
 }
 
-void cmpnlexadd_more(void)
+int cmpnlexadd_more(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = -2;
 	op3 = 2;
 	output = cmp_nle_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x202);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x202);
+	return ret;
 }
 
-void cmpnlxadd_equal(void)
+int cmpnlxadd_equal(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = -1;
 	op3 = 2;
 	output = cmp_nl_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x246);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x246);
+	return ret;
 }
 
-void cmpnlxadd_less(void)
+int cmpnlxadd_less(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = 1;
 	op3 = 2;
 	output = cmp_nl_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, -1, -1, 2, 0x282);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx,
+				output.rflags, -1, -1, 2, 0x282);
+	return ret;
 }
 
-void cmpnlxadd_more(void)
+int cmpnlxadd_more(void)
 {
+	int ret = 0;
+
 	op1 = -1;
 	op2 = -2;
 	op3 = 2;
 	output = cmp_nl_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x202);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, -1, 2, 0x202);
+	return ret;
 }
 
-void cmpnoxadd_not_overflow(void)
+int cmpnoxadd_not_overflow(void)
 {
+	int ret = 0;
+
+	op1 = -1;
 	op1 = -2;
 	op2 = 1;
 	op3 = 1;
 	output = cmp_no_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, -1, -2, 1, 0x282);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx,
+				output.rflags, -1, -2, 1, 0x282);
+	return ret;
 }
 
-void cmpnoxadd_overflow(void)
+int cmpnoxadd_overflow(void)
 {
+	int ret = 0;
+
 	op1 = -2;
 	op2 = LONG_MAX;
 	op3 = 1;
 	output = cmp_no_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, -2, -2, 1, 0xa16);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx,
+				output.rflags, -2, -2, 1, 0xa16);
+	return ret;
 }
 
-void cmpnpxadd_even(void)
+int cmpnpxadd_even(void)
 {
+	int ret = 0;
+
 	uop1 = 4;
 	uop2 = 1;
 	uop3 = 3;
 	uoutput = cmp_np_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 4, 4, 3, 0x206);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 4, 4, 3, 0x206);
+	return ret;
 }
 
-void cmpnpxadd_odd(void)
+int cmpnpxadd_odd(void)
 {
+	int ret = 0;
+
 	uop1 = 2;
 	uop2 = 1;
 	uop3 = 3;
 	uoutput = cmp_np_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 5, 2, 3, 0x202);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 5, 2, 3, 0x202);
+	return ret;
 }
 
-void cmpnsxadd_negative(void)
+int cmpnsxadd_negative(void)
 {
+	int ret = 0;
+
 	op1 = 1;
 	op2 = 2;
 	op3 = 2;
 	output = cmp_ns_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, 1, 2, 0x297);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, 1, 2, 0x297);
+	return ret;
 }
 
-void cmpnsxadd_positive(void)
+int cmpnsxadd_positive(void)
 {
+	int ret = 0;
+
 	op1 = 1;
 	op2 = 1;
 	op3 = 1;
 	output = cmp_ns_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 2, 1, 1, 0x246);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 2, 1, 1, 0x246);
+	return ret;
 }
 
-void cmpnzxadd_not_zero(void)
+int cmpnzxadd_not_zero(void)
 {
+	int ret = 0;
+
 	uop1 = 3;
 	uop2 = 2;
 	uop3 = 2;
 	uoutput = cmp_nz_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 5, 3, 2, 0x202);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 5, 3, 2, 0x202);
+	return ret;
 }
 
-void cmpnzxadd_zero(void)
+int cmpnzxadd_zero(void)
 {
+	int ret = 0;
+
 	uop1 = 2;
 	uop2 = 2;
 	uop3 = 2;
 	uoutput = cmp_nz_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 2, 2, 2, 0x246);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 2, 2, 2, 0x246);
+	return ret;
 }
 
-void cmpoxadd_not_overflow(void)
+int cmpoxadd_not_overflow(void)
 {
+	int ret = 0;
+
 	op1 = -2;
 	op2 = 1;
 	op3 = 1;
 	output = cmp_o_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, -2, -2, 1, 0x282);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx,
+				output.rflags, -2, -2, 1, 0x282);
+	return ret;
 }
 
-void cmpoxadd_overflow(void)
+int cmpoxadd_overflow(void)
 {
+	int ret = 0;
+
 	op1 = -2;
 	op2 = LONG_MAX;
 	op3 = 1;
 	output = cmp_o_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, -1, -2, 1, 0xa16);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx,
+				output.rflags, -1, -2, 1, 0xa16);
+	return ret;
 }
 
-void cmppxadd_even(void)
+int cmppxadd_even(void)
 {
+	int ret = 0;
+
 	uop1 = 4;
 	uop2 = 1;
 	uop3 = 3;
 	uoutput = cmp_p_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 7, 4, 3, 0x206);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 7, 4, 3, 0x206);
+	return ret;
 }
 
-void cmppxadd_odd(void)
+int cmppxadd_odd(void)
 {
+	int ret = 0;
+
 	uop1 = 2;
 	uop2 = 1;
 	uop3 = 3;
 	uoutput = cmp_p_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 2, 2, 3, 0x202);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 2, 2, 3, 0x202);
+	return ret;
 }
 
-void cmpsxadd_negative(void)
+int cmpsxadd_negative(void)
 {
+	int ret = 0;
+
 	op1 = 1;
 	op2 = 2;
 	op3 = 2;
 	output = cmp_s_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 3, 1, 2, 0x297);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 3, 1, 2, 0x297);
+	return ret;
 }
 
-void cmpsxadd_positive(void)
+int cmpsxadd_positive(void)
 {
+	int ret = 0;
+
 	op1 = 1;
 	op2 = 1;
 	op3 = 1;
 	output = cmp_s_add(op1, op2, op3);
-	cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, 1, 1, 0x246);
+	ret = cmp_target_signed(output.rax, output.rbx, output.rcx, output.rflags, 1, 1, 1, 0x246);
+	return ret;
 }
 
-void cmpzxadd_not_zero(void)
+int cmpzxadd_not_zero(void)
 {
+	int ret = 0;
+
 	uop1 = 3;
 	uop2 = 2;
 	uop3 = 2;
 	uoutput = cmp_z_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 3, 3, 2, 0x202);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 3, 3, 2, 0x202);
+	return ret;
 }
 
-void cmpzxadd_zero(void)
+int cmpzxadd_zero(void)
 {
+	int ret = 0;
+
 	uop1 = 2;
 	uop2 = 2;
 	uop3 = 2;
 	uoutput = cmp_z_add(uop1, uop2, uop3);
-	cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx, uoutput.rflags, 4, 2, 2, 0x246);
+	ret = cmp_target_unsigned(uoutput.rax, uoutput.rbx, uoutput.rcx,
+				  uoutput.rflags, 4, 2, 2, 0x246);
+	return ret;
 }
 
-void main(int32_t argc, char **argv)
+int main(int argc, char **argv)
 {
-	if (argc != 3 || strcmp(argv[1], "-t") != 0){
+	if (argc != 3 || strcmp(argv[1], "-t") != 0) {
 		fprintf(stderr, "Usage: ./cmpccxadd -t <testcase_id>\n");
-		return;
+		return -1;
 	}
 
-	int32_t case_id;
+	int ret;
+	int case_id;
 
 	case_id = atoi(argv[2]);
 
-	switch (case_id){
-		case 1:
-			cmpbexadd_above();
-			break;
-		case 2:
-			cmpbexadd_below();
-			break;
-		case 3:
-			cmpbexadd_equal();
-		case 4:
-			cmpbxadd_above();
-			break;
-		case 5:
-			cmpbxadd_below();
-			break;
-		case 6:
-			cmpbxadd_equal();
-			break;
-		case 7:
-			cmplexadd_equal();
-			break;
-		case 8:
-			cmplexadd_less();
-			break;
-		case 9:
-			cmplexadd_more();
-			break;
-		case 10:
-			cmplxadd_equal();
-			break;
-		case 11:
-			cmplxadd_less();
-			break;
-		case 12:
-			cmplxadd_more();
-			break;
-		case 13:
-			cmpnbexadd_above();
-			break;
-		case 14:
-			cmpnbexadd_below();
-			break;
-		case 15:
-			cmpnbexadd_equal();
-			break;
-		case 16:
-			cmpnbxadd_above();
-			break;
-		case 17:
-			cmpnbxadd_below();
-			break;
-		case 18:
-			cmpnbxadd_equal();
-			break;
-		case 19:
-			cmpnlexadd_equal();
-			break;
-		case 20:
-			cmpnlexadd_less();
-			break;
-		case 21:
-			cmpnlexadd_more();
-			break;
-		case 22:
-			cmpnlxadd_equal();
-			break;
-		case 23:
-			cmpnlxadd_less();
-			break;
-		case 24:
-			cmpnlxadd_more();
-			break;
-		case 25:
-			cmpnoxadd_not_overflow();
-			break;
-		case 26:
-			cmpnoxadd_overflow();
-			break;
-		case 27:
-			cmpnpxadd_even();
-			break;
-		case 28:
-			cmpnpxadd_odd();
-			break;
-		case 29:
-			cmpnsxadd_negative();
-			break;
-		case 30:
-			cmpnsxadd_positive();
-			break;
-		case 31:
-			cmpnzxadd_not_zero();
-			break;
-		case 32:
-			cmpnzxadd_zero();
-			break;
-		case 33:
-			cmpoxadd_not_overflow();
-			break;
-		case 34:
-			cmpoxadd_overflow();
-			break;
-		case 35:
-			cmppxadd_even();
-			break;
-		case 36:
-			cmppxadd_odd();
-			break;
-		case 37:
-			cmpsxadd_negative();
-			break;
-		case 38:
-			cmpsxadd_positive();
-			break;
-		case 39:
-			cmpzxadd_not_zero();
-			break;
-		case 40:
-			cmpzxadd_zero();
-			break;
-		default:
-			fprintf(stderr, "Invalid testcase!\n");
-			break;
+	switch (case_id) {
+	case 1:
+		ret = cmpbexadd_above();
+		break;
+	case 2:
+		ret = cmpbexadd_below();
+		break;
+	case 3:
+		ret = cmpbexadd_equal();
+		break;
+	case 4:
+		ret = cmpbxadd_above();
+		break;
+	case 5:
+		ret = cmpbxadd_below();
+		break;
+	case 6:
+		ret = cmpbxadd_equal();
+		break;
+	case 7:
+		ret = cmplexadd_equal();
+		break;
+	case 8:
+		ret = cmplexadd_less();
+		break;
+	case 9:
+		ret = cmplexadd_more();
+		break;
+	case 10:
+		ret = cmplxadd_equal();
+		break;
+	case 11:
+		ret = cmplxadd_less();
+		break;
+	case 12:
+		ret = cmplxadd_more();
+		break;
+	case 13:
+		ret = cmpnbexadd_above();
+		break;
+	case 14:
+		ret = cmpnbexadd_below();
+		break;
+	case 15:
+		ret = cmpnbexadd_equal();
+		break;
+	case 16:
+		ret = cmpnbxadd_above();
+		break;
+	case 17:
+		ret = cmpnbxadd_below();
+		break;
+	case 18:
+		ret = cmpnbxadd_equal();
+		break;
+	case 19:
+		ret = cmpnlexadd_equal();
+		break;
+	case 20:
+		ret = cmpnlexadd_less();
+		break;
+	case 21:
+		ret = cmpnlexadd_more();
+		break;
+	case 22:
+		ret = cmpnlxadd_equal();
+		break;
+	case 23:
+		ret = cmpnlxadd_less();
+		break;
+	case 24:
+		ret = cmpnlxadd_more();
+		break;
+	case 25:
+		ret = cmpnoxadd_not_overflow();
+		break;
+	case 26:
+		ret = cmpnoxadd_overflow();
+		break;
+	case 27:
+		ret = cmpnpxadd_even();
+		break;
+	case 28:
+		ret = cmpnpxadd_odd();
+		break;
+	case 29:
+		ret = cmpnsxadd_negative();
+		break;
+	case 30:
+		ret = cmpnsxadd_positive();
+		break;
+	case 31:
+		ret = cmpnzxadd_not_zero();
+		break;
+	case 32:
+		ret = cmpnzxadd_zero();
+		break;
+	case 33:
+		ret = cmpoxadd_not_overflow();
+		break;
+	case 34:
+		ret = cmpoxadd_overflow();
+		break;
+	case 35:
+		ret = cmppxadd_even();
+		break;
+	case 36:
+		ret = cmppxadd_odd();
+		break;
+	case 37:
+		ret = cmpsxadd_negative();
+		break;
+	case 38:
+		ret = cmpsxadd_positive();
+		break;
+	case 39:
+		ret = cmpzxadd_not_zero();
+		break;
+	case 40:
+		ret = cmpzxadd_zero();
+		break;
+	default:
+		fprintf(stderr, "Invalid testcase!\n");
+		ret = -1;
+		break;
 	}
+	return ret;
 }
