@@ -65,6 +65,10 @@ feature_list = {
         "cpuid": ['7', '0', '0', '0', 'c', '9'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
     },
+    "VPCLMULQDQ": {
+        "cpuid": ['7', '0', '0', '0', 'c', '10'],
+        "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
+    },
     "AVX512_VNNI": {
         "cpuid": ['7', '0', '0', '0', 'c', '11'],
         "platforms": {"SPR", "EMR", "GNR"}
