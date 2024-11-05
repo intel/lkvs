@@ -181,7 +181,7 @@ the initial_max_freq_khz."
       test_print_trc "$per_die shows Uncore current freq $current_freq equals to \
 the max test freq $init_max khz"
     else
-      die "$per_die shows Ucore current freq $current_freq is beyond \
+      die "$per_die shows Uncore current freq $current_freq is beyond \
 the max test freq $init_max khz"
     fi
   done
@@ -388,6 +388,170 @@ pkg_max_min_freq_change() {
   done
 }
 
+# Function to run memory stress using stress tool
+cpus_vm_stress() {
+  local mem_avail
+  local mem_test
+
+# Run memory stress using stress tool
+  mem_avail=$(grep MemAvailable /proc/meminfo | awk -F " " '{print $2}')
+  mem_test=$(echo "$mem_avail"/1000000 | bc)
+  test_print_trc "Will run memory stress with $mem_test vm workers"
+  do_cmd "stress --vm $mem_test --vm-bytes 1024M -t 90 &"
+  STRESS_PID=$!
+  [ -n "$STRESS_PID" ] || block_test "Fail to run memory stress"
+}
+
+get_turbostat_log() {
+  local turbostat_log=""
+  columns="CPU,Busy%"
+  turbostat_log=$($PSTATE_TOOL/turbostat -q --show $columns -i 0.1 sleep 10 2>&1)
+  echo "$turbostat_log"
+}
+
+# ELC: Efficiency Latency Control
+# Chang low threshold and verify the current freq equals to the floor freq
+elc_low_threshold() {
+  local test_low_threshold=10
+
+  per_die_num=$(ls "$UFS_SYSFS_PATH" | grep -c uncore)
+  for ((i = 1; i <= per_die_num; i++)); do
+    per_die=$(ls "$UFS_SYSFS_PATH" | grep uncore | sed -n "$i,1p")
+
+    # Save the default elc_low_threshold_percent, elc_floor_freq_khz value
+    default_floor_freq=$(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz)
+    test_print_trc "The default $per_die elc_floor_freq_khz is: $default_floor_freq"
+    [[ -n "$default_floor_freq" ]] || block_test "elc_floor_freq_khz is not available."
+    default_low_threshold=$(cat $UFS_SYSFS_PATH/$per_die/elc_low_threshold_percent)
+    [[ -n "$default_low_threshold" ]] || block_test "elc_low_threshold_percent is not available."
+
+    # Change the elc_low_threshold_percent to a lower percentage, e.g. 10
+    do_cmd "echo $test_low_threshold > $UFS_SYSFS_PATH/$per_die/elc_low_threshold_percent"
+    test_print_trc "Test elc_low_threshold_percent is: $test_low_threshold"
+    # Read the elc_low_threshold_percent, verify the value is changed
+    [[ "$test_low_threshold" -eq "$(cat $UFS_SYSFS_PATH/$per_die/elc_low_threshold_percent)" ]] ||
+      die "elc_low_threshold_percent is not set to $test_low_threshold"
+
+    # Change elc_floor_freq_khz to the int_elc_floor_freq_khz +100MHz freq
+    do_cmd "echo $(($default_floor_freq + 100000)) > $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz"
+    test_print_trc "Test elc_floor_freq_khz is: $(($default_floor_freq + 100000))"
+    test_print_trc "Configured elc_floor_freq_khz is: $(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz)"
+    # Read the elc_floor_freq_khz, verify the value is changed
+    [[ "$(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz)" -eq "$(($default_floor_freq + 100000))" ]] ||
+    die "elc_floor_freq_khz is not set to $(($default_floor_freq + 100000))"
+
+    # Keep SUT idle for 30 seconds, and read the turbostat Busy% column, make sure the Busy% is lower than 5
+    for ((k = 1; k <= 5; k++)); do
+
+      sleep 10
+      echo "sleep cycle $k---------"
+      cpu_stat=$(get_turbostat_log)
+      busy_percentage=$(echo "$cpu_stat" | grep -E "^-" -A 2 | sed -n "1, 1p" | awk '{print $2}' | awk -F "." '{print $1}')
+      test_print_trc "The Busy percentage is: $busy_percentage"
+
+      # Read UFS current freq value
+      current_freq=$(cat $UFS_SYSFS_PATH/$per_die/current_freq_khz)
+      test_print_trc "The $per_die current freq is: $current_freq"
+    done
+
+    if [ "$busy_percentage" -le "$test_low_threshold" ]; then
+      test_print_trc "The Busy percentage is lower than the elc_low_threshold_percent"
+    else
+      # Recover the default setting for elc_low_threshold_percent, elc_floor_freq_khz
+      do_cmd "echo $default_low_threshold > $UFS_SYSFS_PATH/$per_die/elc_low_threshold_percent"
+      do_cmd "echo $default_floor_freq > $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz"
+      block_test "Test $per_die: The Busy percentage is higher than the elc_low_threshold_percent"
+    fi
+
+    # Verify if the current freq is equal to the floor freq
+    if [[ "$current_freq" -ge $(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz) ]]; then
+      test_print_trc "The $per_die current freq is equal to the elc_floor_freq_khz"
+    else
+      # Recover the default setting for elc_low_threshold_percent, elc_floor_freq_khz
+      do_cmd "echo $default_low_threshold > $UFS_SYSFS_PATH/$per_die/elc_low_threshold_percent"
+      do_cmd "echo $default_floor_freq > $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz"
+      die "$per_die: The current freq is not equal to the elc_floor_freq_khz"
+    fi
+
+    # Recover the default setting for elc_low_threshold_percent, elc_floor_freq_khz
+    do_cmd "echo $default_low_threshold > $UFS_SYSFS_PATH/$per_die/elc_low_threshold_percent"
+    do_cmd "echo $default_floor_freq > $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz"
+  done
+}
+
+# ELC: Efficiency Latency Control
+# Change high threshold and verify the current freq is higher than the floor freq
+elc_high_threshold() {
+  local test_high_threshold=90
+
+  per_die_num=$(ls "$UFS_SYSFS_PATH" | grep -c uncore)
+  for ((i = 1; i <= per_die_num; i++)); do
+    per_die=$(ls "$UFS_SYSFS_PATH" | grep uncore | sed -n "$i,1p")
+
+    # Save the default elc_high_threshold_percent, elc_floor_freq_khz value
+    default_floor_freq=$(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz)
+    [[ -n "$default_floor_freq" ]] || block_test "elc_floor_freq_khz is not available."
+    default_high_threshold=$(cat $UFS_SYSFS_PATH/$per_die/elc_high_threshold_percent)
+    [[ -n "$default_high_threshold" ]] || block_test "elc_high_threshold_percent is not available."
+
+    # Change the elc_high_threshold_percent to a higher percentage, e.g. 90
+    do_cmd "echo $test_high_threshold > $UFS_SYSFS_PATH/$per_die/elc_high_threshold_percent"
+    test_print_trc "Test elc_high_threshold_percent is: $test_high_threshold"
+    # Read the elc_high_threshold_percent, verify the value is changed
+    [[ "$test_high_threshold" -eq $(cat $UFS_SYSFS_PATH/$per_die/elc_high_threshold_percent) ]] ||
+      die "elc_high_threshold_percent is not set to $test_high_threshold"
+
+    # Change elc_floor_freq_khz to the initial_max_freq_khz - 100000 freq
+    test_print_trc "Test elc_floor_freq_khz is: $(($(cat $UFS_SYSFS_PATH/$per_die/initial_max_freq_khz) - 100000 ))"
+    test_print_trc "Before elc_floor_freq_khz: $(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz)"
+    do_cmd "echo $(($(cat $UFS_SYSFS_PATH/$per_die/initial_max_freq_khz) - 100000)) > $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz"
+    test_print_trc "Configured elc_floor_freq_khz: $(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz)"
+    # Read the elc_floor_freq_khz, verify the value is changed
+    [[ "$(($(cat $UFS_SYSFS_PATH/$per_die/initial_max_freq_khz) - 100000 ))" -eq $(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz) ]] ||
+      die "elc_floor_freq_khz is not set to $(($(cat $UFS_SYSFS_PATH/$per_die/initial_max_freq_khz) - 100000))"
+
+    # Keep memory stress for 30 seconds, and read the turbostat Busy% column, make sure the Busy% is higher than 99
+    cpus_vm_stress
+
+    cpu_stat=$(get_turbostat_log)
+    busy_percentage=$(echo "$cpu_stat" | grep -E "^-" -A 2 | sed -n "1, 1p" | awk '{print $2}' | awk -F "." '{print $1}')
+    test_print_trc "The turbostat log: cat $cpu_stat"
+    test_print_trc "The Busy percentage is: $busy_percentage"
+
+    # Read UFS current freq value
+    current_freq=$(cat $UFS_SYSFS_PATH/$per_die/current_freq_khz)
+    test_print_trc "The $per_die current freq is: $current_freq"
+
+    # Kill the memory stress thread
+    [ -n "$STRESS_PID" ] && do_cmd "pkill stress"
+
+    if [ "$busy_percentage" -gt "$test_high_threshold" ]; then
+      test_print_trc "The Busy percentage is higher than the elc_high_threshold_percent"
+    else
+      # Recover the default setting for elc_high_threshold_percent, elc_floor_freq_khz
+      do_cmd "echo $default_high_threshold > $UFS_SYSFS_PATH/$per_die/elc_high_threshold_percent"
+      do_cmd "echo $default_floor_freq > $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz"
+      block_test "Test $per_die: The Busy percentage is lower than the elc_high_threshold_percent"
+    fi
+
+    # Verify if the current freq is higher than the floor freq
+    current_freq=$(cat $UFS_SYSFS_PATH/$per_die/current_freq_khz)
+    test_print_trc "The $per_die current freq is: $current_freq"
+    if [[ "$current_freq" -ge $(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz) ]]; then
+      test_print_trc "The $per_die current freq is higher than the elc_floor_freq_khz"
+    else
+      # Recover the default setting for elc_high_threshold_percent, elc_floor_freq_khz
+      do_cmd "echo $default_high_threshold > $UFS_SYSFS_PATH/$per_die/elc_high_threshold_percent"
+      do_cmd "echo $default_floor_freq > $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz"
+      die "$per_die: The current freq is not larger than the elc_floor_freq_khz"
+    fi
+
+    # Recover the default setting for elc_high_threshold_percent, elc_floor_freq_khz
+    do_cmd "echo $default_high_threshold > $UFS_SYSFS_PATH/$per_die/elc_high_threshold_percent"
+    do_cmd "echo $default_floor_freq > $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz"
+  done
+}
+
 tpmi_ufs_test() {
   case $TEST_SCENARIO in
   check_ufs_unbind_bind)
@@ -400,7 +564,7 @@ tpmi_ufs_test() {
     ufs_sysfs_attr
     ;;
   check_ufs_init_min_max_value)
-    ufs_init_min_max_value
+    ufs_init_min_max_value 
     ;;
   check_ufs_min_equals_to_max)
     min_equals_to_max
@@ -413,6 +577,12 @@ tpmi_ufs_test() {
     ;;
   check_per_pkg_min_max_change)
     pkg_max_min_freq_change
+    ;;
+  check_ufs_elc_low_threshold)
+    elc_low_threshold
+    ;;
+  check_ufs_elc_high_threshold)
+    elc_high_threshold
     ;;
   esac
   return 0
