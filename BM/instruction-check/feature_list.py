@@ -17,6 +17,10 @@ feature_list = {
         "cpuid": ['1', '0', '0', '0', 'c', '26'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
     },
+    "MONITOR": {
+        "cpuid": ['1', '0', '3', '0', 'c', '3'],
+        "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
+    },
     "FSGSBASE": {
         "cpuid": ['7', '0', '0', '0', 'b', '0'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
