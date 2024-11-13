@@ -25,7 +25,7 @@ __license__ = "GPL version 2"
 script_dir = os.path.dirname(os.path.abspath(__file__)) 
 
 # Construce relative paths to the common.sh file
-common_sh_path = os.path.join(script_dir, '../../common/common.sh')
+common_sh_path = os.path.join(script_dir, '../common/common.sh')
 
 class ShellCommandRunnable(Runnable):
     def __init__(self, command):
