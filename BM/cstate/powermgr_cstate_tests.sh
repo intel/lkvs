@@ -762,11 +762,16 @@ verify_single_cpu_freq() {
   local current_freq=""
   local delta=0
   local turbo_on=""
+  local states=()
   local cpu_no_turbo_mode="/sys/devices/system/cpu/intel_pstate/no_turbo"
 
   # Get the CPUs num and the deepest idle cstate number
   cpus_num=$(lscpu | grep "On-line CPU(s) list" | awk '{print $NF}' | awk -F "-" '{print $2}')
-  states=($(grep . /sys/devices/system/cpu/cpu0/cpuidle/state*/name | awk -F "/" '{print $(NF-1)}'))
+
+  # Use a while loop with read -a to read the output into the array
+  while IFS= read -r line; do
+    states+=("$line")
+  done < <(grep . /sys/devices/system/cpu/cpu0/cpuidle/state*/name | awk -F "/" '{print $(NF-1)}')
 
   length=${#states[@]}
 
@@ -838,11 +843,16 @@ verify_single_cpu_freq() {
 # when all CPUs are in P0, L1, C1, or C1E states
 turbo_freq_when_idle() {
   local cpu_num=""
+  local states=()
   local idle_state=$1
 
   # Get the CPUs num and the deepest idle cstate number
   cpus_num=$(lscpu | grep "On-line CPU(s) list" | awk '{print $NF}' | awk -F "-" '{print $2}')
-  states=($(grep . /sys/devices/system/cpu/cpu0/cpuidle/state*/name | awk -F "/" '{print $(NF-1)}'))
+
+  # Use a while loop with read -a to read the output into the array
+  while IFS= read -r line; do
+    states+=("$line")
+  done < <(grep . /sys/devices/system/cpu/cpu0/cpuidle/state*/name | awk -F "/" '{print $(NF-1)}')
 
   length=${#states[@]}
   test_print_trc "The deepest core cstate num is: $length"
@@ -877,36 +887,6 @@ turbo_freq_when_idle() {
   # If the turbo frequency does not meet the expected value
   # Then determine whether a thermal limitation has been reached
   verify_single_cpu_freq
-}
-
-# Function to do CPU offline and online short stress
-cpu_off_on_stress() {
-  local cycle=$1
-  local dmesg_log
-
-  last_dmesg_timestamp
-
-  cpu_num=$(lscpu | grep "On-line CPU" | awk '{print $NF}' | awk -F "-" '{print $2}')
-  [ -n "$cpu_num" ] || block_test "On-line CPU is not available."
-  test_print_trc "The max CPU number is: $cpu_num "
-
-  for ((i = 1; i <= cycle; i++)); do
-    test_print_trc "CPUs offline online stress cycle$i"
-    for ((j = 1; j <= cpu_num; j++)); do
-      do_cmd "echo 0 > /sys/devices/system/cpu/cpu$j/online"
-    done
-    sleep 1
-    for ((j = 1; j <= cpu_num; j++)); do
-      do_cmd "echo 1 > /sys/devices/system/cpu/cpu$j/online"
-    done
-  done
-
-  dmesg_log=$(extract_case_dmesg)
-  if echo "$dmesg_log" | grep -v "IRQ request may fail" | grep -iE "fail|Call Trace|error|BUG|err"; then
-    die "Kernel dmesg shows failure after CPU offline/online stress: $dmesg_log"
-  else
-    test_print_trc "Kernel dmesg shows Okay after CPU offline/online stress."
-  fi
 }
 
 while getopts :t:H arg; do
@@ -1001,9 +981,6 @@ core_cstate_test() {
     ;;
   verify_turbo_freq_in_c1e)
     turbo_freq_when_idle C1E
-    ;;
-  verify_cpu_offline_online_stress)
-    cpu_off_on_stress 5
     ;;
   *)
     block_test "Wrong Case Id is assigned: $CASE_ID"

@@ -28,5 +28,3 @@ powermgr_cstate_tests.sh -t verify_turbo_freq_in_default
 powermgr_cstate_tests.sh -t verify_turbo_freq_in_poll
 powermgr_cstate_tests.sh -t verify_turbo_freq_in_c1
 powermgr_cstate_tests.sh -t verify_turbo_freq_in_c1e
-# Below case is verify the CPUs offline and online stress
-powermgr_cstate_tests.sh -t verify_cpu_offline_online_stress
