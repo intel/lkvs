@@ -1,0 +1,3 @@
+# This script performs CPU offline/online stress test for the specified number of cycles
+
+python3 cpu_off_on_stress.py
