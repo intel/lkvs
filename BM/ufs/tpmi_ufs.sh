@@ -433,12 +433,12 @@ elc_low_threshold() {
       die "elc_low_threshold_percent is not set to $test_low_threshold"
 
     # Change elc_floor_freq_khz to the int_elc_floor_freq_khz +100MHz freq
-    do_cmd "echo $(($default_floor_freq + 100000)) > $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz"
-    test_print_trc "Test elc_floor_freq_khz is: $(($default_floor_freq + 100000))"
+    do_cmd "echo $((default_floor_freq + 100000)) > $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz"
+    test_print_trc "Test elc_floor_freq_khz is: $((default_floor_freq + 100000))"
     test_print_trc "Configured elc_floor_freq_khz is: $(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz)"
     # Read the elc_floor_freq_khz, verify the value is changed
-    [[ "$(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz)" -eq "$(($default_floor_freq + 100000))" ]] ||
-    die "elc_floor_freq_khz is not set to $(($default_floor_freq + 100000))"
+    [[ "$(cat $UFS_SYSFS_PATH/$per_die/elc_floor_freq_khz)" -eq "$((default_floor_freq + 100000))" ]] ||
+    die "elc_floor_freq_khz is not set to $((default_floor_freq + 100000))"
 
     # Keep SUT idle for 30 seconds, and read the turbostat Busy% column, make sure the Busy% is lower than 5
     for ((k = 1; k <= 5; k++)); do
