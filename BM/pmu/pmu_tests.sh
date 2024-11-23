@@ -5,6 +5,7 @@
 # Author:   Ammy Yi <ammy.yi@intel.com>
 #
 # History:  26. Dec, 2022 - (Ammy Yi)Creation
+#           Nov 2024 Wendy Wang Updated
 
 
 # @desc This script verify pmu functional tests
@@ -34,9 +35,7 @@ fix_counter_test() {
   if ! perf stat -e $clockticks -a -x, sleep 1 2> $logfile; then
     flag=$((flag + 1))
   else
-    sync
-    sync
-    sleep 1
+    sync && sleep 1
     value=$(cat $logfile)
     test_print_trc "value = $value"
     value=$(echo "$value" | cut -d "," -f 1)
@@ -52,9 +51,7 @@ fix_counter_test() {
   if ! perf stat -e $clockticks -a -x, sleep 1 2> $logfile; then
     flag=$((flag + 1))
   else
-    sync
-    sync
-    sleep 1
+    sync && sleep 1
     value=$(cat $logfile)
     test_print_trc "value = $value"
     value=$(echo "$value" | cut -d "," -f 1)
@@ -66,14 +63,14 @@ fix_counter_test() {
 
   test_print_trc "flag = $flag"
   [[ $flag -eq 2 ]] && die "Fix counter is not working!"
-
 }
 
+# Basic test: Verify if Intel PMU driver is loaded
 basic_test() {
   do_cmd "dmesg | grep 'Intel PMU driver'"
-#  should_fail "dmesg | grep 'generic architected perfmon'"
 }
 
+# CPUID test for Last Branch Record events
 lbr_events_cpuid_test() {
   #CPUID leaf 0x1c  ECX (19:16) must be all 1 for SRF.
   for((i=16;i<=19;i++)); do
@@ -81,10 +78,12 @@ lbr_events_cpuid_test() {
   done
 }
 
+# Last Branch Record event sample test with "S" option
+# :S means sample
 lbr_events_s_test() {
   perfdata="perf.data"
   logfile="temp.txt"
-  do_cmd "perf record -o $perfdata -e "{branch-instructions,branch-misses}:S" -j any,counter sleep 1 >& $logfile"
+  perf record -o $perfdata -e "{branch-instructions,branch-misses}:S" -j any,counter sleep 1 >& $logfile
   sample_count=$(grep "sample" $logfile| awk '{print $10}' | tr -cd "0-9")
   [[ $sample_count -eq 0 ]] && die "samples = 0!"
   val=$(perf report -D -i $perfdata | grep -c "branch stack counters")
@@ -97,10 +96,11 @@ lbr_events_s_test() {
   done
 }
 
+# Test for all Last Branch Record events
 lbr_events_all_test() {
   perfdata="perf.data"
   logfile="temp.txt"
-  do_cmd "perf record -o $perfdata -e "{cpu/branch-instructions,branch_type=any/, cpu/branch-misses,branch_type=counter/}" sleep 1 >& $logfile"
+  perf record -o $perfdata -e "{cpu/branch-instructions,branch_type=any/, cpu/branch-misses,branch_type=counter/}" sleep 1 >& $logfile
   sample_count=$(grep "sample" $logfile| awk '{print $10}' | tr -cd "0-9")
   [[ $sample_count -eq 0 ]] && die "samples = 0!"
   val=$(perf report -D -i $perfdata | grep -c "branch stack counters")
@@ -113,6 +113,7 @@ lbr_events_all_test() {
   done 
 }
 
+# Test for timed Precise Event Based Sampling(PEBS) MSR capability
 timed_pebs_msr_test() {
   #MSR_IA32_PERF_CAPABILITIES(0x345) bit 17 for Timed PEBs
   bit_17=$(rdmsr 0x345 -f 17:17)
@@ -120,6 +121,7 @@ timed_pebs_msr_test() {
   [[ $bit_17 -eq 1 ]] || die "Timed PEBS msr bit is not set!"
 }
 
+# Test Uncore Events
 uncore_events_test() {
   uncore_events=$(perf list | grep uncore | grep PMU | awk '{print $1}')    
   for uncore_event in $uncore_events; do
@@ -129,9 +131,6 @@ uncore_events_test() {
 }
 
 pmu_test() {
-  echo "$WATCHDOG" > /proc/sys/kernel/nmi_watchdog
-  value=$(cat /proc/sys/kernel/nmi_watchdog)
-  test_print_trc "nmi_watchdog = $value"
   case $TEST_SCENARIO in
     fix_counter)
       fix_counter_test
@@ -161,13 +160,10 @@ pmu_test() {
   return 0
 }
 
-while getopts :t:w:H arg; do
+while getopts :t:H arg; do
   case $arg in
     t)
       TEST_SCENARIO=$OPTARG
-      ;;
-    w)
-      WATCHDOG=$OPTARG
       ;;
     H)
       usage && exit 0
