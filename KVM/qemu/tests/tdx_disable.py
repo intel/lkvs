@@ -13,8 +13,8 @@ from virttest import env_process
 
 def run(test, params, env):
     """
-    Boot TD after disable ept:
-    1) Disable ept
+    Boot TD after disable ept or tdx:
+    1) Disable ept or tdx
     2) Boot up TDVM
     3) TDVM can not be lanuch as expect
 
