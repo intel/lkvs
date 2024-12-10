@@ -13,6 +13,8 @@
 
 from virttest import error_context, utils_net
 
+from avocado.utils import process
+from avocado.core import exceptions
 from provider import hostdev
 from provider.hostdev import utils as hostdev_utils
 from provider.hostdev.dev_setup import hostdev_setup
@@ -31,6 +33,12 @@ def run(test, params, env):
     :type  env: virttest.utils_env.Env
     """
     ip_version = params["ip_version"]
+    vm_type = params.get("vm_secure_guest_type")
+    if not params.get("vm_hostdev_iommufd") and vm_type == "tdx":
+        dma_entry_limit_cmd = params.get("dma_cmd")
+        status = process.system(dma_entry_limit_cmd, shell=True)
+        if status:
+            raise exceptions.TestError("Failed to increase dma_entry_limit.")
     with hostdev_setup(params) as params:
         hostdev_driver = params.get("vm_hostdev_driver", "vfio-pci")
         assignment_type = params.get("hostdev_assignment_type")
