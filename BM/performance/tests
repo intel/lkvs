@@ -1,0 +1,62 @@
+# This script performs the predefined benchmarks test via perf tool
+
+# memcpy: benchmark for memcpy() function
+python3 -u perf_bench.py --bench_feature mem --feature_option memcpy
+# memset: benchmark for memset() function
+python3 -u perf_bench.py --bench_feature mem --feature_option memset
+# find_bit: benchmark for find_bit() function
+python3 -u perf_bench.py --bench_feature mem --feature_option find_bit
+# mem: benchmark for NUMA workloads
+python3 -u perf_bench.py --bench_feature numa --feature_option mem
+# messaging: benchmark for scheduling and IPC
+python3 -u perf_bench.py --bench_feature sched --feature_option messaging
+# pipe: benchmark for pipe() between two processes
+python3 -u perf_bench.py --bench_feature sched --feature_option pipe
+# seccomp-notify: benchmark for seccomp user notify
+python3 -u perf_bench.py --bench_feature sched --feature_option seccomp-notify
+# basic: benchmark for basic getpgid(2) calls
+python3 -u perf_bench.py --bench_feature syscall --feature_option basic
+# getpgid: benchmark for getpgid(2) calls
+python3 -u perf_bench.py --bench_feature syscall --feature_option getpgid
+# fork: benchmark for fork(2) calls
+python3 -u perf_bench.py --bench_feature syscall --feature_option fork
+# execve: benchmark for execve(2) calls
+python3 -u perf_bench.py --bench_feature syscall --feature_option evecve
+# synthesize: benchmark perf event synthesis
+python3 -u perf_bench.py --bench_feature internals --feature_option synthesize
+# kallsyms-parse: benchmark kallsyms parsing
+python3 -u perf_bench.py --bench_feature internals --feature_option kallsyms-parse
+# inject-build-id: benchmark build-id injection
+python3 -u perf_bench.py --bench_feature internals --feature_option inject-build-id
+# evlist-open-close: benchmark evlist open and close
+python3 -u perf_bench.py --bench_feature internals --feature_option evlist-open-close
+# pmu-scan: benchmark sysfs PMU info scanning
+python3 -u perf_bench.py --bench_feature internals --feature_option pmu-scan
+# thread: benchmark thread start/finish with breakpoints
+python3 -u perf_bench.py --bench_feature breakpoint --feature_option thread
+# enable: benchmark breakpoint enable/disable
+python3 -u perf_bench.py --bench_feature breakpoint --feature_option enable
+# baseline: baseline libc usleep(1000) call
+python3 -u perf_bench.py --bench_feature uprobe --feature_option baseline
+# empty: attach empty BPF prog to uprobe on usleep, system wide
+python3 -u perf_bench.py --bench_feature uprobe --feature_option empty
+# trace_printk: attach trace_printk BPF prog to  uprobe on usleep syswide
+python3 -u perf_bench.py --bench_feature uprobe --feature_option trace_printk
+# empty_ret: attach empty BPF prog to uretprobe on usleep, system wide
+python3 -u perf_bench.py --bench_feature uprobe --feature_option empty_ret
+# trace_printk_ret: attach trace_printk BPF prog to uretprobe on usleep syswide
+python3 -u perf_bench.py --bench_feature uprobe --feature_option trace_printk_ret
+# hash: benchmark for futex hash table
+python3 -u perf_bench.py --bench_feature futex --feature_option hash
+# wake: benchmark for futex wake calls
+python3 -u perf_bench.py --bench_feature futex --feature_option wake
+# wake-parallel: benchmark for parallel futex wake calls
+python3 -u perf_bench.py --bench_feature futex --feature_option wake-parallel
+# requeue: benchmark for futex request calls
+python3 -u perf_bench.py --bench_feature futex --feature_option requeue
+# lock-pi: benchmark for futex lock_pi calls
+python3 -u perf_bench.py --bench_feature futex --feature_option lock-pi
+# wait: benchmark for epoll concurrent epoll_waits
+python3 -u perf_bench.py --bench_feature epoll --feature_option wait
+# ctl: benchmark for epoll concurrent epoll_ctls
+python3 -u perf_bench.py --bench_feature epoll --feature_option ctl
