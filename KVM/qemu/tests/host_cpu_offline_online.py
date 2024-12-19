@@ -36,10 +36,12 @@ def run(test, params, env):
     for processor in processor_list:
         cpu.offline(processor)
     test.log.info("CPUs {} have been offline.".format(processor_list))
+    vm.verify_dmesg()
     if not check_if_vm_vcpu_match(vcpus, vm):
         test.fail("vCPU quantity on guest mismatch after offline")
 
     for processor in processor_list:
         cpu.online(processor)
     test.log.info("CPUs {} have been online.".format(processor_list))
+    vm.verify_dmesg()
     session.close()
