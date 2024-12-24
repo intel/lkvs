@@ -1,0 +1,9 @@
+# @name DMATEST
+# @desc DMATEST uses dmatest.ko module to runs tests on all available dma channels
+# @requires dmatest
+
+dma_test.sh -l 1 -p 1 -i 100 -b 32 -c ""
+dma_test.sh -l 1 -p 1 -i 100 -b 4096 -c ""
+dma_test.sh -l 10 -p 1 -i 1000 -b 32 -c ""
+dma_test.sh -l 10 -p 1 -i 1000 -b 4096 -c ""
+dma_test.sh -l 1 -p 1 -i 1000 -b 409600 -c ""
