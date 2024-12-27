@@ -10,10 +10,9 @@
 import re
 
 from avocado.utils import process, cpu
-from virttest import error_context, env_process
+from virttest import env_process
 
 
-@error_context.context_aware
 def run(test, params, env):
     """
     TDX module test:
