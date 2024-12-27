@@ -10,7 +10,6 @@
 import re
 
 from avocado.utils import process, cpu
-from virttest import env_process
 
 
 def run(test, params, env):
