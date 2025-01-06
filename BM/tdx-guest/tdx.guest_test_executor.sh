@@ -414,6 +414,11 @@ case "$TESTCASE" in
     guest_test_entry tdx_kexec_test.sh "-v $VCPU -m $MEM -o yes -k $KEXEC_CNT" || \
       die "Failed on $TESTCASE tdx_kexec_test.sh -v $VCPU -m $MEM -o yes -k $KEXEC_CNT"
     ;;
+  VM_KEXEC_"$VCPU"C_"$MEM"G_CYCLE_2 | VM_KEXEC_"$VCPU"C_"$MEM"G_CYCLE_1 | VM_KEXEC_"$VCPU"C_"$MEM"G_CYCLE_0)
+    guest_test_prepare vm_kexec_test.sh
+    guest_test_entry vm_kexec_test.sh "-v $VCPU -m $MEM -k $KEXEC_CNT" || \
+      die "Failed on $TESTCASE vm_kexec_test.sh -v $VCPU -m $MEM -k $KEXEC_CNT"
+    ;; 
   :)
     test_print_err "Must specify the test scenario option by [-t]"
     usage && exit 1
