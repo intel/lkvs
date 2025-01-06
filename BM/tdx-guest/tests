@@ -110,23 +110,23 @@
 # case info: [NA for upstream kernel] TD guest booting with disable device filter test for debug purpose
 ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_NO_CCFILTER -c "noccfilter" -p off
 # case implemented by tdx_kdump_test_entry.sh
-# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 1 sockets 1 and memory size 1 GB
+# case info: tdx guest kdump functional check with vcpu 1 sockets 1 and memory size 1 GB
 ./tdx-guest/tdx_kdump_test_entry.sh -v 1 -m 1 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
-# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 1 sockets 1 and memory size 32 GB
+# case info: tdx guest kdump functional check with vcpu 1 sockets 1 and memory size 32 GB
 ./tdx-guest/tdx_kdump_test_entry.sh -v 1 -m 32 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
-# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 1 sockets 1 and memory size 96 GB
+# case info: tdx guest kdump functional check with vcpu 1 sockets 1 and memory size 96 GB
 ./tdx-guest/tdx_kdump_test_entry.sh -v 1 -m 96 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
-# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 32 sockets 1 and memory size 1 GB
+# case info: tdx guest kdump functional check with vcpu 32 sockets 1 and memory size 1 GB
 ./tdx-guest/tdx_kdump_test_entry.sh -v 32 -m 1 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
-# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 32 sockets 1 and memory size 32 GB
+# case info: tdx guest kdump functional check with vcpu 32 sockets 1 and memory size 32 GB
 ./tdx-guest/tdx_kdump_test_entry.sh -v 32 -m 32 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
-# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 32 sockets 1 and memory size 96 GB
+# case info: tdx guest kdump functional check with vcpu 32 sockets 1 and memory size 96 GB
 ./tdx-guest/tdx_kdump_test_entry.sh -v 32 -m 96 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
-# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 128 sockets 1 and memory size 4 GB
+# case info: tdx guest kdump functional check with vcpu 128 sockets 1 and memory size 4 GB
 ./tdx-guest/tdx_kdump_test_entry.sh -v 128 -m 4 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
-# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 128 sockets 1 and memory size 32 GB
+# case info: tdx guest kdump functional check with vcpu 128 sockets 1 and memory size 32 GB
 ./tdx-guest/tdx_kdump_test_entry.sh -v 128 -m 32 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
-# case info: [NA for upstream kernel yet] tdx guest kdump functional check with vcpu 128 sockets 1 and memory size 96 GB
+# case info: tdx guest kdump functional check with vcpu 128 sockets 1 and memory size 96 GB
 ./tdx-guest/tdx_kdump_test_entry.sh -v 128 -m 96 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
 # case implemented by tdx_stress_test.sh
 # case info: In TDVM, stress test on memory with stress-ng memrate stressor under config of 1VCPU + 16G MEM + 8 stressors
@@ -138,52 +138,95 @@
 # case info: In TDVM, stress test on memory with stress-ng network socket + iomix stressor under config of 1VCPU + 96G MEM + 48 stressors
 ./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_STRESS_SOCK_IOMIX_1C_96G_48W -c "accept_memory=lazy" -p off
 # case implemented by tdx_kexec_test_entry.sh
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 1 memory size 1 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 1 memory size 1 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 1 -m 1 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 1 memory size 4 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 1 memory size 4 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 1 -m 4 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 1 memory size 96 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 1 memory size 96 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 1 -m 96 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 2 memory size 1 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 2 memory size 1 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 2 -m 1 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 2 memory size 4 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 2 memory size 4 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 2 -m 4 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 2 memory size 96 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 2 memory size 96 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 2 -m 96 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 32 memory size 1 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 32 memory size 1 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 32 -m 1 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 32 memory size 4 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 32 memory size 4 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 32 -m 4 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 32 memory size 96 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 32 memory size 96 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 32 -m 96 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 64 memory size 1 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 64 memory size 1 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 64 -m 1 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 64 memory size 4 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 64 memory size 4 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 64 -m 4 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 64 memory size 96 GB memory drain before kexec test 2 kexec cycles
+# case info: tdx guest kexec functional check with vcpu 64 memory size 96 GB memory drain before kexec test 2 kexec cycles
 ./tdx-guest/tdx_kexec_test_entry.sh -v 64 -m 96 -o yes -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 1 memory size 1 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 1 memory size 1 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 1 -m 1 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 1 memory size 4 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 1 memory size 4 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 1 -m 4 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 1 memory size 96 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 1 memory size 96 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 1 -m 96 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 2 memory size 1 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 2 memory size 1 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 2 -m 1 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 2 memory size 4 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 2 memory size 4 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 2 -m 4 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 2 memory size 96 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 2 memory size 96 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 2 -m 96 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 32 memory size 1 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 32 memory size 1 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 32 -m 1 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 32 memory size 4 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 32 memory size 4 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 32 -m 4 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 32 memory size 96 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 32 memory size 96 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 32 -m 96 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 64 memory size 1 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 64 memory size 1 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 64 -m 1 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 64 memory size 4 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 64 memory size 4 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 64 -m 4 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-# case info: [NA for upstream kernel yet] tdx guest kexec functional check with vcpu 64 memory size 96 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
+# case info: tdx guest kexec functional check with vcpu 64 memory size 96 GB no memory drain before kexec test 2 kexec cycles, do memory drain after kexec cycles complete
 ./tdx-guest/tdx_kexec_test_entry.sh -v 64 -m 96 -o no -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
-
+# case implemented by vm_kdump_test_entry.sh
+# case info: vm guest kdump functional check with vcpu 1 sockets 1 and memory size 1 GB
+./tdx-guest/vm_kdump_test_entry.sh -v 1 -m 1 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: vm guest kdump functional check with vcpu 1 sockets 1 and memory size 32 GB
+./tdx-guest/vm_kdump_test_entry.sh -v 1 -m 32 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: vm guest kdump functional check with vcpu 1 sockets 1 and memory size 96 GB
+./tdx-guest/vm_kdump_test_entry.sh -v 1 -m 96 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: vm guest kdump functional check with vcpu 32 sockets 1 and memory size 1 GB
+./tdx-guest/vm_kdump_test_entry.sh -v 32 -m 1 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: vm guest kdump functional check with vcpu 32 sockets 1 and memory size 32 GB
+./tdx-guest/vm_kdump_test_entry.sh -v 32 -m 32 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: vm guest kdump functional check with vcpu 32 sockets 1 and memory size 96 GB
+./tdx-guest/vm_kdump_test_entry.sh -v 32 -m 96 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: vm guest kdump functional check with vcpu 128 sockets 1 and memory size 4 GB
+./tdx-guest/vm_kdump_test_entry.sh -v 128 -m 4 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: vm guest kdump functional check with vcpu 128 sockets 1 and memory size 32 GB
+./tdx-guest/vm_kdump_test_entry.sh -v 128 -m 32 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case info: vm guest kdump functional check with vcpu 128 sockets 1 and memory size 96 GB
+./tdx-guest/vm_kdump_test_entry.sh -v 128 -m 96 -r /abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm
+# case implemented by vm_kexec_test_entry.sh
+# case info: vm guest kexec functional check with vcpu 1 memory size 1 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 1 -m 1 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
+# case info: vm guest kexec functional check with vcpu 1 memory size 4 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 1 -m 4 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
+# case info: vm guest kexec functional check with vcpu 1 memory size 96 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 1 -m 96 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
+# case info: vm guest kexec functional check with vcpu 2 memory size 1 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 2 -m 1 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
+# case info: vm guest kexec functional check with vcpu 2 memory size 4 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 2 -m 4 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
+# case info: vm guest kexec functional check with vcpu 2 memory size 96 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 2 -m 96 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
+# case info: vm guest kexec functional check with vcpu 32 memory size 1 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 32 -m 1 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
+# case info: vm guest kexec functional check with vcpu 32 memory size 4 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 32 -m 4 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
+# case info: vm guest kexec functional check with vcpu 32 memory size 96 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 32 -m 96 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
+# case info: vm guest kexec functional check with vcpu 64 memory size 1 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 64 -m 1 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
+# case info: vm guest kexec functional check with vcpu 64 memory size 4 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 64 -m 4 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
+# case info: vm guest kexec functional check with vcpu 64 memory size 96 GB 2 kexec cycles
+./tdx-guest/vm_kexec_test_entry.sh -v 64 -m 96 -k 2 -r "/abs/path/to/kdump_test/kenrel_rpm/kernel-x-version-under-test.rpm"
