@@ -33,13 +33,33 @@ feature_list = {
         "cpuid": ['7', '0', '0', '0', 'b', '15'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
     },
+    "AVX512_F": {
+        "cpuid": ['7', '0', '0', '0', 'b', '16'],
+        "platforms": {"SPR", "EMR", "GNR"}
+    },
+    "AVX512_DQ": {
+        "cpuid": ['7', '0', '0', '0', 'b', '17'],
+        "platforms": {"SPR", "EMR", "GNR"}
+    },
     "AVX512_IFMA": {
         "cpuid": ['7', '0', '0', '0', 'b', '21'],
+        "platforms": {"SPR", "EMR", "GNR"}
+    },
+    "AVX512_CD": {
+        "cpuid": ['7', '0', '0', '0', 'b', '28'],
         "platforms": {"SPR", "EMR", "GNR"}
     },
     "SHA_NI": {
         "cpuid": ['7', '0', '0', '0', 'b', '29'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
+    },
+    "AVX512_BW": {
+        "cpuid": ['7', '0', '0', '0', 'b', '30'],
+        "platforms": {"SPR", "EMR", "GNR"}
+    },
+    "AVX512_VL": {
+        "cpuid": ['7', '0', '0', '0', 'b', '31'],
+        "platforms": {"SPR", "EMR", "GNR"}
     },
     "AVX512_VBMI": {
         "cpuid": ['7', '0', '0', '0', 'c', '1'],
