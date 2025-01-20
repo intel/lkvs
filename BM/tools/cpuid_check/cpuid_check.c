@@ -88,7 +88,10 @@ unsigned int extract_bits(unsigned int num, int start, int end)
 {
 	unsigned int mask = 0;
 
-	mask = ((1 << (end - start + 1)) - 1) << start;
+	if ((end - start) == 31)
+		mask = ~(0 << (end - start)) << start;
+	else
+		mask = ((1 << (end - start + 1)) - 1) << start;
 	return (num & mask) >> start;
 }
 
