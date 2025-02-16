@@ -654,7 +654,7 @@ check_turbostat_ver() {
   turbostat_output=$(turbostat -v 2>&1)
   version=$(echo "$turbostat_output" | grep -o "version [0-9]*" | cut -d ' ' -f 2)
 
-  if [[ "$version" == 2024 ]]; then
+  if [[ "$version" -ge 2024 ]]; then
     test_print_trc "The turbostat version is 2024"
   else
     block_test "Please ensure you are using the most recent version of turbostat by recompiling
