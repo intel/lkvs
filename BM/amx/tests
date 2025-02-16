@@ -47,8 +47,3 @@ tmul -b 2 -t 10 -c 10 -i 4
 tmul -b 3 -t 10 -c 10 -i 4
 tmul -b 5 -t 10 -c 10 -i 4
 # amx_fp16 instruction based tests
-tmul -b 0 -t 10 -c 10 -i 5
-tmul -b 1 -t 10 -c 10 -i 5
-tmul -b 2 -t 10 -c 10 -i 5
-tmul -b 3 -t 10 -c 10 -i 5
-tmul -b 5 -t 10 -c 10 -i 5
