@@ -6,6 +6,8 @@
 # Author: Xudong Hao <xudong.hao@intel.com>
 #
 # History:  Jun. 2024 - Xudong Hao - creation
+import time
+
 from avocado.utils import cpu
 
 from virttest import env_process
@@ -36,6 +38,10 @@ def run(test, params, env):
     host_free_mem = utils_misc.get_usable_memory_size()
     params['mem'] = host_free_mem//2
 
+    if params.get("sleep_after_powerdown"):
+        sleep_after_powerdown = int(params.get("sleep_after_powerdown"))
+    else:
+        sleep_after_powerdown = 10
     if (params.get("check_host_cpu") is not None) and (params['check_host_cpu'] == 'yes'):
         params['smp'] = params['vcpu_maxcpus'] = host_cpu
     elif (params.get("overrange_host_cpu") is not None) and (params['overrange_host_cpu'] == 'yes'):
@@ -62,3 +68,5 @@ def run(test, params, env):
         session = vm.wait_for_login(timeout=timeout)
         session.close()
         vm.destroy()
+    # Add sleep time for qemu to release resources completely
+    time.sleep(sleep_after_powerdown)
