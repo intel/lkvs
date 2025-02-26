@@ -46,6 +46,8 @@ struct test_cpuid {
 	int version;
 	struct cpuid_regs_ext regs;
 	struct list_head list;
+	u64 tdcs_td_ctl;
+	u64 tdcs_feature_pv_ctl;
 };
 
 struct cr_reg {
