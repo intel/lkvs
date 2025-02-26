@@ -8,44 +8,60 @@
 	.subleaf = _subleaf,			\
 }
 
-#define EXP_CPUID_BIT(_leaf, _subleaf, _reg, _bit_nr, _val, _vsn) do {	\
+#define EXP_CPUID_BIT_CTL(_leaf, _subleaf, _reg, _bit_nr, _val, _vsn, _td_ctl, _pv_ctl) do {\
 	struct test_cpuid *t;						\
 	int bnr = _bit_nr;						\
 	t = kzalloc(sizeof(struct test_cpuid), GFP_KERNEL);		\
 	t->name = "CPUID(" #_leaf "," #_subleaf ")." #_reg "[" #_bit_nr "]";\
-	t->version = _vsn;						\
-	t->leaf = _leaf;						\
-	t->subleaf = _subleaf;						\
+	t->version = (_vsn);						\
+	t->leaf = (_leaf);						\
+	t->subleaf = (_subleaf);					\
 	t->regs._reg.mask = BIT(bnr);					\
 	t->regs._reg.expect = BIT(bnr) * (_val);			\
+	t->tdcs_td_ctl = (_td_ctl);					\
+	t->tdcs_feature_pv_ctl = (_pv_ctl);				\
 	list_add_tail(&t->list, &cpuid_list);				\
 } while (0)
 
-#define EXP_CPUID_BYTE(_leaf, _subleaf, _reg, _val, _vsn) do {		\
+#define EXP_CPUID_BIT(_leaf, _subleaf, _reg, _bit_nr, _val, _vsn)	\
+	EXP_CPUID_BIT_CTL(_leaf, _subleaf, _reg, _bit_nr, _val, _vsn, 0, 0)
+
+#define EXP_CPUID_BYTE_CTL(_leaf, _subleaf, _reg, _val, _vsn, _td_ctl, _pv_ctl) do {\
 	struct test_cpuid *t;						\
 	t = kzalloc(sizeof(struct test_cpuid), GFP_KERNEL);		\
 	t->name = "CPUID(" #_leaf "," #_subleaf ")." #_reg;		\
-	t->version = _vsn;						\
-	t->leaf = _leaf;						\
-	t->subleaf = _subleaf;						\
+	t->version = (_vsn);						\
+	t->leaf = (_leaf);						\
+	t->subleaf = (_subleaf);					\
 	t->regs._reg.mask = 0xffffffff;					\
 	t->regs._reg.expect = (_val);					\
+	t->tdcs_td_ctl = (_td_ctl);					\
+	t->tdcs_feature_pv_ctl = (_pv_ctl);				\
 	list_add_tail(&t->list, &cpuid_list);				\
 } while (0)
 
-#define EXP_CPUID_RES_BITS(_leaf, _subleaf, _reg, _bit_s, _bit_e, _vsn) do {	\
+#define EXP_CPUID_BYTE(_leaf, _subleaf, _reg, _val, _vsn)		\
+	EXP_CPUID_BYTE_CTL(_leaf, _subleaf, _reg, _val, _vsn, 0, 0)
+
+#define EXP_CPUID_RES_BITS_CTL(_leaf, _subleaf, _reg, _bit_s, _bit_e, _vsn, _td_ctl, _pv_ctl) do {\
 	int i = 0;								\
 	struct test_cpuid *t;							\
 	t = kzalloc(sizeof(struct test_cpuid), GFP_KERNEL);			\
 	t->name = "CPUID(" #_leaf "," #_subleaf ")." #_reg "[" #_bit_e ":" #_bit_s "]";\
-	t->version = _vsn;							\
-	t->leaf = _leaf;							\
-	t->subleaf = _subleaf;							\
+	t->version = (_vsn);							\
+	t->leaf = (_leaf);							\
+	t->subleaf = (_subleaf);						\
 	for (i = _bit_s; i <= (_bit_e); i++) {					\
 		t->regs._reg.mask |= BIT(i);					\
 	}									\
+	t->tdcs_td_ctl = (_td_ctl);						\
+	t->tdcs_feature_pv_ctl = (_pv_ctl);					\
 	list_add_tail(&t->list, &cpuid_list);					\
 } while (0)
+
+
+#define EXP_CPUID_RES_BITS(_leaf, _subleaf, _reg, _bit_s, _bit_e, _vsn) \
+	EXP_CPUID_RES_BITS_CTL(_leaf, _subleaf, _reg, _bit_s, _bit_e, _vsn, 0, 0)
 
 #ifdef AUTOGEN_CPUID
 extern void initial_cpuid(void);
