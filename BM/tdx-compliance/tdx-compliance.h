@@ -100,7 +100,7 @@ static int write_msr_native(struct test_msr *c);
 static int read_msr_native(struct test_msr *c);
 void initial_cpuid(void);
 void parse_version(void);
-void parse_input(char* s);
+void parse_input(char *s);
 int check_results_cr(struct test_cr *t);
 
 u64 cur_cr4, cur_cr0;
