@@ -4,6 +4,9 @@ MODULES = tdx-compliance.ko
 
 obj-m += tdx-compliance.o
 
+# Add other source files if needed
+tdx-compliance-objs := tdx-compliance-main.o # tdcall.o tdxcall.o
+
 ifeq ($(KERNEL_SRC),)
 KDIR ?= /lib/modules/$(shell uname -r)/build
 else
