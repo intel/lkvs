@@ -108,9 +108,12 @@ def run(test, params, env):
         for feature_dir_name in feature_dir_names.split():
             vm_test_path = os.path.join(guest_bm_path, feature_dir_name)
             prepare_test_suite(test, vm_test_path, session)
+            cmd_timeout = params.get_numeric("cmd_timeout", 240)
+            if params.get("cmd_timeout"):
+                cmd_timeout = params.get_numeric("cmd_timeout")
             #run_cmd = "cd %s && ./runtests -f %s/tests" % (guest_bm_path, feature_dir_name)
             run_cmd = "cd %s && ./runtests.py -f %s -t %s/tests" % (guest_bm_path, feature_dir_name, feature_dir_name)
-            s, o = session.cmd_status_output(run_cmd)
+            s, o = session.cmd_status_output(run_cmd, timeout=cmd_timeout)
 
             get_test_results(test, o, vm, session)
 
