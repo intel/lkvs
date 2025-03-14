@@ -42,7 +42,7 @@ def run(test, params, env):
         host_file = os.path.join(deps_dir, file_name)
         guest_file = guest_dir + file_name
         vm.copy_files_to(host_file, guest_dir)
-        result = session.cmd_status(guest_file)
+        result = session.cmd_status(guest_file, timeout=300)
         if result:
             test.fail("Cuda test fail")
         else:
