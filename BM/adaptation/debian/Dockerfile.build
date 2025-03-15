@@ -24,4 +24,6 @@ RUN export GIT_SSL_NO_VERIFY=true && rm -rf libipt && git clone http://github.co
 RUN mkdir -p /src
 WORKDIR /src
 
-CMD ["sh"]
+RUN git clone https://github.com/intel/lkvs.git
+
+CMD ["bash"]
