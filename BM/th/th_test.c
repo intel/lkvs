@@ -65,7 +65,7 @@ static int set_policy(int fd, const char *policy)
 	}
 	id->size = size;
 	id->width = 64;
-	memcpy(id->id, policy, sizeof(id->id));
+	memcpy(id->id, policy, size);
 	fprintf(stdout, "start to ioctl with STP_POLICY_ID_SET\n");
 	ret = ioctl(fd, STP_POLICY_ID_SET, id);
 	fprintf(stderr, "ioctl result : %d\n", ret);
@@ -87,7 +87,7 @@ static int get_policy(int fd, const char *policy)
 	}
 	id->size = size;
 	id->width = 64;
-	memcpy(id->id, policy, sizeof(id->id));
+	memcpy(id->id, policy, size);
 	fprintf(stdout, "start to ioctl with STP_POLICY_ID_SET\n");
 	ret = ioctl(fd, STP_POLICY_ID_GET, id);
 	fprintf(stderr, "ioctl result : %d\n", ret);
