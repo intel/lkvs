@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (c) 2022 Intel Corporation.
+
+FROM debian
+
+ARG PROXY
+ENV http_proxy=$PROXY
+ENV https_proxy=$PROXY
+
+# Copy the packages list file into the image
+COPY packages /src/packages
+
+RUN 	apt-get update
+RUN	while read line; do apt-get install -y $line; done < /src/packages
+RUN	apt-get clean
+RUN	rm -rf /var/lib/apt/lists/*
+
+RUN export GIT_SSL_NO_VERIFY=true && rm -rf libipt && git clone http://github.com/intel/libipt.git && \
+	cd libipt && cmake . && make install
+
+RUN mkdir -p /src
+WORKDIR /src
+
+RUN git clone https://github.com/intel/lkvs.git
+
+CMD ["bash"]
