@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (c) 2022 Intel Corporation.
+
+#docker pull quay.io/centos/centos:stream9
+
+# docker run -it --rm --privileged -v $HOME:/home_host --mount type=bind,source=/dev,target=/dev localhost/centos:stream9 /bin/bash
+
+FROM quay.io/centos/centos:stream9
+
+ARG PROXY="http://127.0.0.1"
+
+ENV http_proxy=$PROXY
+ENV https_proxy=$PROXY
+
+RUN export http_proxy=${PROXY} https_proxy=${PROXY} && \
+    yum -y groupinstall "Development Tools" && \
+    yum -y install vim python3-pip && \
+    pip install --user avocado-framework \
+    yum -y clean all && \
+    rm -rf /var/cache/yum
+
+#RUN export GIT_SSL_NO_VERIFY=true && rm -rf libipt && git clone http://github.com/intel/libipt.git && \
+#	cd libipt && cmake . && make install
+
+RUN mkdir -p /home_host
+WORKDIR /home_host
+
+RUN git clone https://github.com/intel/lkvs.git
+
+
+# #RUN apt-get install linux-headers-`uname -r` -y
+# #RUN apt-get update && apt-get install linux-headers-generic linux-headers-5.19.0-41-generic -y
+
+CMD ["bash"]
+
+
