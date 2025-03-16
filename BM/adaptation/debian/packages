@@ -85,3 +85,9 @@ trace-cmd
 uuid-dev
 xmlto
 zlib1g-dev
+bc
+libpfm4-dev
+libtraceevent-dev
+pkg-config
+kmod
+python3-pip
