@@ -14,6 +14,7 @@ RUN 	apt-get update
 RUN	while read line; do apt-get install -y $line; done < /src/packages
 RUN	apt-get clean
 RUN	rm -rf /var/lib/apt/lists/*
+RUN	pip3 install --break-system-packages avocado-framework
 
 RUN export GIT_SSL_NO_VERIFY=true && rm -rf libipt && git clone http://github.com/intel/libipt.git && \
 	cd libipt && cmake . && make install
@@ -22,5 +23,14 @@ RUN mkdir -p /src
 WORKDIR /src
 
 RUN git clone https://github.com/intel/lkvs.git
+RUN cd lkvs/BM/tools/cpuid_check && make && make install
 
+RUN git clone --depth=1 https://github.com/torvalds/linux.git
+RUN cd linux/tools/power/x86/turbostat/ && make && make install
+
+RUN git clone https://github.com/intel/idxd-config.git
+RUN cd idxd-config && ./autogen.sh && ./configure CFLAGS='-g -O2' --prefix=/usr --sysconfdir=/etc --libdir=/usr/lib64 --enable-test=yes && make && make install
+RUN export PATH=$PATH:/usr/libexec/accel-config/test
+
+RUN cd /src/linux/tools/power/x86/intel-speed-select/ && make && make install
 CMD ["bash"]
