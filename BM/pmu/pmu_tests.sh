@@ -130,6 +130,140 @@ uncore_events_test() {
   done
 }
 
+arch_pebs_cpuid_test() {
+  ##CPUID.0x23.0.EAX[5] == 1
+  do_cmd "cpuid_check 23 0 0 0 a 5"
+
+  ## For PTL
+  ## CPUID.0x23.0.EAX[5:4] == 0x3
+  model=$(< /proc/cpuinfo grep mode | awk '{print $3}' | awk 'NR==1')
+  [[ $model -eq 204 ]] && do_cmd "cpuid_check 23 0 0 0 a 4"
+}
+
+reg_group_test(){
+  reg=$1
+  perfdata="pebs.data"
+  logfile="temp.txt"
+  event="cycles:$level"
+  test_print_trc "Will test with $reg now!"
+  perf record -o $perfdata -I$reg -e $event -a sleep 1 2>&1|tee $logfile
+  sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
+  count=$(perf report -D -i $perfdata| grep -v events | grep -c "\. $reg" )
+  test_print_trc "before sample_count = $sample_count; count = $count"
+  sample_count=$((sample_count))
+  test_print_trc "after sample_count = $sample_count; count = $count"
+  [[ $sample_count -eq 0 ]] && die "samples = 0!"
+  [[ $sample_count -eq $count ]] || die "samples does not match!"
+}
+
+reg_group_test_more_option(){
+  reg=$1
+  reg_v=$2
+  times=$3
+  perfdata="pebs.data"
+  logfile="temp.txt"
+  event="cycles:$level"
+  test_print_trc "Will test with $reg with $reg_v $times now!"
+  perf record -o $perfdata -I$reg -e $event -a sleep 1 2>&1|tee $logfile
+  sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
+  count=$(perf report -D -i $perfdata| grep -v events | grep -c "\. $reg_v" )
+  test_print_trc "before sample_count = $sample_count; count = $count"
+  sample_count=$((sample_count * times))
+  test_print_trc "after sample_count = $sample_count; count = $count"
+  [[ $sample_count -eq 0 ]] && die "samples = 0!"
+  [[ $sample_count -eq $count ]] || die "samples does not match!"
+}
+
+arch_pebs_gp_reg_group_test() {
+  ##CPUID.0x23.4.EBX.GPR[29] == 1
+  do_cmd "cpuid_check 23 0 4 0 b 29"
+  level="p"
+  reg_group_test "AX"
+  reg_group_test "BX"
+  reg_group_test "CX"
+  reg_group_test "DX"
+  reg_group_test "SI"
+  reg_group_test "DI"
+  reg_group_test "BP"
+  reg_group_test "SP"
+  reg_group_test "IP"
+  reg_group_test "FLAGS"
+  reg_group_test "CS"
+  reg_group_test "SS"
+#  reg_group_test "DS"
+#  reg_group_test "ES"
+#  reg_group_test "FS"
+#  reg_group_test "GS"
+  reg_group_test "R8" 
+}
+
+arch_pebs_xer_group_test() {
+  level="p"
+#  reg_group_test_more_option "OPMASK0" "opmask0" 1
+  reg_group_test_more_option "YMMH0" "YMMH0" 2
+#  reg_group_test_more_option "ZMMH0" "ZMMLH0" 4
+}
+
+arch_pebs_counter_group_test() {
+  perfdata="pebs.data"
+  logfile="temp.txt"
+  perfdata_s="pebs_s.data"
+  logfile_s="temp_s.txt"
+  mode=$(< /proc/cpuinfo grep mode | awk '{print $3}' | awk 'NR==1')
+  case $mode in
+    221)
+      perf record -o $perfdata_s -e '{cycles:p,cache-misses,cache-references,topdown-bad-spec,topdown-fe-bound,topdown-retiring}:S' -- sleep 1 2>&1|tee $logfile_s
+      perf record -o $perfdata -e '{cycles,cache-misses,cache-references,topdown-bad-spec,topdown-fe-bound,topdown-retiring}:p' -- sleep 1 2>&1|tee $logfile
+      ;;
+    1)
+    # Topdown events don't rely on real counter and they are caculated from perf metrics MSR. Could not sample with P core on DMR.
+      perf record -o $perfdata_s -e '{slots,cache-misses,cache-references,branches,branches-misses}:S' -- sleep 1 2>&1|tee $logfile_s
+      perf record -o $perfdata -e '{slots,cache-misses,cache-references,branches,branch-misses}:p' -- sleep 1 2>&1|tee $logfile      
+      ;;
+  esac
+  sample_count=$(grep "sample" $logfile_s | awk '{print $10}' | tr -cd "0-9")
+  [[ $sample_count -eq 0 ]] && die "samples = 0!"
+  sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
+  count=$(perf report -D -i $perfdata| grep -c "PERF_RECORD_SAMPLE")
+  [[ $sample_count -eq 0 ]] && die "samples = 0!"
+  [[ $sample_count -eq $count ]] || die "samples does not match!"
+}
+
+arch_pebs_counter_group_stress_test() {
+  perfdata="pebs.data"
+  logfile="temp.txt"
+  #because nmi_watchdog will occupy one fix counter, so disable it
+  echo 0 > /proc/sys/kernel/nmi_watchdog
+  event="{branches,branches,branches,branches,branches,branches,branches,branches,cycles,instructions,ref-cycles,topdown-bad-spec,topdown-fe-bound,topdown-retiring"
+  perf record -o $perfdata -e "$event:p" -a -- sleep 1 2>&1|tee $logfile
+  sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
+  count=$(perf report -D -i $perfdata| grep -c "PERF_RECORD_SAMPLE")
+  [[ $sample_count -eq 0 ]] && die "samples = 0!"
+  [[ $sample_count -eq $count ]] || die "samples does not match!"
+}
+
+arch_pebs_gp_counter_test() {
+  event="branches:p"
+  perfdata="pebs.data"
+  logfile="temp.txt" 
+  perf record -o $perfdata -e $event -a sleep 1 2>&1|tee $logfile
+  sample_count=$(grep "sample" $logfile| awk '{print $10}' | tr -cd "0-9")
+  count=$(perf report -D -i $perfdata| grep -c "PERF_RECORD_SAMPLE")
+  [[ $sample_count -eq 0 ]] && die "samples = 0!"
+  [[ $sample_count -eq $count ]] || die "samples does not match!" 
+}
+
+arch_pebs_basic_group_test() {
+  event="cycles:pp"
+  perfdata="pebs.data"
+  logfile="temp.txt" 
+  perf record -o $perfdata -e $event -a sleep 1 2>&1|tee $logfile
+  sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
+  count=$(perf report -D -i $perfdata| grep -c "PERF_RECORD_SAMPLE")
+  [[ $sample_count -eq 0 ]] && die "samples = 0!"
+  [[ $sample_count -eq $count ]] || die "samples does not match!" 
+}
+
 pmu_test() {
   case $TEST_SCENARIO in
     fix_counter)
@@ -156,6 +290,27 @@ pmu_test() {
     uncore_events)
       uncore_events_test
       ;;
+    arch_pebs_cpuid)
+      arch_pebs_cpuid_test
+      ;;
+    arch_pebs_gp_reg_group)
+      arch_pebs_gp_reg_group_test
+      ;;
+    arch_pebs_xer_group)
+      arch_pebs_xer_group_test
+      ;;
+    arch_pebs_counter_group)
+      arch_pebs_counter_group_test
+      ;;
+    arch_pebs_counter_group_stres)
+      arch_pebs_counter_group_stress_test
+      ;;
+    arch_pebs_gp_counter)
+      arch_pebs_gp_counter_test
+      ;;
+    arch_pebs_basic_group)
+      arch_pebs_basic_group_test
+      ;;
     esac
   return 0
 }
@@ -179,6 +334,6 @@ while getopts :t:H arg; do
   esac
 done
 
-pmu_test
+pmu_test "$@"
 # Call teardown for passing case
 exec_teardown

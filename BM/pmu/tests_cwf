@@ -1,0 +1,33 @@
+# This file collects the PMU cases for GNR platform
+pmu_tests.sh -t basic
+pmu_tests.sh -t uncore
+pmu_tests.sh -t timed_pebs_msr
+pmu_tests.sh -t uncore_events
+pmu_iommu_tests.sh -t iommu_clocks
+apebs_tests.sh -t data_src -w 0
+apebs_tests.sh -t ip_1 -w 0
+apebs_tests.sh -t ip_2 -w 0
+apebs_tests.sh -t lbr_1 -w 0
+apebs_tests.sh -t lbr_2 -w 0
+apebs_tests.sh -t large_pebs -w 0
+apebs_tests.sh -t large_pebs -w 1
+apebs_tests.sh -t xmm_1 -w 1
+apebs_tests.sh -t xmm_2 -w 1
+apebs_tests.sh -t ip_1 -w 1
+apebs_tests.sh -t ip_2 -w 1
+apebs_tests.sh -t data_src -w 1
+apebs_tests.sh -t lbr_1 -w 1
+apebs_tests.sh -t lbr_2 -w 1
+apebs_tests.sh -t ip_1 -w 1
+apebs_tests.sh -t ip_2 -w 1
+apebs_tests.sh -t data_src -w 1
+pmu_tests.sh -t lbr_events_cpuid
+pmu_tests.sh -t timed_pebs_msr
+pmu_tests.sh -t uncore_events
+pmu_tests.sh -t arch_pebs_cpuid
+pmu_tests.sh -t arch_pebs_gp_reg_group
+pmu_tests.sh -t arch_pebs_xer_group
+pmu_tests.sh -t arch_pebs_counter_group
+pmu_tests.sh -t arch_pebs_counter_group_stress
+pmu_tests.sh -t arch_pebs_gp_counter
+pmu_tests.sh -t arch_pebs_basic_group
