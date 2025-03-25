@@ -1,1 +1,5 @@
-../../BM/edac/tests
+# This file collects Intel EDAC driver testcases which can run against
+# on Intel 10nm series server
+
+intel_edac.sh -t check_edac_bus
+intel_edac.sh -t check_edac_driver
