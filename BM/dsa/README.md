@@ -8,6 +8,24 @@ networking, persistent memory, and various data processing applications. IAA is
 a similar accelerator which is more focused on data encryption and decryption.
 DSA and IAA share the same Linux Kernel driver “IDXD”
 
+## dependencies
+### Kenrel Configuration
+Please check if `CONFIG_DMATEST=m` is configured.
+
+### Kernel Commandline
+Make sure the kernel commandline has the following options:
+```
+intel_iommu=on,sm_on
+```
+
+### BIOS dependencies
+Please check if the following BIOS options are enabled:
+```
+EDKII -> Socket Configuration -> IIO Configuration -> Intel VT for Directed I/O (VT-d) -> Intel VT for Directed I/O -> Enable
+
+EDKII -> Socket Configuration -> IIO Configuration -> Intel VT for Directed I/O (VT-d) ->Opt-out Illegal MSI Mitigation -> Enable
+```
+
 ## Usage
 IDXD is the DSA driver name and enabled after kernel 5.19, it is better to do tests
 newer than that.
