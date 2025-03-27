@@ -57,6 +57,7 @@ thermal_throttling() {
       taskset -c 0-"$NUM_CPUS" stress -c "$cpus" -t 20 &
       stress_pid=$!
       [[ -n "$stress_pid" ]] || block_test "stress is not launched."
+      sleep 10
 
       cur_temp=$(cat "$THERMAL_PATH/thermal_zone${i}/temp" 2>&1)
       test_print_trc "cur_temp: $cur_temp"
