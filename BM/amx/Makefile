@@ -5,11 +5,11 @@ CC = gcc
 BIN_AMX = tmul
 CFILES_AMX = tmul.c
 
-all:
-	$(CC) $(CFLAG) $(CFILES_AMX) -o $(BIN_AMX) $(LIBS)
+all: CFLAG += -g -DFP16
+all: spr
 
-fp16: CFLAG += -g -DFP16
-fp16: all
+spr:
+	$(CC) $(CFLAG) $(CFILES_AMX) -o $(BIN_AMX) $(LIBS)
 
 clean:
 	-rm $(BIN_AMX)
