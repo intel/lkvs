@@ -302,8 +302,9 @@ static int run_all_cpuid(void)
 {
 	struct test_cpuid *t;
 
-	pr_tdx_tests("Testing CPUID...\n");
+	pr_tdx_tests("Testing CPUID start\n");
 	list_for_each_entry(t, &cpuid_list, list) {
+		pr_info("New case start ...");
 		if (operation & 0x8000 && strcmp(case_name, t->name) != 0)
 			continue;
 
@@ -330,6 +331,7 @@ static int run_all_cpuid(void)
 
 		pr_buf("%d: %s_%s:\t %s\n",
 			++stat_total, t->name, version_name, result_str(t->ret));
+		pr_info("Case end!");
 	}
 	pr_tdx_tests("CPUID test end!\n");
 	return 0;
