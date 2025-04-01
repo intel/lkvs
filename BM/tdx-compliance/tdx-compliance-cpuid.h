@@ -24,7 +24,7 @@
 } while (0)
 
 #define EXP_CPUID_BIT(_leaf, _subleaf, _reg, _bit_nr, _val, _vsn)	\
-	EXP_CPUID_BIT_CTL(_leaf, _subleaf, _reg, _bit_nr, _val, _vsn, 0, 0)
+	EXP_CPUID_BIT_CTL(_leaf, _subleaf, _reg, _bit_nr, _val, _vsn, 0xbad, 0xbad)
 
 #define EXP_CPUID_BYTE_CTL(_leaf, _subleaf, _reg, _val, _vsn, _td_ctl, _pv_ctl) do {\
 	struct test_cpuid *t;						\
@@ -41,7 +41,7 @@
 } while (0)
 
 #define EXP_CPUID_BYTE(_leaf, _subleaf, _reg, _val, _vsn)		\
-	EXP_CPUID_BYTE_CTL(_leaf, _subleaf, _reg, _val, _vsn, 0, 0)
+	EXP_CPUID_BYTE_CTL(_leaf, _subleaf, _reg, _val, _vsn, 0xbad, 0xbad)
 
 #define EXP_CPUID_RES_BITS_CTL(_leaf, _subleaf, _reg, _bit_s, _bit_e, _vsn, _td_ctl, _pv_ctl) do {\
 	int i = 0;								\
@@ -61,7 +61,7 @@
 
 
 #define EXP_CPUID_RES_BITS(_leaf, _subleaf, _reg, _bit_s, _bit_e, _vsn) \
-	EXP_CPUID_RES_BITS_CTL(_leaf, _subleaf, _reg, _bit_s, _bit_e, _vsn, 0, 0)
+	EXP_CPUID_RES_BITS_CTL(_leaf, _subleaf, _reg, _bit_s, _bit_e, _vsn, 0xbad, 0xbad)
 
 #ifdef AUTOGEN_CPUID
 extern void initial_cpuid(void);
