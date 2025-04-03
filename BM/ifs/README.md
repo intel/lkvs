@@ -1,7 +1,6 @@
 # IFS(In Field Scan) Test Cases
 
 ## Description
-```
 IFS old name is SAF(Scan At Field ), now the old feature name "SAF" will not be
 used anymore and use the name "IFS" instead.
 IFS is a feature which allows software to periodically test for latent faults
@@ -9,11 +8,8 @@ in non-array portions of the Core.
 
 For more explanation about IFS please see the link:
 https://docs.kernel.org/arch/x86/ifs.html
-```
 
 ## Usage
-make
-```
 1. Before test, IFS is disabled by default in BIOS, please enable IFS in BIOS setting:
 EDKII Menu – Socket Configuration – Security Configuration(or Processor Configuration) – Memory Encryption (TME) - Enable
 EDKII Menu – Socket Configuration – Security Configuration(or Processor Configuration) – Total Memory Encryption - Enable
@@ -22,9 +18,11 @@ EDKII Menu – Socket Configuration – Security Configuration(or Processor Conf
 EDKII Menu – Socket Configuration – Security Configuration(or Processor Configuration) – In Field Scan (IFS) – Enable SBFT - choose "Enable SBFT and SGX"
 
 2. Please make sure ifs_0 scanned image ff-mm-ss-xx.scan files are placed in
+```
 /lib/firmware/intel/ifs_0 sysfs folder.
-If there is no /lib/firmware/intel/ifs_0 folder
-mkdir -p /lib/firmware/intel/ifs_0 to create the folder.
+```
+If there is no `/lib/firmware/intel/ifs_0` folder
+`mkdir -p /lib/firmware/intel/ifs_0` to create the folder.
 
 ff-mm-ss-xx.scan:  (SPR ifs image file sample:06-af-03-01.scan)
   ff: CPU family number in hexadecimal
@@ -32,13 +30,24 @@ ff-mm-ss-xx.scan:  (SPR ifs image file sample:06-af-03-01.scan)
   ss: CPU stepping number in hexadecimal
   xx: scan files number in hexadecimal
 
-How to check if IFS ready for testing?
-Check ifs dependency:
-cd ..; ./runtests -d ifs/tests
-or run below case directly:
-"ifs_tests.sh -m 0 -p all -b 1 -n ifs_batch"
-If it passes, all cases can be tested.
+3. Kernel Configuration
 ```
+CONFIG_X86_PLATFORM_DEVICES = y
+CONFIG_INTEL_IFS = m
+```
+
+4. How to check if IFS ready for testing?
+Check ifs dependency:
+```
+modprobe intel_ifs
+cd ..; ./runtests -d ifs/tests
+```
+or run below case directly:
+```
+modprobe intel_ifs
+ifs_tests.sh -m 0 -p all -b 1 -n ifs_batch
+```
+If it passes, all cases can be tested.
 
 ### ifs_0 scan test cases, it works on SPR(Sapphire Rapids) platform and future server
 ```
