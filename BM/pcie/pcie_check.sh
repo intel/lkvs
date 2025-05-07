@@ -59,7 +59,7 @@ pci_max_link_speed() {
       test_print_trc "PCI bridge: $dev, PCIe Max Link Speed is: 32GT/s"
     else
       reg=$(decimal_to_binary "$reg" 4)
-      test_print_wrn "PCI bridge: $dev, PCIe Max Link Speed registers value $reg" 
+      test_print_wrg "PCI bridge: $dev, PCIe Max Link Speed registers value $reg"
     fi
     echo 32
   elif [[ "$gen" = "gen6" ]]; then
@@ -67,7 +67,7 @@ pci_max_link_speed() {
       test_print_trc "PCI bridge: $dev, PCIe Max Link Speed is: 64GT/s"
     else
       reg=$(decimal_to_binary "$reg" 4)
-      test_print_wrn "PCI bridge: $dev, PCIe Max Link Speed registers value $reg" 
+      test_print_wrg "PCI bridge: $dev, PCIe Max Link Speed registers value $reg"
     fi
     echo 64
   elif [[ "$gen" = "gen4" ]]; then
@@ -75,7 +75,7 @@ pci_max_link_speed() {
       test_print_trc "PCI bridge: $dev, PCIe Max Link Speed is: 16GT/s"
     else
       reg=$(decimal_to_binary "$reg" 4)
-      test_print_wrn "PCI bridge: $dev, PCIe Max Link Speed registers value $reg" 
+      test_print_wrg "PCI bridge: $dev, PCIe Max Link Speed registers value $reg"
     fi
     echo 16
   else
@@ -98,20 +98,20 @@ pci_current_link_speed() {
       test_print_trc "PCI bridge: $dev, PCIe Current Link Speed is: 32GT/s"
       echo 32
     elif [[ "$reg" -eq 3 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 16GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 16GT/s (downgraded)"
       echo 16
     elif [[ "$reg" -eq 2 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 8GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 8GT/s (downgraded)"
       echo 8
     elif [[ "$reg" -eq 1 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 5GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 5GT/s (downgraded)"
       echo 5
     elif [[ "$reg" -eq 0 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 2.5GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 2.5GT/s (downgraded)"
       echo 2.5
     else
       reg=$(decimal_to_binary "$reg" 4)
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed registers value $reg" 
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed registers value $reg"
       echo 0
     fi
   elif [[ "$gen" = "gen6" ]]; then
@@ -119,23 +119,23 @@ pci_current_link_speed() {
       test_print_trc "PCI bridge: $dev, PCIe Current Link Speed is: 64GT/s"
       echo 64
     elif [[ "$reg" -eq 4 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 32GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 32GT/s (downgraded)"
       echo 32
     elif [[ "$reg" -eq 3 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 16GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 16GT/s (downgraded)"
       echo 16
     elif [[ "$reg" -eq 2 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 8GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 8GT/s (downgraded)"
       echo 8
     elif [[ "$reg" -eq 1 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 5GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 5GT/s (downgraded)"
       echo 5
     elif [[ "$reg" -eq 0 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 2.5GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 2.5GT/s (downgraded)"
       echo 2.5
     else
       reg=$(decimal_to_binary "$reg" 4)
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed registers value $reg" 
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed registers value $reg"
       echo 0
     fi
   elif [[ "$gen" = "gen4" ]]; then
@@ -143,17 +143,17 @@ pci_current_link_speed() {
       test_print_trc "PCI bridge: $dev, PCIe Current Link Speed is: 16GT/s"
       echo 16
     elif [[ "$reg" -eq 2 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 8GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 8GT/s (downgraded)"
       echo 8
     elif [[ "$reg" -eq 1 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 5GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 5GT/s (downgraded)"
       echo 5
     elif [[ "$reg" -eq 0 ]]; then
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed is: 2.5GT/s (downgraded)"
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed is: 2.5GT/s (downgraded)"
       echo 2.5
     else
       reg=$(decimal_to_binary "$reg" 4)
-      test_print_wrn "PCI bridge: $dev, PCIe Current Link Speed registers value $reg" 
+      test_print_wrg "PCI bridge: $dev, PCIe Current Link Speed registers value $reg"
       echo 0
     fi
   else
@@ -191,7 +191,7 @@ pci_supported_link_speed() {
       test_print_trc "PCI bridge: $dev, PCIe Supported Link Speeds: 2.5GT/s"
       echo "2.5GT/s"
     else
-      test_print_wrn "PCI bridge: $dev, PCIe Supported Link Speeds registers value $reg" 
+      test_print_wrg "PCI bridge: $dev, PCIe Supported Link Speeds registers value $reg"
       echo "0"
     fi
   elif [[ "$gen" = "gen6" ]]; then
@@ -214,7 +214,7 @@ pci_supported_link_speed() {
       test_print_trc "PCI bridge: $dev, PCIe Supported Link Speeds: 2.5GT/s"
       echo "2.5GT/s"
     else
-      test_print_wrn "PCI bridge: $dev, PCIe Supported Link Speeds registers value $reg" 
+      test_print_wrg "PCI bridge: $dev, PCIe Supported Link Speeds registers value $reg"
       echo "0"
     fi
   elif [[ "$gen" = "gen4" ]]; then
@@ -231,7 +231,7 @@ pci_supported_link_speed() {
       test_print_trc "PCI bridge: $dev, PCIe Supported Link Speeds: 2.5GT/s"
       echo "2.5GT/s"
     else
-      test_print_wrn "PCI bridge: $dev, PCIe Supported Link Speeds registers value $reg" 
+      test_print_wrg "PCI bridge: $dev, PCIe Supported Link Speeds registers value $reg"
       echo "0"
     fi
   else
@@ -255,7 +255,7 @@ pci_target_link_speed() {
       echo 32
     else
       reg=$(decimal_to_binary "$reg" 4)
-      test_print_wrn "PCI bridge: $dev, PCIe Target Link Speed registers value $reg" 
+      test_print_wrg "PCI bridge: $dev, PCIe Target Link Speed registers value $reg"
       echo 0
     fi
   elif [[ "$gen" = "gen6" ]]; then
@@ -264,7 +264,7 @@ pci_target_link_speed() {
       echo 64
     else
       reg=$(decimal_to_binary "$reg" 4)
-      test_print_wrn "PCI bridge: $dev, PCIe Target Link Speed registers value $reg"
+      test_print_wrg "PCI bridge: $dev, PCIe Target Link Speed registers value $reg"
       echo 0
     fi
   elif [[ "$gen" = "gen4" ]]; then
@@ -273,7 +273,7 @@ pci_target_link_speed() {
       echo 16
     else
       reg=$(decimal_to_binary "$reg" 4)
-      test_print_wrn "PCI bridge: $dev, PCIe Target Link Speed registers value $reg"
+      test_print_wrg "PCI bridge: $dev, PCIe Target Link Speed registers value $reg"
       echo 0
     fi
   else
