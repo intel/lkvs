@@ -70,8 +70,8 @@ qemu_tdx_cap_check() {
   if qemu-system-x86_64 -object help | grep -q "tdx-guest"; then
     test_print_trc "QEMU has TDX capability."
   else
-    test_print_wrn "default QEMU qemu-system-x86_64 does not have TDX capability."
-    test_print_wrn "if there is off-tree QEMU with TDX capability, please specify the path."
+    test_print_wrg "default QEMU qemu-system-x86_64 does not have TDX capability."
+    test_print_wrg "if there is off-tree QEMU with TDX capability, please specify the path."
     die "QEMU TDX capability check FAIL."
     return 1
   fi
@@ -83,7 +83,7 @@ virtual_bios_tdx_check() {
   if find / -name "OVMF_*.fd" 2>/dev/null; then
     test_print_trc "Virtual BIOS has TDX support."
   else
-    test_print_wrn "can't find any OVMF EDK2 BIOS file, please check if virtual BIOS has TDX support."
+    test_print_wrg "can't find any OVMF EDK2 BIOS file, please check if virtual BIOS has TDX support."
     die "Virtual BIOS TDX support check FAIL."
     return 1
   fi
@@ -97,7 +97,7 @@ mainline_kernel_check() {
     [ "$(uname -r | awk -F'.' '{print $2}')" -ge 10 ]; then
     test_print_trc "Mainline kernel version is used."
   else
-    test_print_wrn "Kernel version is not mainline or less than 5.10."
+    test_print_wrg "Kernel version is not mainline or less than 5.10."
     die "Mainline kernel version check FAIL."
     return 1
   fi
