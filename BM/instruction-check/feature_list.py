@@ -101,6 +101,10 @@ feature_list = {
         "cpuid": ['7', '0', '0', '0', 'c', '12'],
         "platforms": {"SPR", "EMR", "GNR"}
     },
+    "5LP": {
+        "cpuid": ['7', '0', '0', '0', 'c', '16'],
+        "platforms": {"SPR", "EMR", "GNR"}
+    },
     "RDPID": {
         "cpuid": ['7', '0', '0', '0', 'c', '22'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
