@@ -202,3 +202,32 @@ def check_if_vm_vcpus_match_qemu(vm):
     enabled_count = vm.cpuinfo.smp + (len(enabled_vcpu_devices) * vcpus_count)
 
     return check_if_vm_vcpu_match(enabled_count, vm)
+
+
+def check_vmx_flags(params, flags, test, session=None):
+    """
+    Check vmx flags on host or guest.(only for Linux now)
+    :param params: Dictionary with the test parameters
+    :param flags: checked flags
+    :param test: QEMU test object
+    :param session: guest session
+    """
+    cmd = "cat /proc/cpuinfo |grep 'vmx flags' | head -1 | awk -F ':' '{print $2}'"
+    func = process.getoutput
+    if session:
+        func = session.cmd_output
+    out = func(cmd).split()
+    missing = [f for f in flags.split() if f not in out]
+    if session:
+        LOG_JOB.info("Check vmx flags inside guest")
+        if missing:
+            test.fail("VMX flag %s not in guest" % missing)
+        no_flags = params.get("no_flags")
+        if no_flags:
+            err_flags = [f for f in no_flags.split() if f in out]
+            if err_flags:
+                test.fail("Flag %s should not be present in guest" % err_flags)
+    else:
+        LOG_JOB.info("Check vmx flags on host")
+        if missing:
+            test.cancel("This host doesn't support vmx flag %s" % missing)
