@@ -637,18 +637,22 @@ void initial_cpuid(void)
 	 * Disable these cases by default, configure cpu topology in QEMU command before enable the cases here
 	 */
 
-	/* -smp 8,threads=2,cores=4, cpuid of cpu0 */
+	/* -smp 16,sockets=1,dies=2,threads=2,cores=4, cpuid of cpu0 */
 	/* Uncomment the following cases before testing */
 //	EXP_CPUID_BYTE(0xb, 0, eax, 0x1, VER1_5);
 //	EXP_CPUID_BYTE(0xb, 0, ebx, 0x2, VER1_5);
 //	EXP_CPUID_BYTE(0xb, 0, ecx, 0x0100, VER1_5);
 //	EXP_CPUID_BYTE(0xb, 0, edx, 0, VER1_5);
-//	EXP_CPUID_BYTE(0xb, 1, eax, 0x3, VER1_5);
-//	EXP_CPUID_BYTE(0xb, 1, ebx, 0x8, VER1_5);
+//	EXP_CPUID_BYTE(0xb, 1, eax, 0x4, VER1_5);
+//	EXP_CPUID_BYTE(0xb, 1, ebx, 0x10, VER1_5);
 //	EXP_CPUID_BYTE(0xb, 1, ecx, 0x0201, VER1_5);
 //	EXP_CPUID_BYTE(0xb, 1, edx, 0, VER1_5);
+//	EXP_CPUID_BYTE(0xb, 2, eax, 0, VER1_5);
+//	EXP_CPUID_BYTE(0xb, 2, ebx, 0, VER1_5);
+//	EXP_CPUID_BYTE(0xb, 2, ecx, 0x2, VER1_5);
+//	EXP_CPUID_BYTE(0xb, 2, edx, 0, VER1_5);
 
-	/* -smp 12,threads=3,cores=4, cpuid of cpu11 */
+	/* -smp 12,sockets=1,threads=3,cores=4, cpuid of cpu11 */
 	/* Uncomment the following cases before testing */
 //	EXP_CPUID_BYTE(0xb, 0, eax, 0x2, VER1_5);
 //	EXP_CPUID_BYTE(0xb, 0, ebx, 0x3, VER1_5);
@@ -658,9 +662,13 @@ void initial_cpuid(void)
 //	EXP_CPUID_BYTE(0xb, 1, ebx, 0xc, VER1_5);
 //	EXP_CPUID_BYTE(0xb, 1, ecx, 0x0201, VER1_5);
 //	EXP_CPUID_BYTE(0xb, 1, edx, 0xe, VER1_5);
+//	EXP_CPUID_BYTE(0xb, 2, eax, 0x0, VER1_5);
+//	EXP_CPUID_BYTE(0xb, 2, ebx, 0x0, VER1_5);
+//	EXP_CPUID_BYTE(0xb, 2, ecx, 0x2, VER1_5);
+//	EXP_CPUID_BYTE(0xb, 2, edx, 0xe, VER1_5);
 
 
-	/* CPUID(0x1f) -smp 8,threads=2,cores=4, cpuid of cpu0 */
+	/* CPUID(0x1f) -smp 16,sockets=1,dies=2,threads=2,cores=4, cpuid of cpu0 */
 	/* Uncomment the following cases before testing */
 //	EXP_CPUID_BYTE(0x1f, 0, eax, 0x1, VER1_5);
 //	EXP_CPUID_BYTE(0x1f, 0, ebx, 0x2, VER1_5);
@@ -670,25 +678,33 @@ void initial_cpuid(void)
 //	EXP_CPUID_BYTE(0x1f, 1, ebx, 0x8, VER1_5);
 //	EXP_CPUID_BYTE(0x1f, 1, ecx, 0x0201, VER1_5);
 //	EXP_CPUID_BYTE(0x1f, 1, edx, 0, VER1_5);
-//	EXP_CPUID_BYTE(0x1f, 2, eax, 0x3, VER1_5);
-//	EXP_CPUID_BYTE(0x1f, 2, ebx, 0x8, VER1_5);
-//	EXP_CPUID_BYTE(0x1f, 2, ecx, 0x0502, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 2, eax, 0x4, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 2, ebx, 0x10, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 2, ecx, 0x502, VER1_5);
 //	EXP_CPUID_BYTE(0x1f, 2, edx, 0, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 3, eax, 0, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 3, ebx, 0, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 3, ecx, 0x3, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 3, edx, 0, VER1_5);
 
-	/* CPUID(0x1f) -smp 8,threads=3,cores=4 cpuid of cpu11 */
+	/* CPUID(0x1f) -smp 48,sockets=2,dies=2,threads=3,cores=4, cpuid of cpu47 */
 	/* Uncomment the following cases before testing */
 //	EXP_CPUID_BYTE(0x1f, 0, eax, 0x2, VER1_5);
 //	EXP_CPUID_BYTE(0x1f, 0, ebx, 0x3, VER1_5);
 //	EXP_CPUID_BYTE(0x1f, 0, ecx, 0x0100, VER1_5);
-//	EXP_CPUID_BYTE(0x1f, 0, edx, 0xe, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 0, edx, 0x3e, VER1_5);
 //	EXP_CPUID_BYTE(0x1f, 1, eax, 0x4, VER1_5);
 //	EXP_CPUID_BYTE(0x1f, 1, ebx, 0xc, VER1_5);
 //	EXP_CPUID_BYTE(0x1f, 1, ecx, 0x0201, VER1_5);
-//	EXP_CPUID_BYTE(0x1f, 1, edx, 0xe, VER1_5);
-//	EXP_CPUID_BYTE(0x1f, 2, eax, 0x4, VER1_5);
-//	EXP_CPUID_BYTE(0x1f, 2, ebx, 0xc, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 1, edx, 0x3e, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 2, eax, 0x5, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 2, ebx, 0x18, VER1_5);
 //	EXP_CPUID_BYTE(0x1f, 2, ecx, 0x0502, VER1_5);
-//	EXP_CPUID_BYTE(0x1f, 2, edx, 0xe, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 2, edx, 0x3e, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 3, eax, 0, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 3, ebx, 0, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 3, ecx, 0x3, VER1_5);
+//	EXP_CPUID_BYTE(0x1f, 3, edx, 0x3e, VER1_5);
 
 /* Configuration 2 and 3 is disabled by default.
  * Enable or disable the following features in QEMU command before enable the cases here
@@ -697,8 +713,7 @@ void initial_cpuid(void)
 /* 2. TD_CTLS.REDUCE_VE == 1, FEATURE_PARAVIRT_CTLS == 1 */
 //	/* CPUID(0x1) */
 //	/* EST(est) */
-//	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 7, 0x1, VER1_5, 8, BIT(2)); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 7, 0x0, VER1_5, 8, BIT(2)); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 7, 0x0, VER1_5, 8, BIT(2)); //not supported by VMM
 //	/* TSC_DEADLINE(tsc-deadline) */
 //	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 24, 0x1, VER1_5, 8, BIT(11)); //enable it by qemu
 //	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 24, 0x0, VER1_5, 8, BIT(11)); //disable it by qemu
@@ -707,13 +722,12 @@ void initial_cpuid(void)
 //	EXP_CPUID_BIT_CTL(0x1, 0, edx, 7, 0x0, VER1_5, 8, BIT(3)); //disable it by qemu
 //	/* MTRR(mtrr) */
 //	EXP_CPUID_BIT_CTL(0x1, 0, edx, 12, 0x1, VER1_5, 8, BIT(4)); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x1, 0, edx, 12, 0x0, VER1_5, 8, BIT(4)); //enable it by qemu
+//	EXP_CPUID_BIT_CTL(0x1, 0, edx, 12, 0x0, VER1_5, 8, BIT(4)); //disable it by qemu
 //	/* MCA(mca) */
 //	EXP_CPUID_BIT_CTL(0x1, 0, edx, 14, 0x1, VER1_5, 8, BIT(3)); //enable it by qemu
 //	EXP_CPUID_BIT_CTL(0x1, 0, edx, 14, 0x0, VER1_5, 8, BIT(3)); //disable it by qemu
 //	/* TM(acpi) */
-//	EXP_CPUID_BIT_CTL(0x1, 0, edx, 22, 0x1, VER1_5, 8, BIT(8)); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x1, 0, edx, 22, 0x0, VER1_5, 8, BIT(8)); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x1, 0, edx, 22, 0x0, VER1_5, 8, BIT(8)); //not supported by VMM
 //
 //	/* CPUID(0x2) */
 //	EXP_CPUID_BYTE_CTL(0x2, 0, eax, 0x00feff01, VER1_5, 4, 0);
@@ -725,33 +739,27 @@ void initial_cpuid(void)
 //	EXP_CPUID_BIT_CTL(0x7, 0, edx, 30, 0x1, VER1_5, 8, BIT(0)); //enable it by qemu
 //	EXP_CPUID_BIT_CTL(0x7, 0, edx, 30, 0x0, VER1_5, 8, BIT(0)); //disable it by qemu
 //	/* RDT_M(pqm) */
-//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 12, 0x1, VER1_5, 8, BIT(7)); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 12, 0x0, VER1_5, 8, BIT(7)); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 12, 0x0, VER1_5, 8, BIT(7)); //not supported by qemu
 //	/* RDT_A(rdta) */
-//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 15, 0x1, VER1_5, 8, BIT(6)); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 15, 0x0, VER1_5, 8, BIT(6)); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 15, 0x0, VER1_5, 8, BIT(6)); //not supported by qemu
 //	/* PCONFIG(pconfig) */
-//	EXP_CPUID_BIT_CTL(0x7, 0, edx, 18, 0x1, VER1_5, 8, BIT(5)); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x7, 0, edx, 18, 0x0, VER1_5, 8, BIT(5)); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x7, 0, edx, 18, 0x0, VER1_5, 8, BIT(5)); //not supported by qemu
 //	/* TME(tme) */
-//	EXP_CPUID_BIT_CTL(0x7, 0, ecx, 13, 0x1, VER1_5, 8, BIT(10)); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x7, 0, ecx, 13, 0x0, VER1_5, 8, BIT(10)); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x7, 0, ecx, 13, 0x0, VER1_5, 8, BIT(10)); //not supported by qemu
 //
 //	/* CPUID(0x9), enumerated by virtual CPUID(1).ECX[18] */
-//	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 18, 0x0, VER1_5, 8, BIT(1)); //disable it by qemu
+//	/* DCA(dca) */
+//	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 18, 0x0, VER1_5, 8, BIT(1)); //not supported by VMM
 //	EXP_CPUID_BYTE_CTL(0x9, 0, eax, 0x0, VER1_5, 8, BIT(1)); //virtual CPUID(1).ECX[18] == 0
 //	EXP_CPUID_BYTE_CTL(0x9, 0, ebx, 0x0, VER1_5, 8, BIT(1)); //virtual CPUID(1).ECX[18] == 0
 //	EXP_CPUID_BYTE_CTL(0x9, 0, ecx, 0x0, VER1_5, 8, BIT(1)); //virtual CPUID(1).ECX[18] == 0
 //	EXP_CPUID_BYTE_CTL(0x9, 0, edx, 0x0, VER1_5, 8, BIT(1)); //virtual CPUID(1).ECX[18] == 0
-//
-//	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 18, 0x1, VER1_5, 8, BIT(1)); //enable it by qemu
-//	EXP_CPUID_BYTE_CTL(0x9, 0, eax, 0x0, VER1_5, 8, BIT(1)); //virtual CPUID(1).ECX[18] != 0, trigger #VE
+
 
 /* 3. Backward-Compatible -- when #VE reduction is not enabled: TD_CTLS.REDUCE_VE is 0. */
 //	/* CPUID(0x1) */
 //	/* EST(est) */
-//	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 7, 0x1, VER1_5, 0, 0); //enable it by qemu
-//    EXP_CPUID_BIT_CTL(0x1, 0, ecx, 7, 0x0, VER1_5, 0, 0); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 7, 0x0, VER1_5, 0, 0); //not supported by VMM
 //	/* TSC_DEADLINE(tsc-deadline) */
 //	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 24, 0x1, VER1_5, 0, 0); //enable it by qemu
 //	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 24, 0x0, VER1_5, 0, 0); //disable it by qemu
@@ -765,8 +773,7 @@ void initial_cpuid(void)
 //	EXP_CPUID_BIT_CTL(0x1, 0, edx, 14, 0x1, VER1_5, 0, 0); //enable it by qemu
 //	EXP_CPUID_BIT_CTL(0x1, 0, edx, 14, 0x1, VER1_5, 0, 0); //disable it by qemu
 //	/* TM(acpi) */
-//	EXP_CPUID_BIT_CTL(0x1, 0, edx, 22, 0x1, VER1_5, 0, 0); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x1, 0, edx, 22, 0x0, VER1_5, 0, 0); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x1, 0, edx, 22, 0x0, VER1_5, 0, 0); //not supported by VMM
 //
 //	/* CPUID(0x2) */
 //	EXP_CPUID_BYTE_CTL(0x2, 0, eax, 0, VER1_5, 0, 0); //trigger #VE
@@ -779,23 +786,17 @@ void initial_cpuid(void)
 //	EXP_CPUID_BIT_CTL(0x7, 0, edx, 30, 0x1, VER1_5, 0, 0); //enable it by qemu
 //	EXP_CPUID_BIT_CTL(0x7, 0, edx, 30, 0x1, VER1_5, 0, 0); //disable it by qemu
 //	/* RDT_M(pqm) */
-//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 12, 0x1, VER1_5, 0, 0); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 12, 0x0, VER1_5, 0, 0); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 12, 0x0, VER1_5, 0, 0); //not supported by qemu
 //	/* RDT_A(rdta) */
-//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 15, 0x1, VER1_5, 0, 0); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 15, 0x0, VER1_5, 0, 0); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x7, 0, ebx, 15, 0x0, VER1_5, 0, 0); //not supported by qemu
 //	/* PCONFIG(pconfig) */
-//	EXP_CPUID_BIT_CTL(0x7, 0, edx, 18, 0x1, VER1_5, 0, 0); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x7, 0, edx, 18, 0x0, VER1_5, 0, 0); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x7, 0, edx, 18, 0x0, VER1_5, 0, 0); //not supported by qemu
 //	/* TME(tme) */
-//	EXP_CPUID_BIT_CTL(0x7, 0, ecx, 13, 0x1, VER1_5, 0, 0); //enable it by qemu
-//	EXP_CPUID_BIT_CTL(0x7, 0, ecx, 13, 0x0, VER1_5, 0, 0); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x7, 0, ecx, 13, 0x0, VER1_5, 0, 0); //not supported by qemu
 //
 //	/* CPUID(0x9), enumerated by virtual CPUID(1).ECX[18] */
 //	/* DCA(dca) */
-//	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 18, 0x1, VER1_5, 0, 0); //enable it by qemu
-//	EXP_CPUID_BYTE_CTL(0x9, 0, eax, 0x0, VER1_5, 0, 0); //VM_CTLS.CPUID_VE_DISABLE is false, trigger #VE
-//	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 18, 0x0, VER1_5, 0, 0); //disable it by qemu
+//	EXP_CPUID_BIT_CTL(0x1, 0, ecx, 18, 0x0, VER1_5, 0, 0); //not supported by VMM
 //	EXP_CPUID_BYTE_CTL(0x9, 0, eax, 0x0, VER1_5, 0, 0); //VM_CTLS.CPUID_VE_DISABLE is false, trigger #VE
 //
 //	/* CPUID(0xb), Per SDM, CPUID(0x1F, *) is a preferred superset to leaf CPUID(0xB,*) */
