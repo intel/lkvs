@@ -38,6 +38,8 @@ char version_name[32];
 char *buf_ret;
 bool kretprobe_switch;
 static struct dentry *f_tdx_tests, *d_tdx;
+static u64 tdcs_td_ctl;
+static u64 tdcs_feature_pv_ctl;
 LIST_HEAD(cpuid_list);
 
 #define SIZE_BUF		(PAGE_SIZE << 3)
@@ -145,9 +147,15 @@ static int check_results_msr(struct test_msr *t)
 
 static int run_cpuid(struct test_cpuid *t)
 {
+	int cpu_id = smp_processor_id();
+
 	t->regs.eax.val = t->leaf;
 	t->regs.ecx.val = t->subleaf;
+	tdcs_td_ctl = t->tdcs_td_ctl;
+	tdcs_feature_pv_ctl = t->tdcs_feature_pv_ctl;
+	setup_tdcs_ctl();
 	__cpuid(&t->regs.eax.val, &t->regs.ebx.val, &t->regs.ecx.val, &t->regs.edx.val);
+	pr_info("From CPU core %d\n", cpu_id);
 
 	return 0;
 }
@@ -302,8 +310,9 @@ static int run_all_cpuid(void)
 {
 	struct test_cpuid *t;
 
-	pr_tdx_tests("Testing CPUID...\n");
+	pr_tdx_tests("Testing CPUID start\n");
 	list_for_each_entry(t, &cpuid_list, list) {
+		pr_info("New case start ...");
 		if (operation & 0x8000 && strcmp(case_name, t->name) != 0)
 			continue;
 
@@ -326,10 +335,11 @@ static int run_all_cpuid(void)
 			stat_fail++;
 		if (kretprobe_switch)
 			pr_info("CPUID output: eax:%X, ebx:%X, ecx:%X, edx:%X\n",
-        			t->regs.eax.val, t->regs.ebx.val, t->regs.ecx.val, t->regs.edx.val);
+			t->regs.eax.val, t->regs.ebx.val, t->regs.ecx.val, t->regs.edx.val);
 
 		pr_buf("%d: %s_%s:\t %s\n",
 			++stat_total, t->name, version_name, result_str(t->ret));
+		pr_info("Case end!");
 	}
 	pr_tdx_tests("CPUID test end!\n");
 	return 0;
@@ -472,7 +482,7 @@ static int unregister(void)
 	// Unregister the kretprobe.
 	unregister_kretprobe(&my_kretprobe);
 	kretprobe_switch = false;
-	pr_info("kprobe at %p unregistered. Please rmmod tdx_compliance. \n", my_kretprobe.kp.addr);
+	pr_info("kprobe at %p unregistered. Please rmmod tdx_compliance.\n", my_kretprobe.kp.addr);
 	return 0;
 }
 
@@ -552,8 +562,7 @@ tdx_tests_proc_write(struct file *file,
 		run_kretprobe();
 	if (operation & OPMASK_UNREGISTER)
 		unregister();
-	if (operation & TRIGGER_CPUID)
-	{
+	if (operation & TRIGGER_CPUID) {
 		unsigned int A, B, C, D;
 
 		if (sscanf(version_name, "%x %x %x %x", &A, &B, &C, &D) == 4)
@@ -577,6 +586,143 @@ const struct file_operations data_file_fops = {
 	.write = tdx_tests_proc_write,
 	.read = tdx_tests_proc_read,
 };
+
+u64 __tdx_hypercall(struct tdx_module_args *args)
+{
+	/*
+	 * For TDVMCALL explicitly set RCX to the bitmap of shared registers.
+	 * The caller isn't expected to set @args->rcx anyway.
+	 */
+	args->rcx = TDVMCALL_EXPOSE_REGS_MASK;
+
+	/*
+	 * Failure of __tdcall_saved_ret() indicates a failure of the TDVMCALL
+	 * mechanism itself and that something has gone horribly wrong with
+	 * the TDX module, so panic.
+	 */
+	if (__tdcall_saved_ret(TDG_VP_VMCALL, args))
+		abort();
+
+	if (args->r10)
+		pr_info("%s err:\n"
+			"R10=0x%016llx, R11=0x%016llx, R12=0x%016llx\n"
+			"R13=0x%016llx, R14=0x%016llx, R15=0x%016llx\n",
+			__func__, args->r10, args->r11, args->r12, args->r13, args->r14,
+			args->r15);
+
+	/* TDVMCALL leaf return code is in R10 */
+	return args->r10;
+}
+
+u64 tdcall(u64 fn, struct tdx_module_args *args)
+{
+	u64 r;
+
+	r = __tdcall_ret(fn, args);
+	if (r)
+		panic("TDCALL %lld failed (Buggy TDX module!)\n", fn);
+	return r;
+}
+
+u64 tdg_vm_read(u64 field, u64 *val)
+{
+	u64 ret;
+	struct tdx_module_args arg = {
+		.rcx = 0,
+		.rdx = field,
+	};
+
+	ret =  __tdcall_ret(TDG_VM_RD, &arg);
+	if (!ret)
+		*val = arg.r8;
+
+	return ret;
+}
+
+u64 tdg_vm_write(u64 field, u64 val, u64 mask)
+{
+	struct tdx_module_args arg = {
+		.rcx = 0,
+		.rdx = field,
+		.r8 = val,
+		.r9 = mask,
+	};
+
+	return tdcall(TDG_VM_WR, &arg);
+}
+
+static void setup_tdcs_ctl(void)
+{
+	struct tdx_module_args arg;
+	u64 r;
+	u64 v;
+	u64 mask;
+	bool ve_reduce;
+	bool vcpu_toplgy;
+
+	arg.rdx = TDX_GLOBAL_FIELD_FEATURES0;
+	r = tdcall(TDG_SYS_RD, &arg);
+	if (r) {
+		pr_info("WARN: Failed to get TDX FEATURES0, err:0x%llx\n", r);
+		return;
+	}
+
+	pr_info("TDX FEATURES0:0x%llx\n", arg.r8);
+
+	r = tdg_vm_read(TDX_TDCS_FIELD_TD_CTL, &v);
+	if (!r)
+		pr_info("TDX_TDCS_FILED_TD_CTL before set:0x%llx\n", v);
+	else
+		pr_info("Failed to read TDX_TDCS_FILED_TD_CTL\n");
+
+	r = tdg_vm_read(TDX_TDCS_FIELD_FEATURE_PV_CTL, &v);
+	if (!r)
+		pr_info("TDX_TDCS_FIELD_FEATURE_PV_CTL before set:0x%llx\n", v);
+	else
+		pr_info("Failed to read TDX_TDCS_FIELD_FEATURE_PV_CTL\n");
+
+	ve_reduce = arg.r8 & MD_FIELD_ID_FEATURES0_VE_REDUCE;
+	vcpu_toplgy = arg.r8 & MD_FIELD_ID_FEATURES0_VCPU_TPLGY;
+	if ((ve_reduce || vcpu_toplgy) && tdcs_td_ctl != 0xbad) {
+		mask = tdcs_td_ctl ? tdcs_td_ctl : 0x800000000000000eULL;
+		r = tdg_vm_write(TDX_TDCS_FIELD_TD_CTL, tdcs_td_ctl, mask);
+		if (!r)
+			pr_info("TDX_TDCS_FILED_TD_CTL set to 0x%llx\n", tdcs_td_ctl);
+		else
+			pr_info("Failed to set TDX_TDCS_FILED_TD_CTL set to 0x%llx, err:0x%llx\n",
+				tdcs_td_ctl, r);
+	} else {
+		pr_info("TDX_TDCS_FILED_TD_CTL is not supported or not set (0x%llx)\n",
+			tdcs_td_ctl);
+	}
+
+	if (ve_reduce && tdcs_td_ctl != 0xbad) {
+		mask = tdcs_feature_pv_ctl ? tdcs_feature_pv_ctl : -1ULL;
+		r = tdg_vm_write(TDX_TDCS_FIELD_FEATURE_PV_CTL,
+				 tdcs_feature_pv_ctl, mask);
+		if (!r)
+			pr_info("TDX_TDCS_FIELD_FEATURE_PV_CTL set to 0x%llx\n",
+				tdcs_feature_pv_ctl);
+		else
+			pr_info("Failed to set TDX_TDCS_FIELD_FEATURE_PV_CTL 0x%llx, err:0x%llx\n",
+				tdcs_feature_pv_ctl, r);
+	} else {
+		pr_info("TDX_TDCS_FIELD_FEATURE_PV_CTL is not supported or not set (tdcs_ctl=0x%llx)\n",
+			tdcs_td_ctl);
+	}
+
+	r = tdg_vm_read(TDX_TDCS_FIELD_TD_CTL, &v);
+	if (!r)
+		pr_info("TDX_TDCS_FILED_TD_CTL after set:0x%llx\n", v);
+	else
+		pr_info("Failed to read TDX_TDCS_FILED_TD_CTL\n");
+
+	r = tdg_vm_read(TDX_TDCS_FIELD_FEATURE_PV_CTL, &v);
+	if (!r)
+		pr_info("TDX_TDCS_FIELD_FEATURE_PV_CTL after set:0x%llx\n", v);
+	else
+		pr_info("Failed to read TDX_TDCS_FIELD_FEATURE_PV_CTL\n");
+}
 
 static int __init tdx_tests_init(void)
 {
