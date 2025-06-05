@@ -335,7 +335,7 @@ static int run_all_cpuid(void)
 			stat_fail++;
 		if (kretprobe_switch)
 			pr_info("CPUID output: eax:%X, ebx:%X, ecx:%X, edx:%X\n",
-        			t->regs.eax.val, t->regs.ebx.val, t->regs.ecx.val, t->regs.edx.val);
+			t->regs.eax.val, t->regs.ebx.val, t->regs.ecx.val, t->regs.edx.val);
 
 		pr_buf("%d: %s_%s:\t %s\n",
 			++stat_total, t->name, version_name, result_str(t->ret));
@@ -562,8 +562,7 @@ tdx_tests_proc_write(struct file *file,
 		run_kretprobe();
 	if (operation & OPMASK_UNREGISTER)
 		unregister();
-	if (operation & TRIGGER_CPUID)
-	{
+	if (operation & TRIGGER_CPUID) {
 		unsigned int A, B, C, D;
 
 		if (sscanf(version_name, "%x %x %x %x", &A, &B, &C, &D) == 4)
@@ -605,10 +604,10 @@ u64 __tdx_hypercall(struct tdx_module_args *args)
 		abort();
 
 	if (args->r10)
-		pr_info("__tdx_hypercall err:\n"
+		pr_info("%s err:\n"
 			"R10=0x%016llx, R11=0x%016llx, R12=0x%016llx\n"
 			"R13=0x%016llx, R14=0x%016llx, R15=0x%016llx\n",
-			args->r10, args->r11, args->r12, args->r13, args->r14,
+			__func__, args->r10, args->r11, args->r12, args->r13, args->r14,
 			args->r15);
 
 	/* TDVMCALL leaf return code is in R10 */
@@ -618,6 +617,7 @@ u64 __tdx_hypercall(struct tdx_module_args *args)
 u64 tdcall(u64 fn, struct tdx_module_args *args)
 {
 	u64 r;
+
 	r = __tdcall_ret(fn, args);
 	if (r)
 		panic("TDCALL %lld failed (Buggy TDX module!)\n", fn);
@@ -690,24 +690,26 @@ static void setup_tdcs_ctl(void)
 			pr_info("TDX_TDCS_FILED_TD_CTL set to 0x%llx\n", tdcs_td_ctl);
 		else
 			pr_info("Failed to set TDX_TDCS_FILED_TD_CTL set to 0x%llx, err:0x%llx\n",
-					tdcs_td_ctl, r);
-	} else
+				tdcs_td_ctl, r);
+	} else {
 		pr_info("TDX_TDCS_FILED_TD_CTL is not supported or not set (0x%llx)\n",
-				tdcs_td_ctl);
+			tdcs_td_ctl);
+	}
 
 	if (ve_reduce && tdcs_td_ctl != 0xbad) {
 		mask = tdcs_feature_pv_ctl ? tdcs_feature_pv_ctl : -1ULL;
 		r = tdg_vm_write(TDX_TDCS_FIELD_FEATURE_PV_CTL,
-			tdcs_feature_pv_ctl, mask);
+				 tdcs_feature_pv_ctl, mask);
 		if (!r)
 			pr_info("TDX_TDCS_FIELD_FEATURE_PV_CTL set to 0x%llx\n",
-					tdcs_feature_pv_ctl);
+				tdcs_feature_pv_ctl);
 		else
 			pr_info("Failed to set TDX_TDCS_FIELD_FEATURE_PV_CTL 0x%llx, err:0x%llx\n",
-					tdcs_feature_pv_ctl, r);
-	} else
+				tdcs_feature_pv_ctl, r);
+	} else {
 		pr_info("TDX_TDCS_FIELD_FEATURE_PV_CTL is not supported or not set (tdcs_ctl=0x%llx)\n",
-			       tdcs_td_ctl);
+			tdcs_td_ctl);
+	}
 
 	r = tdg_vm_read(TDX_TDCS_FIELD_TD_CTL, &v);
 	if (!r)
