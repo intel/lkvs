@@ -122,14 +122,11 @@ void initial_cpuid(void)
 	EXP_CPUID_BIT(0x1, 0, edx, 4, 1, VER1_5);		//TSC
 	EXP_CPUID_BIT(0x1, 0, edx, 5, 1, VER1_0 | VER1_5 | VER2_0);		//MSR
 	EXP_CPUID_BIT(0x1, 0, edx, 6, 1, VER1_0 | VER1_5 | VER2_0);		//PAE
-	EXP_CPUID_BIT(0x1, 0, edx, 7, 1, VER1_0 | VER1_5 | VER2_0);		//MCE
 	EXP_CPUID_BIT(0x1, 0, edx, 8, 1, VER1_5);		//CX8
 	EXP_CPUID_BIT(0x1, 0, edx, 9, 1, VER1_0 | VER1_5 | VER2_0);		//APIC
 	EXP_CPUID_BIT(0x1, 0, edx, 10, 0, VER1_0 | VER1_5 | VER2_0);		//Reserved_10
 	EXP_CPUID_BIT(0x1, 0, edx, 11, 1, VER1_5);		//SEP
-	EXP_CPUID_BIT(0x1, 0, edx, 12, 1, VER1_0 | VER1_5 | VER2_0);		//MTRR
 	EXP_CPUID_BIT(0x1, 0, edx, 13, 1, VER1_5);		//PGE
-	EXP_CPUID_BIT(0x1, 0, edx, 14, 1, VER1_0 | VER1_5 | VER2_0);		//MCA
 	EXP_CPUID_BIT(0x1, 0, edx, 15, 1, VER1_5);		//CMOV
 	EXP_CPUID_BIT(0x1, 0, edx, 16, 1, VER1_5);		//PAT
 	EXP_CPUID_BIT(0x1, 0, edx, 17, 0, VER1_5);		//PSE-36
@@ -298,7 +295,6 @@ void initial_cpuid(void)
 	EXP_CPUID_BIT(0x7, 0x0, edx, 26, 1, VER1_0 | VER1_5 | VER2_0);		//IBRS
 	EXP_CPUID_BIT(0x7, 0x0, edx, 27, 1, VER1_5);		//STIBP
 	EXP_CPUID_BIT(0x7, 0x0, edx, 29, 1, VER1_0 | VER1_5 | VER2_0);		//IA32_ARCH_CAPABILITIES Support
-	EXP_CPUID_BIT(0x7, 0x0, edx, 30, 1, VER1_0 | VER1_5 | VER2_0);		//IA32_CORE_CAPABILITIES Present
 	EXP_CPUID_BIT(0x7, 0x0, edx, 31, 1, VER1_0 | VER1_5 | VER2_0);		//SSBD(Speculative Store Bypass Disable)
 
 	/* CPUID(0x7, 0x1).EAX */
