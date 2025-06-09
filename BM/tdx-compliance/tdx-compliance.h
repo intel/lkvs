@@ -21,6 +21,22 @@
 #define MSR_IA32_INT_SSP_TAB		0x000006a8
 /****** END of Backport ******/
 
+/* TDX TDCALL.VMCALL leaf id  */
+#define TDG_VM_RD                      7
+#define TDG_VM_WR                      8
+#define TDG_SYS_RD                     11
+
+/* For #VE Reduction */
+/* Global metadata field TDX_FEATURES0 */
+#define TDX_GLOBAL_FIELD_FEATURES0     0x0A00000300000008
+#define MD_FIELD_ID_FEATURES0_VCPU_TPLGY        BIT_ULL(20)
+#define MD_FIELD_ID_FEATURES0_VE_REDUCE         BIT_ULL(30)
+
+/* TDCS.TD_CTLS.REDUCE_VE */
+#define TDX_TDCS_FIELD_TD_CTL          0x9110000300000017
+/* TDCS.FEATURE_PARAVIRT_CTLS */
+#define TDX_TDCS_FIELD_FEATURE_PV_CTL         0x9110000300000022
+
 #define VER1_0 1
 #define VER1_5 2
 #define VER2_0 4
@@ -163,6 +179,9 @@ int __no_profile _native_write_cr0(u64 val);
 int __no_profile _native_write_cr4(u64 val);
 static int write_msr_native(struct test_msr *c);
 static int read_msr_native(struct test_msr *c);
+u64 tdg_vm_read(u64 field, u64 *val);
+u64 tdg_vm_write(u64 field, u64 val, u64 mask);
+static void setup_tdcs_ctl(void);
 void initial_cpuid(void);
 void parse_version(void);
 void parse_input(char *s);
