@@ -1,0 +1,38 @@
+# This file collects TDX KVM dynamic pamt tests on
+# Intel® Architecture-based platforms.
+# @hw_dep: ../tdx-guest/tdx_dep_check.sh -t hw_dep_check @SEAMRR not enabled, probably HW or BIOS can't support TDX
+# @other_dep: general_test.sh -t kconfig -k "CONFIG_INTEL_TDX_HOST=y"
+######## TDX Host Kernel module kvm_intel TDX enabling status check
+# @other_dep: tdx_dep_check.sh -t other_dep_check1 @host kernel kvm_intel has no TDX enabled
+
+# case implemented by tdx_dpamt_test.sh
+# case info: basic KVM host TDX enabling check
+./tdx-host/tdx_dpamt_test.sh -t 0
+# case info: basic KVM host dynamic pamt check
+./tdx-host/tdx_dpamt_test.sh -t 1
+# case info: 1 TDVM of 1 VCPU and 1GB MEM launch & shutdown, with dpamt check
+./tdx-host/tdx_dpamt_test.sh -t 2
+# case info: 1 TDVM of 1 VCPU and 4GB MEM launch & shutdown, with dpamt check
+./tdx-host/tdx_dpamt_test.sh -t 3
+# case info: 1 TDVM of 1 VCPU and 96GB MEM launch & shutdown, with dpamt check
+./tdx-host/tdx_dpamt_test.sh -t 4
+# case info: 2 TDVMs of 1 VCPU and 1GB MEM launch & shutdown, with dpamt check
+./tdx-host/tdx_dpamt_test.sh -t 5
+# case info: 2 TDVMs of 1 VCPU and 4GB MEM launch & shutdown, with dpamt check
+./tdx-host/tdx_dpamt_test.sh -t 6
+# case info: 2 TDVMs of 1 VCPU and 96GB MEM launch & shutdown, with dpamt check
+./tdx-host/tdx_dpamt_test.sh -t 7
+# case info: [negative] 1 VPCU and 1GB MEM legacy VM launch and dpamt check
+./tdx-host/tdx_dpamt_test.sh -t 8
+# case info: [negative] 1 VCPU and 1GB TDVM and legacy VM launch and dpamt check
+./tdx-host/tdx_dpamt_test.sh -t 9
+# case info: [stress] TDVM 1 1 VCPU and 1GB MEM, TDVM2 1 VCPU and 96GB, launch and shutdown 10 times, check dpamt accordingly
+./tdx-host/tdx_dpamt_test.sh -t 10
+# case info: [stress] TDVM 1 1 VCPU and 1GB MEM, TDVM2 1 VCPU and 96GB, launch and shutdown 10 times, check dpamt accordingly
+# TDVM4 1 VCPU and 32GB MEM, TDVM5 1 VCPU and 96GB MEM, create and shutdown 10 times, check dpamt accordinlgy
+./tdx-host/tdx_dpamt_test.sh -t 11
+# case info: [stress] TDVM 1 1 VCPU and 1GB MEM, TDVM2 1 VCPU and 96GB, launch and shutdown 100 cycles, check dpamt accordingly
+./tdx-host/tdx_dpamt_test.sh -t 12
+# case info: [stress] TDVM1 1 VCPU and 1GB MEM, TDVM2 1 VCPU and 4GB MEM, TDVM3 1 VCPU and 8GB MEM
+# TDVM4 1 VCPU and 32GB MEM, TDVM5 1 VCPU and 96GB MEM, create and shutdown 100 cycles, check dpamt accordinlgy
+./tdx-host/tdx_dpamt_test.sh -t 13
