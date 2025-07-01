@@ -15,9 +15,9 @@ def run(test, params, env):
     """
     Get kernel src code from kernel.org and run protection key tests in VM.
 
-    1) Download Linux kernel source if no prepared execuable protection_keys_64
+    1) Download Linux kernel source if no prepared execuable protection_keys
     2) Checkout the correct code version and compile protection_keys.c
-    3) Run executable file 'protection_keys_64'
+    3) Run executable file 'protection_keys'
     4) Check results
 
     :param test:   QEMU test object.
