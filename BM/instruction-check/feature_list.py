@@ -69,6 +69,10 @@ feature_list = {
         "cpuid": ['7', '0', '0', '0', 'c', '2'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
     },
+    "PKU": {
+        "cpuid": ['7', '0', '0', '0', 'c', '3'],
+        "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
+    },
     "WAITPKG": {
         "cpuid": ['7', '0', '0', '0', 'c', '5'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
