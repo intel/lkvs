@@ -325,9 +325,9 @@ static int run_all_cpuid(void)
 		}
 		if (kretprobe_switch)
 			pr_info("leaf:%X subleaf:%X\n", t->leaf, t->subleaf);
-
+		preempt_disable();
 		run_cpuid(t);
-
+		preempt_enable();
 		t->ret = check_results_cpuid(t);
 		if (t->ret == 1)
 			stat_pass++;
