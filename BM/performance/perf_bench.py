@@ -163,7 +163,7 @@ def run_perf_bench(bench_feature, feature_option):
         exit_code = result.run()
         if exit_code != 0:
             print("Perf benchmark failed")
-            return exit_code
+            sys.exit(1)
 
     except Exception as e:
         print(f"Error running perf bench: {e}")

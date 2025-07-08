@@ -21,7 +21,7 @@ python3 -u perf_bench.py --bench_feature syscall --feature_option getpgid
 # fork: benchmark for fork(2) calls
 python3 -u perf_bench.py --bench_feature syscall --feature_option fork
 # execve: benchmark for execve(2) calls
-python3 -u perf_bench.py --bench_feature syscall --feature_option evecve
+python3 -u perf_bench.py --bench_feature syscall --feature_option execve
 # synthesize: benchmark perf event synthesis
 python3 -u perf_bench.py --bench_feature internals --feature_option synthesize
 # kallsyms-parse: benchmark kallsyms parsing
