@@ -1,6 +1,10 @@
 # This file collects Intel RAS/MCE testcases which can run against
 # Intel® Architecture-based platforms.
 # @other_dep: general_test.sh -t module -p einj @ No module einj
+# @other_warn: which rdmsr 2>/dev/null @ rdmsr tool is required, please install msr-tools
+# @other_warn: which cpuid 2>/dev/null @ cpuid tool is required, please install cpuid
+# @other_warn: which mcelog 2>/dev/null @ mcelog tool is required, please install mcelog
+# @other_warn: which screen 2>/dev/null @ rdmsr tool is required, please install screen
 
 # error injection test cases
 mce_test.sh -t apei-inj
