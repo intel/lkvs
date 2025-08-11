@@ -93,5 +93,4 @@ while getopts :t:H arg; do
   esac
 done
 
-pkg_check_install screen
 mce_test

@@ -120,6 +120,5 @@ while getopts :t:H arg; do
 done
 
 lmce_support_check # check whether LMCE feature is supported
-pkg_check_install msr-tools cpuid mcelog # install pre-requisite packages
 mcelog_config # configure mcelog service
 lmce_test
