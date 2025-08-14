@@ -87,7 +87,7 @@ mem_accept_func() {
     test_print_trc "stress-ng prerequisites is ready for use"
   fi
   bootup_vmstat=$(grep "nr_unaccepted" /proc/vmstat | cut -d' ' -f2)
-  stress-ng --vm 1 --vm-bytes 10% --timeout 3s
+  stress-ng --vm 1 --vm-bytes 100% --timeout 3s
   stress_vmstat=$(grep "nr_unaccepted" /proc/vmstat | cut -d' ' -f2)
   if [[ "$bootup_vmstat" -gt "$stress_vmstat" ]]; then
     test_print_trc "TD VM unaccepted memory func test PASS"
