@@ -1,3 +1,3 @@
 # Family 06 CPUs from arch/x86/include/asm/intel-family.h
-#  SPR EMR GNR_X GNR_D SRF
-06:8f  cf  ad    ae    af
+#  SPR EMR GNR_X GNR_D SRF CWF
+06:8f  cf  ad    ae    af  dd
