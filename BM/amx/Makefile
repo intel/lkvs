@@ -5,7 +5,7 @@ CC = gcc
 BIN_AMX = tmul
 CFILES_AMX = tmul.c
 
-all: CFLAG += -g -DFP16
+all: CFLAG += -g -DFP16 -static
 all: spr
 
 spr:
