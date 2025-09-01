@@ -67,8 +67,7 @@ docker_make:
 	docker run -it --rm -v $(PWD):/src -v /lib/modules/`uname -r`:/lib/modules/`uname -r` --name ubuntu_2204_lkvs ubuntu:22.04 make
 
 docker_make_ddt:
-	docker run -it --rm -v $(PWD)/..:/src -v /lib/modules/`uname -r`:/lib/modules/`uname -r` --name ubuntu_2404_lkvs ubuntu:24.04 \
-		bash -c "cd BM/ras && git submodule update --init --recursive && cd .. && make"
+	docker run -it --rm -v $(PWD):/src -v /lib/modules/`uname -r`:/lib/modules/`uname -r` --name ubuntu_2404_lkvs ubuntu:24.04 make
 
 build:
 	@echo "Building $(word 2, $(MAKECMDGOALS))"

@@ -17,20 +17,6 @@ RUN \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
-# Update the package list and install CA certificates
-RUN \
-	apt-get update && \
-	apt-get install -y ca-certificates && \
-	update-ca-certificates
-
-# Configure Git to use the CA certificates
-RUN \
-	git config --global http.sslCAInfo /etc/ssl/certs/ca-certificates.crt
-
-# Configure Git to recognize /src as a safe directory
-RUN \
-	git config --global --add safe.directory /src
-
 #RUN apt-get install linux-headers-`uname -r` -y
 RUN apt-get update && apt-get install linux-headers-generic -y
 
