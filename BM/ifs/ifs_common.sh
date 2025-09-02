@@ -6,6 +6,7 @@
 
 cd "$(dirname "$0")" 2>/dev/null || exit 1
 source ../.env
+source ../runtests
 
 # For SPR legacy IFS
 readonly SCAN_STATUS="0x2c7"

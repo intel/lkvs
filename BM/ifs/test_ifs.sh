@@ -61,6 +61,7 @@ IFS_LOG="/tmp/ifs_logs.$$"
 RANDOM_CPU=""
 DEFAULT_IMG_ID=""
 
+# define customized append_log to append logs to pre-define $IFS_LOG file
 append_log()
 {
   echo -e "$1" | tee -a "$IFS_LOG"
