@@ -169,6 +169,18 @@ feature_list = {
         "cpuid": ['7', '0', '0', '0', 'd', '25'],
         "platforms": {"SPR", "EMR", "GNR"}
     },
+    "SHA512": {
+        "cpuid": ['7', '0', '1', '0', 'a', '0'],
+        "platforms": {"CWF"}
+    },
+    "SM3": {
+        "cpuid": ['7', '0', '1', '0', 'a', '1'],
+        "platforms": {"CWF"}
+    },
+    "SM4": {
+        "cpuid": ['7', '0', '1', '0', 'a', '2'],
+        "platforms": {"CWF"}
+    },
     "AVX_VNNI": {
         "cpuid": ['7', '0', '1', '0', 'a', '4'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
@@ -208,6 +220,10 @@ feature_list = {
     "AVX_NE_CONVERT": {
         "cpuid": ['7', '0', '1', '0', 'd', '5'],
         "platforms": {"SRF", "CWF"}
+    },
+    "AVX_VNNI_INT16": {
+        "cpuid": ['7', '0', '1', '0', 'd', '10'],
+        "platforms": {"CWF"}
     },
     "PREFETCHI": {
         "cpuid": ['7', '0', '1', '0', 'd', '14'],
