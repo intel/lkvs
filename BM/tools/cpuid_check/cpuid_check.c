@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 			usage(argv[0]);
 
 		memset(n_bits, 0, sizeof(n_bits));
-		if (sscanf(argv[6], "%6s", &n_bits) != 1)
+		if (sscanf(argv[6], "%6s", n_bits) != 1)
 			usage(argv[0]);
 
 		printf("7 parameters: Check CPUID.(EAX=%dH, ECX=%dH):e%cx[bit %s]\n",
