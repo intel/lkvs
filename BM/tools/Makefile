@@ -18,11 +18,13 @@ all:
 		fi					\
 	done
 	@cat ${MAKE_TOOLS_LOG}
-ifeq ($(shell cat $(MAKE_TOOLS_LOG)),)
-	@exit 0
-else
-	@exit 2
-endif
+	@if [ -s ${MAKE_TOOLS_LOG} ]; then \
+		echo "Some tools failed to build"; \
+		exit 2; \
+	else \
+		echo "All tools built successfully"; \
+		exit 0; \
+	fi
 
 clean:
 	@for tooldir in $(TOOLSDIRS); do 			\
