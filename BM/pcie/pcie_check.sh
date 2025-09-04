@@ -21,7 +21,7 @@ echo "$SCRIPT_DIR"
 pci_bridge_device_check() {
   local pci_bridge_device
   local dev
-  pci_bridge_device=$(lspci -nnv | grep -wE "PCI bridge" | awk '{print $1}')
+  pci_bridge_device=$(lspci -nnv | grep -wE "PCI bridge" | grep -iv "pci-to-pci" | awk '{print $1}')
   pci_bridge_device=$(echo -e $pci_bridge_device)
   IFS=" " read -ra pci_bridge_array <<< "$pci_bridge_device"
   for dev in "${pci_bridge_array[@]}"
@@ -344,7 +344,7 @@ target_speed=0
 passed=0
 failed=0
 
-pci_bridge_device=$(lspci -nnv | grep -wE "PCI bridge" | awk '{print $1}')
+pci_bridge_device=$(lspci -nnv | grep -wE "PCI bridge" | grep -iv "pci-to-pci" | awk '{print $1}')
 pci_bridge_device=$(echo -e $pci_bridge_device)
 IFS=" " read -ra pci_bridge_array <<< "$pci_bridge_device"
 for dev in "${pci_bridge_array[@]}"
