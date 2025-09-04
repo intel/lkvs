@@ -1,0 +1,22 @@
+# This file collects TDX guest (Trust Domain eXtensions) tests on
+# Intel® Architecture-based platforms.
+# @hw_dep: tdx_dep_check.sh -t hw_dep_check @SEAMRR not enabled, probably HW or BIOS can't support TDX
+# @other_dep: general_test.sh -t kconfig -k "CONFIG_INTEL_TDX_HOST=y"
+######## TDX Host Kernel module kvm_intel TDX enabling status check
+# @other_dep: tdx_dep_check.sh -t other_dep_check1 @host kernel kvm_intel has no TDX enabled
+
+# case implemented by tdx-guest_boot_check.sh
+# case info: TD VM booting test with vcpu 1 sockets 1 and memory size 1 GB
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 1 sockets 1 and memory size 16 GB
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 16 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 4 sockets 1 and memory size 4 GB
+./guest-test/guest.test_launcher.sh -v 4 -s 1 -m 4 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 4 sockets 2 and memory size 4 GB
+./guest-test/guest.test_launcher.sh -v 4 -s 2 -m 4 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 4 sockets 2 and memory size 96 GB
+./guest-test/guest.test_launcher.sh -v 4 -s 2 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: TD VM booting test with vcpu 64 sockets 8 and memory size 96 GB
+./guest-test/guest.test_launcher.sh -v 64 -s 8 -m 96 -d on -t tdx -e tdx-guest -f tdx -x TD_BOOT -c "accept_memory=lazy" -p off
+# case info: Check if TDX guest kernel can boot in legacy VM configuration 1 VCPU 1 Socket 1GB Memory
+./guest-test/guest.test_launcher.sh -v 1 -s 1 -m 1 -d on -t legacy -e tdx-guest -f tdx -x TD_BOOT -c " " -p off
