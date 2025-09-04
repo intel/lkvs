@@ -4,15 +4,6 @@
 # @other_dep: general_test.sh -t kconfig -k "CONFIG_INTEL_TDX_HOST=y"
 ######## TDX Host Kernel module kvm_intel TDX enabling status check
 # @other_dep: tdx_dep_check.sh -t other_dep_check1 @host kernel kvm_intel has no TDX enabled
-######## TDX Module enabling status check
-# @other_dep: tdx_dep_check.sh -t other_dep_check2 @TDX module is not initialized or failed to initialize
-######## QEMU TDX capability check
-# @other_dep: tdx_dep_check.sh -t other_dep_check3 @QEMU has no tdx-guest capability, please make sure QEMU in use is TDX capable
-######## Virtual Firmware TDX capability check (OVMF EDK2 basic check, not 100% TDX capable guranateed)
-# @other_dep: tdx_dep_check.sh -t other_dep_check4 @OVMF EDK2 has no TDX capability, please make sure OVMF in use is TDX capable
-######## Host Kernel mainline version or not check, warn on some non-upstream complete feature 
-######## TCs failure expectation in case of non-mainline kernel
-# @other_warn: tdx_dep_check.sh -t other_warn_check @case info with [NA for upstream kernel] failed as expected
 
 # case implemented by tdx-guest_boot_check.sh
 # case info: TD VM booting test with vcpu 1 sockets 1 and memory size 1 GB
