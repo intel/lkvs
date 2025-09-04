@@ -1,4 +1,5 @@
 # pcie related tests description
+# please compile the pcie_check test tool under BM/tools/pcie before test execution
 
 ## case implemented by pcie_check.sh and pcie_check.c for general PCIe capability check
 ### for simplicity, only check PCIe Cap Structure (7.5.3 in spec) Max Speed, Current Speed, Supported Speed, Target Speed
