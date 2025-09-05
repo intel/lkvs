@@ -150,6 +150,12 @@ arch_pebs_cpuid_test() {
   [[ $model -eq 204 ]] && do_cmd "cpuid_check 23 0 0 0 a 4"
 }
 
+clear_files() {
+  for i in "$@"; do
+    [[ -f $i ]] && test_print_trc "Remove file: $i" && rm "$i"
+  done;
+}
+
 reg_group_test(){
   reg=$1
   perfdata="pebs.data"
@@ -274,6 +280,163 @@ arch_pebs_basic_group_test() {
   [[ $sample_count -eq $count ]] || die "samples does not match!" 
 }
 
+bitmap_6_test() {
+  search="Intel PMU"
+  gbitmap=$(dmesg | grep -A 8  "$search" | grep "generic bitmap" | awk '{print $6}')
+  fbitmap=$(dmesg | grep -A 8  "$search" | grep "fixed-purpose bitmap" | awk '{print $6}')
+  [[ $gbitmap = "00000000000000ff" ]] || die "gbitmap = $gbitmap not expected!"
+  [[ $fbitmap = "0000000000000077" ]] || die "fbitmap = $fbitmap not expected!"
+}
+
+umask2_cpuid_test() {
+  ##EAX=023H, ECX=0, EBX=0=1
+  do_cmd "cpuid_check 23 0 0 0 b 0"
+}
+
+zbit_cpuid_test() {
+  ##EAX=023H, ECX=0, EBX=1=1
+  do_cmd "cpuid_check 23 0 0 0 b 1"
+}
+
+umask2_test() {
+  cputype='cpu'
+  benchmark="sleep 1"
+  perf_log="perf.log"
+  clear_files $perf_log
+  do_cmd "perf stat -e $cputype/event=0xd1,umask=0x0201,name=MEM_LOAD_RETIRED.L1_L2_HIT/ $benchmark >& $perf_log"
+  counts=$(grep "MEM_LOAD_RETIRED" $perf_log | awk '{print $1}' | tr -cd "0-9")
+  clear_files $perf_log
+  [[ $counts != 0 ]] || die "$cputype counts not > 0!"
+}
+
+zbit_test() {
+  cputype='cpu'
+  benchmark="sleep 1"
+  perf_log="perf.log"
+  clear_files $perf_log
+  do_cmd "perf stat -e $cputype/event=0x11,umask=0x10,cmask=1,eq=1,name=ITLB_MISSES.WALK_ACTIVE_1/ $benchmark >& $perf_log"
+  clear_files $perf_log
+}
+
+counting_test() {
+  cputype='cpu'
+  benchmark="sleep 1"
+  perf_log="perf.log"
+  clear_files $perf_log
+  do_cmd "perf stat -e $cputype/event=0x3c,umask=0x0,name=CYCLES/ \
+    -e $cputype/event=0x73,umask=0x0,name=TOPDOWN_BAD_SPEC/ \
+    -e $cputype/event=0x9c,umask=0x01,name=TOPDOWN_FE_BOUND/ \
+    -e $cputype/event=0xc2,umask=0x02,name=TOPDOWN_RETIRING/ \
+    -e $cputype/event=0xa4,umask=0x02,name=TOPDOWN_BE_BOUND/ $benchmark >& $perf_log"
+  CYCLES=$(grep "CYCLES" $perf_log | awk '{print $1}')
+  TOPDOWN_BAD_SPEC=$(grep "TOPDOWN_BAD_SPEC" $perf_log | awk '{print $1}')
+  TOPDOWN_RETIRING=$(grep "TOPDOWN_RETIRING" $perf_log | awk '{print $1}')
+  TOPDOWN_BE_BOUND=$(grep "TOPDOWN_BE_BOUND" $perf_log | awk '{print $1}')
+  clear_files $perf_log
+  [[ $CYCLES != 0 ]] || die "counts = 0 for CYCLES!"
+  [[ $TOPDOWN_BAD_SPEC != 0 ]] || die "counts = 0 for TOPDOWN_BAD_SPEC!"
+  [[ $TOPDOWN_RETIRING != 0 ]] || die "counts = 0 for TOPDOWN_RETIRING!"
+  [[ $TOPDOWN_BE_BOUND != 0 ]] || die "counts = 0 for TOPDOWN_BE_BOUND!"
+}
+
+sampling_test() {
+  e_topdown_bad_spec="topdown-bad-spec"
+  e_topdown_fe_bound="topdown-fe-bound"
+  e_topdown_retiring="topdown-retiring"
+  e_topdown_be_bound="topdown-be-bound"
+  benchmark="sleep 1"
+  perf_log="perf.log"
+  clear_files $perf_log
+  do_cmd "perf record -e $e_topdown_bad_spec $benchmark >& $perf_log"
+  samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
+  test_print_trc "$e_topdown_bad_spec sample = $samples"
+  [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_bad_spec!"
+
+  do_cmd "perf record -e $e_topdown_fe_bound $benchmark >& $perf_log"
+  samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
+  test_print_trc "$e_topdown_fe_bound sample = $samples"
+  [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_fe_bound!"
+
+  do_cmd "perf record -e $e_topdown_retiring $benchmark >& $perf_log"
+  samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
+  test_print_trc "$e_topdown_retiring sample = $samples"
+  [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_retiring!"
+
+  do_cmd "perf record -e $e_topdown_be_bound $benchmark >& $perf_log"
+  samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
+  clear_files $perf_log
+  test_print_trc "$e_topdown_be_bound sample = $samples"
+  [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_be_bound!"
+
+}
+
+counting_multi_test() {
+  cputype='cpu'
+  benchmark="sleep 1"
+  perf_log="perf.log"
+  clear_files $perf_log
+  do_cmd "perf stat -e '{$cputype/event=0x73,umask=0x0,name=TOPDOWN_BAD_SPEC/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BAD_SPEC/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BAD_SPEC/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BAD_SPEC/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BAD_SPEC/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BAD_SPEC/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BAD_SPEC/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BAD_SPEC/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BAD_SPEC/}' $benchmark >& $perf_log"
+  counts=$(grep "TOPDOWN_BE_BOUND" $perf_log | awk '{print $1}')
+  for count in $counts; do
+    val=$(echo $count | tr -cd "0-9")
+    [[ $val != 0 ]] || die "counts = 0 for TOPDOWN_BAD_SPEC!"
+  done
+
+  do_cmd "perf stat -e '{$cputype/event=0x73,umask=0x0,name=TOPDOWN_FE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_FE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_FE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_FE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_FE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_FE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_FE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_FE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_FE_BOUND/}' $benchmark >& $perf_log"
+  counts=$(grep "TOPDOWN_FE_BOUND" $perf_log | awk '{print $1}')
+  for count in $counts; do
+    val=$(echo $count | tr -cd "0-9")
+    [[ $val != 0 ]] || die "counts = 0 for TOPDOWN_FE_BOUND!"
+  done
+
+  do_cmd "perf stat -e '{$cputype/event=0x73,umask=0x0,name=TOPDOWN_BE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BE_BOUND/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_BE_BOUND/}' $benchmark >& $perf_log"
+  counts=$(grep "TOPDOWN_BE_BOUND" $perf_log | awk '{print $1}')
+  for count in $counts; do
+    val=$(echo $count | tr -cd "0-9")
+    [[ $val != 0 ]] || die "counts = 0 for TOPDOWN_BE_BOUND!"
+  done
+
+  do_cmd "perf stat -e '{$cputype/event=0x73,umask=0x0,name=TOPDOWN_RETIRING/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_RETIRING/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_RETIRING/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_RETIRING/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_RETIRING/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_RETIRING/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_RETIRING/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_RETIRING/, \
+    $cputype/event=0x73,umask=0x0,name=TOPDOWN_RETIRING/}' $benchmark >& $perf_log"
+  counts=$(grep "TOPDOWN_RETIRING" $perf_log | awk '{print $1}')
+  clear_files $perf_log
+  for count in $counts; do
+    val=$(echo $count | tr -cd "0-9")
+    [[ $val != 0 ]] || die "counts = 0 for TOPDOWN_RETIRING!"
+  done
+}
+
 pmu_test() {
   case $TEST_SCENARIO in
     fix_counter)
@@ -323,6 +486,30 @@ pmu_test() {
       ;;
     arch_pebs_basic_group)
       arch_pebs_basic_group_test
+      ;;
+    bitmap_6)
+      bitmap_6_test
+      ;;
+    umask2_cpuid)
+      umask2_cpuid_test
+      ;;
+    zbit_cpuid)
+      zbit_cpuid_test
+      ;;
+    umask2)
+      umask2_test
+      ;;
+    zbit)
+      zbit_test
+      ;;
+    counting)
+      counting_test
+      ;;
+    sampling)
+      sampling_test
+      ;;
+    counting_multi)
+      counting_multi_test
       ;;
     esac
   return 0
