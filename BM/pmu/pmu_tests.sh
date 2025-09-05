@@ -70,6 +70,16 @@ basic_test() {
   do_cmd "dmesg | grep 'Intel PMU driver'"
 }
 
+uncore_dmesg_check() {
+  # Uncore is failed when there is following dmesg:
+  # “Invalid address is detected for uncore type %d box %d, Disable the uncore unit.”
+  # “A spurious uncore type %d is detected, Disable the uncore type.”
+  # “Duplicate uncore type %d box ID %d is detected, Drop the duplicate uncore unit.”
+  should_fail "dmesg | grep 'Disable the uncore'"
+  should_fail "dmesg | grep 'Drop the duplicate uncore unit'"
+  should_fail "dmesg | grep 'Invalid address is detected for uncore type'"
+}
+
 # CPUID test for Last Branch Record events
 lbr_events_cpuid_test() {
   #CPUID leaf 0x1c  ECX (19:16) must be all 1 for SRF.
@@ -274,6 +284,9 @@ pmu_test() {
       ;;
     uncore)
       do_cmd "ls /sys/devices/ | grep uncore"
+      ;;
+    uncore_dmesg)
+      uncore_dmesg_check
       ;;
     lbr_events_cpuid)
       lbr_events_cpuid_test
