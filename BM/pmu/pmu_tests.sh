@@ -150,6 +150,12 @@ arch_pebs_cpuid_test() {
   [[ $model -eq 204 ]] && do_cmd "cpuid_check 23 0 0 0 a 4"
 }
 
+clear_files() {
+  for i in "$@"; do
+    [[ -f $i ]] && test_print_trc "Remove file: $i" && rm "$i"
+  done;
+}
+
 reg_group_test(){
   reg=$1
   perfdata="pebs.data"
@@ -274,6 +280,44 @@ arch_pebs_basic_group_test() {
   [[ $sample_count -eq $count ]] || die "samples does not match!" 
 }
 
+bitmap_6_test() {
+  search="Intel PMU"
+  gbitmap=$(dmesg | grep -A 8  "$search" | grep "generic bitmap" | awk '{print $6}')
+  fbitmap=$(dmesg | grep -A 8  "$search" | grep "fixed-purpose bitmap" | awk '{print $6}')
+  [[ $gbitmap = "00000000000000ff" ]] || die "gbitmap = $gbitmap not expected!"
+  [[ $fbitmap = "0000000000000077" ]] || die "fbitmap = $fbitmap not expected!"
+}
+
+umask2_cpuid_test() {
+  ##EAX=023H, ECX=0, EBX=0=1
+  do_cmd "cpuid_check 23 0 0 0 b 0"
+}
+
+zbit_cpuid_test() {
+  ##EAX=023H, ECX=0, EBX=1=1
+  do_cmd "cpuid_check 23 0 0 0 b 1"
+}
+
+umask2_test() {
+  cputype='cpu'
+  benchmark="sleep 1"
+  perf_log="perf.log"
+  clear_files $perf_log
+  do_cmd "perf stat -e $cputype/event=0xd1,umask=0x0201,name=MEM_LOAD_RETIRED.L1_L2_HIT/ $benchmark >& $perf_log"
+  counts=$(grep "MEM_LOAD_RETIRED" $perf_log | awk '{print $1}' | tr -cd "0-9")
+  clear_files $perf_log
+  [[ $counts != 0 ]] || die "$cputype counts not > 0!"
+}
+
+zbit_test() {
+  cputype='cpu'
+  benchmark="sleep 1"
+  perf_log="perf.log"
+  clear_files $perf_log
+  do_cmd "perf stat -e $cputype/event=0x11,umask=0x10,cmask=1,eq=1,name=ITLB_MISSES.WALK_ACTIVE_1/ $benchmark >& $perf_log"
+  clear_files $perf_log
+}
+
 pmu_test() {
   case $TEST_SCENARIO in
     fix_counter)
@@ -323,6 +367,21 @@ pmu_test() {
       ;;
     arch_pebs_basic_group)
       arch_pebs_basic_group_test
+      ;;
+    bitmap_6)
+      bitmap_6_test
+      ;;
+    umask2_cpuid)
+      umask2_cpuid_test
+      ;;
+    zbit_cpuid)
+      zbit_cpuid_test
+      ;;
+    umask2)
+      umask2_test
+      ;;
+    zbit)
+      zbit_test
       ;;
     esac
   return 0
