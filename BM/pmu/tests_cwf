@@ -33,3 +33,8 @@ pmu_tests.sh -t arch_pebs_counter_group
 pmu_tests.sh -t arch_pebs_counter_group_stress
 pmu_tests.sh -t arch_pebs_gp_counter
 pmu_tests.sh -t arch_pebs_basic_group
+pmu_tests.sh -t bitmap_6
+pmu_tests.sh -t umask2_cpuid
+pmu_tests.sh -t zbit_cpuid
+pmu_tests.sh -t umask2
+pmu_tests.sh -t zbit
