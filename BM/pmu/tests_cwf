@@ -38,3 +38,6 @@ pmu_tests.sh -t umask2_cpuid
 pmu_tests.sh -t zbit_cpuid
 pmu_tests.sh -t umask2
 pmu_tests.sh -t zbit
+pmu_tests.sh -t counting
+pmu_tests.sh -t sampling
+pmu_tests.sh -t counting_multi
