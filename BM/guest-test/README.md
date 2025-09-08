@@ -112,7 +112,7 @@ Note: by deault, $GCOV is off, if $GCOV is on, above VM life-cycles management l
 ### guest.qemu_runner description
 VM boot engine, with parames exported from qemu_get_config.py and test scenario config sourced from test_params.py
 
-before VM boot, for $VM_TYPE tdx or tdxio, tdx_pre_check and tdx_module_check will be called to make sure basic environment is ready for TDX/TDXIO launching
+before VM boot, for $VM_TYPE tdx or tdxio, tdx_pre_check will be called to make sure basic environment is ready for TDX/TDXIO launching
 
 VM boot is triggered by qemu_runner.py based on $VM_TYPE, with proper qemu config options applied
 
