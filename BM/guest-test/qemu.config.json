@@ -28,8 +28,8 @@
 
   "tdx": {
     "cfg_1": "-machine q35,kernel_irqchip=split,confidential-guest-support=tdx,memory-backend=ram1 ",
-    "cfg_var_1": "-object tdx-guest,id=tdx,debug=$DEBUG,sept-ve-disable=on,quote-generation-service=vsock:2:4050 ",
-    "cfg_var_2": "-object memory-backend-memfd-private,id=ram1,size=$MEMG "
+    "cfg_var_1": "-object '{\"qom-type\":\"tdx-guest\",\"id\":\"tdx\",\"sept-ve-disable\":true}' ",
+    "cfg_var_2": "-object memory-backend-ram,id=ram1,size=$MEMG "
   },
 
   "tdxio": {
