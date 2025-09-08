@@ -1,5 +1,5 @@
 # This file collects PCIe tests on Intel® Architecture-based platforms.
-# @other_dep: ls tools/pcie/pcie_check @BM/tools/pcie/pcie_check binary not available, please compile it before test
+# @other_dep: ls tools/pcie/pcie_check || ls ../tools/pcie/pcie_check @BM/tools/pcie/pcie_check binary not available, please compile it before test
 
 # case info: PCIe gen4 device capability check
 pcie_check.sh gen4
