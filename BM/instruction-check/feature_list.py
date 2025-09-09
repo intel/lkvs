@@ -229,6 +229,10 @@ feature_list = {
         "cpuid": ['7', '0', '1', '0', 'd', '14'],
         "platforms": {"GNR"}
     },
+    "AVX10_1": {
+        "cpuid": ['7', '0', '1', '0', 'd', '19'],
+        "platforms": {"GNR"}
+    },
     "XFD": {
         "cpuid": ['d', '0', '1', '0', 'a', '4'],
         "platforms": {"SPR", "EMR", "GNR"}
