@@ -449,11 +449,11 @@ while getopts :a:m:p:b:i:o:n:t:f:c:h arg; do
       FILE=$OPTARG
       ;;
     h)
-      usage
+      basic_usage
       exit 2
       ;;
     *)
-      usage
+      basic_usage
       die "Option -$OPTARG requires an argument."
       ;;
   esac
