@@ -6,7 +6,6 @@
 
 cd "$(dirname "$0")" 2>/dev/null || exit 1
 source ../.env
-source ../runtests
 
 # For SPR legacy IFS
 readonly SCAN_STATUS="0x2c7"
@@ -198,7 +197,7 @@ check_cpu_ifs_support_interval_time()
     *)
       # Set default interval time for other platforms
       export INTERVAL_TIME=1;
-      append_log "[$INFO] CPU FML:$FML model:0x$MODEL, default: 1s interval time"
+      echo -e "[$INFO] CPU FML:$FML model:0x$MODEL, default: 1s interval time"
       ;;
   esac
 }
