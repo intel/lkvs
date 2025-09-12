@@ -179,8 +179,11 @@ case $TESTCASE in
   2)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_2/
     # launch TDVM with 1 vCPU, 1GB memory and port 10021
-    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 &
+    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_2/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_2/tdvm.1.log"
     # wait for TDVM fully launched for ssh accessible
     vm_up_check 10021
     # check if TDX KVM host /proc/meminfo tdx field value is zero
@@ -207,8 +210,11 @@ case $TESTCASE in
   3)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_3/
     # launch TDVM with 1 vCPU, 4GB memory and port 10021
-    ./qemu_dpamt.sh 1 4 10021 $GUEST_IMAGE_1 &
+    ./qemu_dpamt.sh 1 4 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_3/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_3/tdvm.1.log"
     # wait for TDVM fully launched for ssh accessible
     vm_up_check 10021
     # check if TDX KVM host /proc/meminfo tdx field value is zero
@@ -235,8 +241,11 @@ case $TESTCASE in
   4)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_4/
     # launch TDVM with 1 vCPU, 96GB memory and port 10021
-    ./qemu_dpamt.sh 1 96 10021 $GUEST_IMAGE_1 &
+    ./qemu_dpamt.sh 1 96 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_4/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_4/tdvm.1.log"
     # wait for TDVM fully launched for ssh accessible
     vm_up_check 10021
     # check if TDX KVM host /proc/meminfo tdx field value is zero
@@ -263,10 +272,14 @@ case $TESTCASE in
   5)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_5/
     # launch TDVM1 with 1 vCPU, 1GB memory and port 10021
-    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 &
+    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_5/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_5/tdvm.1.log"
     # launch TDVM2 with 1 vCPU, 1GB memory and port 10022
-    ./qemu_dpamt.sh 1 1 10022 $GUEST_IMAGE_2 &
+    ./qemu_dpamt.sh 1 1 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_5/tdvm.2.log 2>&1 &
+    test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_5/tdvm.2.log"
     # wait for all TDVMs fully launched for ssh accessible
     vm_up_check 10021
     vm_up_check 10022
@@ -304,10 +317,14 @@ case $TESTCASE in
   6)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_6/
     # launch TDVM1 with 1 vCPU, 4GB memory and port 10021
-    ./qemu_dpamt.sh 1 4 10021 $GUEST_IMAGE_1 &
+    ./qemu_dpamt.sh 1 4 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_6/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_6/tdvm.1.log"
     # launch TDVM2 with 1 vCPU, 4GB memory and port 10022
-    ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 &
+    ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_6/tdvm.2.log 2>&1 &
+    test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_6/tdvm.2.log"
     # wait for all TDVMs fully launched for ssh accessible
     vm_up_check 10021
     vm_up_check 10022
@@ -345,10 +362,14 @@ case $TESTCASE in
   7)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_7/
     # launch TDVM1 with 1 vCPU, 96GB memory and port 10021
-    ./qemu_dpamt.sh 1 96 10021 $GUEST_IMAGE_1 &
+    ./qemu_dpamt.sh 1 96 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_7/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_7/tdvm.1.log"
     # launch TDVM2 with 1 vCPU, 96GB memory and port 10022
-    ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 &
+    ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_7/tdvm.2.log 2>&1 &
+    test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_7/tdvm.2.log"
     # wait for all TDVMs fully launched for ssh accessible
     vm_up_check 10021
     vm_up_check 10022
@@ -386,8 +407,11 @@ case $TESTCASE in
   8)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_8/
     # launch legacy VM with 1 vCPU, 1GB memory and port 10021
-    ./qemu_legacy.sh 1 1 10021 &
+    ./qemu_legacy.sh 1 1 10021 > /tmp/tdpamt_8/vm.1.log 2>&1 &
+    test_print_trc "legacy VM launched, VM boot log at /tmp/tdpamt_8/vm.1.log"
     # wait for legacy VM fully launched for ssh accessible
     vm_up_check 10021
     # check if TDX KVM host /proc/meminfo tdx field value is zero
@@ -414,10 +438,14 @@ case $TESTCASE in
   9)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_9/
     # launch TDVM with 1 vCPU, 1GB memory and port 10021
-    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 &
+    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_9/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm launched, VM boot log at /tmp/tdpamt_9/tdvm.1.log"
     # launch legacy VM with 1 vCPU, 1GB memory and port 10022
-    ./qemu_legacy.sh 1 1 10022 &
+    ./qemu_legacy.sh 1 1 10022 > /tmp/tdpamt_9/vm.1.log 2>&1 &
+    test_print_trc "legacy VM launched, VM boot log at /tmp/tdpamt_9/vm.1.log"
     # wait for TDVM and legacy VM fully launched for ssh accessible
     vm_up_check 10021
     vm_up_check 10022
@@ -456,13 +484,17 @@ case $TESTCASE in
   10)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_10/
     # 10 repeat times while loop
     for i in {1..10}; do
       test_print_trc "Start TDVM1 and TDVM2 launch and dpamt check, repeat times: $i"
       # launch TDVM1 with 1 vCPU, 1GB memory and port 10021
-      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_10/tdvm.1.log 2>&1 &
+      test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_10/tdvm.1.log"
       # launch TDVM2 with 1 vCPU, 96GB memory and port 10022
-      ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_10/tdvm.2.log 2>&1 &
+      test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_10/tdvm.2.log"
       # wait for all TDVMs fully launched for ssh accessible
       vm_up_check 10021
       vm_up_check 10022
@@ -502,19 +534,26 @@ case $TESTCASE in
   11)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_11/
     # 10 repeat times while loop
     for i in {1..10}; do
       test_print_trc "Start TDVM1, TDVM2, TDVM3, TDVM4 and TDVM5 launch and dpamt check, repeat times: $i"
       # launch TDVM1 with 1 vCPU, 1GB memory and port 10021
-      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_11/tdvm.1.log 2>&1 &
+      test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_11/tdvm.1.log"
       # launch TDVM2 with 1 vCPU, 4GB memory and port 10022
-      ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_11/tdvm.2.log 2>&1 &
+      test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_11/tdvm.2.log"
       # launch TDVM3 with 1 vCPU, 8GB memory and port 10023
-      ./qemu_dpamt.sh 1 8 10023 $GUEST_IMAGE_3 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 8 10023 $GUEST_IMAGE_3 > /tmp/tdpamt_11/tdvm.3.log 2>&1 &
+      test_print_trc "tdvm 3 launched, VM boot log at /tmp/tdpamt_11/tdvm.3.log"
       # launch TDVM4 with 1 vCPU, 32GB memory and port 10024
-      ./qemu_dpamt.sh 1 32 10024 $GUEST_IMAGE_4 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 32 10024 $GUEST_IMAGE_4 > /tmp/tdpamt_11/tdvm.4.log 2>&1 &
+      test_print_trc "tdvm 4 launched, VM boot log at /tmp/tdpamt_11/tdvm.4.log"
       # launch TDVM5 with 1 vCPU, 96GB memory and port 10025
-      ./qemu_dpamt.sh 1 96 10025 $GUEST_IMAGE_5 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 96 10025 $GUEST_IMAGE_5 > /tmp/tdpamt_11/tdvm.5.log 2>&1 &
+      test_print_trc "tdvm 5 launched, VM boot log at /tmp/tdpamt_11/tdvm.5.log"
       # wait for all TDVMs fully launched for ssh accessible
       vm_up_check 10021
       vm_up_check 10022
@@ -579,13 +618,17 @@ case $TESTCASE in
   12)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_12/
     # 100 repeat times while loop
     for i in {1..100}; do
       test_print_trc "Start TDVM1 and TDVM2 launch and dpamt check, repeat times: $i"
       # launch TDVM1 with 1 vCPU, 1GB memory and port 10021
-      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_12/tdvm.1.log 2>&1 &
+      test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_12/tdvm.1.log"
       # launch TDVM2 with 1 vCPU, 96GB memory and port 10022
-      ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_12/tdvm.2.log 2>&1 &
+      test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_12/tdvm.2.log"
       # wait for all TDVMs fully launched for ssh accessible
       vm_up_check 10021
       vm_up_check 10022
@@ -625,19 +668,26 @@ case $TESTCASE in
   13)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_13/
     # 100 repeat times while loop
     for i in {1..100}; do
       test_print_trc "Start TDVM1, TDVM2, TDVM3, TDVM4 and TDVM5 launch and dpamt check, repeat times: $i"
       # launch TDVM1 with 1 vCPU, 1GB memory and port 10021
-      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_13/tdvm.1.log 2>&1 &
+      test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_13/tdvm.1.log"
       # launch TDVM2 with 1 vCPU, 4GB memory and port 10022
-      ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_13/tdvm.2.log 2>&1 &
+      test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_13/tdvm.2.log"
       # launch TDVM3 with 1 vCPU, 8GB memory and port 10023
-      ./qemu_dpamt.sh 1 8 10023 $GUEST_IMAGE_3 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 8 10023 $GUEST_IMAGE_3 > /tmp/tdpamt_13/tdvm.3.log 2>&1 &
+      test_print_trc "tdvm 3 launched, VM boot log at /tmp/tdpamt_13/tdvm.3.log"
       # launch TDVM4 with 1 vCPU, 32GB memory and port 10024
-      ./qemu_dpamt.sh 1 32 10024 $GUEST_IMAGE_4 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 32 10024 $GUEST_IMAGE_4 > /tmp/tdpamt_13/tdvm.4.log 2>&1 &
+      test_print_trc "tdvm 4 launched, VM boot log at /tmp/tdpamt_13/tdvm.4.log"
       # launch TDVM5 with 1 vCPU, 96GB memory and port 10025
-      ./qemu_dpamt.sh 1 96 10025 $GUEST_IMAGE_5 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 96 10025 $GUEST_IMAGE_5 > /tmp/tdpamt_13/tdvm.5.log 2>&1 &
+      test_print_trc "tdvm 5 launched, VM boot log at /tmp/tdpamt_13/tdvm.5.log"
       # wait for all TDVMs fully launched for ssh accessible
       vm_up_check 10021
       vm_up_check 10022
