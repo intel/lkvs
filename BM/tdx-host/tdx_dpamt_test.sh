@@ -410,7 +410,7 @@ case $TESTCASE in
     # create VM launching log dir under /tmp/
     mkdir -p /tmp/tdpamt_8/
     # launch legacy VM with 1 vCPU, 1GB memory and port 10021
-    ./qemu_legacy.sh 1 1 10021 > /tmp/tdpamt_8/vm.1.log 2>&1 &
+    ./qemu_legacy.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_8/vm.1.log 2>&1 &
     test_print_trc "legacy VM launched, VM boot log at /tmp/tdpamt_8/vm.1.log"
     # wait for legacy VM fully launched for ssh accessible
     vm_up_check 10021
@@ -444,7 +444,7 @@ case $TESTCASE in
     ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_9/tdvm.1.log 2>&1 &
     test_print_trc "tdvm launched, VM boot log at /tmp/tdpamt_9/tdvm.1.log"
     # launch legacy VM with 1 vCPU, 1GB memory and port 10022
-    ./qemu_legacy.sh 1 1 10022 > /tmp/tdpamt_9/vm.1.log 2>&1 &
+    ./qemu_legacy.sh 1 1 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_9/vm.1.log 2>&1 &
     test_print_trc "legacy VM launched, VM boot log at /tmp/tdpamt_9/vm.1.log"
     # wait for TDVM and legacy VM fully launched for ssh accessible
     vm_up_check 10021
