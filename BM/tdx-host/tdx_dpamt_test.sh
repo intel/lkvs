@@ -36,7 +36,7 @@ usage() {
 EOF
 }
 
-# functiont to do basic TDX KVM host enabling check
+# function to do basic TDX KVM host enabling check
 tdx_basic_check(){
   #check if TDX KVM host is booted with TDX enabled
   dmesg | grep -i "tdx" | grep -iq "module initialized" || \
@@ -61,7 +61,7 @@ pamt_basic_check() {
   test_print_trc "TDX KVM host booted with dynamic pamt enabled" 
   # check /proc/meminfo TDX field exists and value is zero
   grep -iq "tdx" /proc/meminfo || \
-  die "TDX KVM host not booted with TDX enabled, \
+  die "TDX KVM host not booted with /proc/meminfo tdx field, \
   please check host kernel tdx enabling setup."
   local tdx_meminfo
   tdx_meminfo=$(grep -i "tdx:" /proc/meminfo | awk '{print $2}')
@@ -88,6 +88,10 @@ pamt_meminfo_tdx(){
 # function to shutdown TDVM or legacy VM with port number passed in
 vm_shutdown(){
   local PORT="$1"
+  local VM_PROC="$2"
+  local TIMEOUT=300
+  local INTERVAL=2
+  local ELAPSED=0
   if [ -z "$PORT" ]; then
     die "Port number not provided for TDVM shutdown."
   fi
@@ -95,6 +99,39 @@ vm_shutdown(){
   sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no root@localhost << EOF
     systemctl reboot --reboot-argument=now
 EOF
+
+  # Wait for VM shutdown fully complete within TIMEOUT seconds
+  while [ $ELAPSED -lt $TIMEOUT ]; do
+    if ! pgrep -f "${VM_PROC}_${PORT}" > /dev/null; then
+      test_print_trc "TDVM ${VM_PROC}_${PORT} has exited after ${ELAPSED} seconds."
+      return 0
+    fi
+    sleep $INTERVAL
+    ELAPSED=$((ELAPSED + INTERVAL))
+  done
+
+  test_print_wrg "TDVM ${VM_PROC}_${PORT} can't exit after shutdown timeout ${TIMEOUT} seconds."
+  return 1
+}
+
+# function to check TDVM or legacy VM is fully launched for ssh accessible
+vm_up_check() {
+  local PORT="$1"
+  local TIMEOUT=300
+  local INTERVAL=2
+  local ELAPSED=0
+  while [ $ELAPSED -lt $TIMEOUT ]; do
+    if sshpass -e ssh -p "$PORT" -o StrictHostKeyChecking=no -o ConnectTimeout=2 root@localhost "echo SSH_OK" 2>/dev/null | grep -q "SSH_OK"; then
+      test_print_trc "VM is up on port ${PORT} after ${ELAPSED} seconds."
+      break
+    fi
+    sleep $INTERVAL
+    ELAPSED=$((ELAPSED + INTERVAL))
+  done
+
+  if [ $ELAPSED -ge $TIMEOUT ]; then
+    die "VM is not up on port ${PORT} after ${TIMEOUT} seconds"
+  fi
 }
 
 ###################### Do Works #######################
@@ -142,9 +179,13 @@ case $TESTCASE in
   2)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_2/
     # launch TDVM with 1 vCPU, 1GB memory and port 10021
-    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 &
-    sleep 10
+    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_2/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_2/tdvm.1.log"
+    # wait for TDVM fully launched for ssh accessible
+    vm_up_check 10021
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -154,8 +195,8 @@ case $TESTCASE in
       test_print_trc "TDX KVM host /proc/meminfo tdx field is $tdx_meminfo after TDVM lauched"
     fi
     # shutdown TDVM
-    vm_shutdown 10021 || die "Failed to shutdown TDVM"
-    sleep 10
+    vm_shutdown 10021 "td_pamt" || die "Failed to shutdown TDVM"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -169,9 +210,13 @@ case $TESTCASE in
   3)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_3/
     # launch TDVM with 1 vCPU, 4GB memory and port 10021
-    ./qemu_dpamt.sh 1 4 10021 $GUEST_IMAGE_1 &
-    sleep 20
+    ./qemu_dpamt.sh 1 4 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_3/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_3/tdvm.1.log"
+    # wait for TDVM fully launched for ssh accessible
+    vm_up_check 10021
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -181,8 +226,8 @@ case $TESTCASE in
       test_print_trc "TDX KVM host /proc/meminfo tdx field is $tdx_meminfo after TDVM lauched"
     fi
     # shutdown TDVM
-    vm_shutdown 10021 || die "Failed to shutdown TDVM"
-    sleep 10
+    vm_shutdown 10021 "td_pamt" || die "Failed to shutdown TDVM"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -196,9 +241,13 @@ case $TESTCASE in
   4)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_4/
     # launch TDVM with 1 vCPU, 96GB memory and port 10021
-    ./qemu_dpamt.sh 1 96 10021 $GUEST_IMAGE_1 &
-    sleep 60
+    ./qemu_dpamt.sh 1 96 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_4/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_4/tdvm.1.log"
+    # wait for TDVM fully launched for ssh accessible
+    vm_up_check 10021
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -208,8 +257,8 @@ case $TESTCASE in
       test_print_trc "TDX KVM host /proc/meminfo tdx field is $tdx_meminfo after TDVM lauched"
     fi
     # shutdown TDVM
-    vm_shutdown 10021 || die "Failed to shutdown TDVM"
-    sleep 10
+    vm_shutdown 10021 "td_pamt" || die "Failed to shutdown TDVM"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -223,12 +272,17 @@ case $TESTCASE in
   5)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_5/
     # launch TDVM1 with 1 vCPU, 1GB memory and port 10021
-    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 &
+    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_5/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_5/tdvm.1.log"
     # launch TDVM2 with 1 vCPU, 1GB memory and port 10022
-    ./qemu_dpamt.sh 1 1 10022 $GUEST_IMAGE_2 &
-    # wait for TDVMs to be launched
-    sleep 20
+    ./qemu_dpamt.sh 1 1 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_5/tdvm.2.log 2>&1 &
+    test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_5/tdvm.2.log"
+    # wait for all TDVMs fully launched for ssh accessible
+    vm_up_check 10021
+    vm_up_check 10022
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -238,8 +292,8 @@ case $TESTCASE in
       test_print_trc "TDX KVM host /proc/meminfo tdx field is $tdx_meminfo after TDVMs lauched"
     fi
     # shutdown TDVM1
-    vm_shutdown 10021 || die "Failed to shutdown TDVM1"
-    sleep 10
+    vm_shutdown 10021 "td_pamt" || die "Failed to shutdown TDVM1"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is not zero since TDVM2 is still alive
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -248,8 +302,8 @@ case $TESTCASE in
       test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM1 shutdown"
     fi
     # shutdown TDVM2
-    vm_shutdown 10022 || die "Failed to shutdown TDVM2"
-    sleep 10
+    vm_shutdown 10022 "td_pamt" || die "Failed to shutdown TDVM2"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -263,12 +317,17 @@ case $TESTCASE in
   6)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_6/
     # launch TDVM1 with 1 vCPU, 4GB memory and port 10021
-    ./qemu_dpamt.sh 1 4 10021 $GUEST_IMAGE_1 &
+    ./qemu_dpamt.sh 1 4 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_6/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_6/tdvm.1.log"
     # launch TDVM2 with 1 vCPU, 4GB memory and port 10022
-    ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 &
-    # wait for TDVMs to be launched
-    sleep 30
+    ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_6/tdvm.2.log 2>&1 &
+    test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_6/tdvm.2.log"
+    # wait for all TDVMs fully launched for ssh accessible
+    vm_up_check 10021
+    vm_up_check 10022
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -278,8 +337,8 @@ case $TESTCASE in
       test_print_trc "TDX KVM host /proc/meminfo tdx field is $tdx_meminfo after TDVMs lauched"
     fi
     # shutdown TDVM1
-    vm_shutdown 10021 || die "Failed to shutdown TDVM1"
-    sleep 10
+    vm_shutdown 10021 "td_pamt" || die "Failed to shutdown TDVM1"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is not zero since TDVM2 is still alive
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -288,8 +347,8 @@ case $TESTCASE in
       test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM1 shutdown"
     fi
     # shutdown TDVM2
-    vm_shutdown 10022 || die "Failed to shutdown TDVM2"
-    sleep 10
+    vm_shutdown 10022 "td_pamt" || die "Failed to shutdown TDVM2"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -303,12 +362,17 @@ case $TESTCASE in
   7)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_7/
     # launch TDVM1 with 1 vCPU, 96GB memory and port 10021
-    ./qemu_dpamt.sh 1 96 10021 $GUEST_IMAGE_1 &
+    ./qemu_dpamt.sh 1 96 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_7/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_7/tdvm.1.log"
     # launch TDVM2 with 1 vCPU, 96GB memory and port 10022
-    ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 &
-    # wait for TDVMs to be launched
-    sleep 60
+    ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_7/tdvm.2.log 2>&1 &
+    test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_7/tdvm.2.log"
+    # wait for all TDVMs fully launched for ssh accessible
+    vm_up_check 10021
+    vm_up_check 10022
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -318,8 +382,8 @@ case $TESTCASE in
       test_print_trc "TDX KVM host /proc/meminfo tdx field is $tdx_meminfo after TDVMs lauched"
     fi
     # shutdown TDVM1
-    vm_shutdown 10021 || die "Failed to shutdown TDVM1"
-    sleep 10
+    vm_shutdown 10021 "td_pamt" || die "Failed to shutdown TDVM1"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is not zero since TDVM2 is still alive
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -328,8 +392,8 @@ case $TESTCASE in
       test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM1 shutdown"
     fi
     # shutdown TDVM2
-    vm_shutdown 10022 || die "Failed to shutdown TDVM2"
-    sleep 10
+    vm_shutdown 10022 "td_pamt" || die "Failed to shutdown TDVM2"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -343,9 +407,13 @@ case $TESTCASE in
   8)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_8/
     # launch legacy VM with 1 vCPU, 1GB memory and port 10021
-    ./qemu_legacy.sh 1 1 10021 &
-    sleep 10
+    ./qemu_legacy.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_8/vm.1.log 2>&1 &
+    test_print_trc "legacy VM launched, VM boot log at /tmp/tdpamt_8/vm.1.log"
+    # wait for legacy VM fully launched for ssh accessible
+    vm_up_check 10021
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -355,8 +423,8 @@ case $TESTCASE in
       please check host kernel pamt enabling setup."
     fi
     # shutdown legacy VM
-    vm_shutdown 10021 || die "Failed to shutdown legacy VM"
-    sleep 10
+    vm_shutdown 10021 "vm" || die "Failed to shutdown legacy VM"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -370,12 +438,17 @@ case $TESTCASE in
   9)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_9/
     # launch TDVM with 1 vCPU, 1GB memory and port 10021
-    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 &
+    ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_9/tdvm.1.log 2>&1 &
+    test_print_trc "tdvm launched, VM boot log at /tmp/tdpamt_9/tdvm.1.log"
     # launch legacy VM with 1 vCPU, 1GB memory and port 10022
-    ./qemu_legacy.sh 1 1 10022 &
-    # wait for TDVM and legacy VM to be launched
-    sleep 10
+    ./qemu_legacy.sh 1 1 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_9/vm.1.log 2>&1 &
+    test_print_trc "legacy VM launched, VM boot log at /tmp/tdpamt_9/vm.1.log"
+    # wait for TDVM and legacy VM fully launched for ssh accessible
+    vm_up_check 10021
+    vm_up_check 10022
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -385,8 +458,8 @@ case $TESTCASE in
       test_print_trc "TDX KVM host /proc/meminfo tdx field is $tdx_meminfo after TDVM lauched"
     fi
     # shutdown TDVM
-    vm_shutdown 10021 || die "Failed to shutdown TDVM"
-    sleep 10
+    vm_shutdown 10021 "td_pamt" || die "Failed to shutdown TDVM"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -396,8 +469,8 @@ case $TESTCASE in
       please check host kernel pamt enabling setup."
     fi
     # shutdown legacy VM
-    vm_shutdown 10022 || die "Failed to shutdown legacy VM"
-    sleep 10
+    vm_shutdown 10022 "vm" || die "Failed to shutdown legacy VM"
+    sleep 2
     # check if TDX KVM host /proc/meminfo tdx field value is zero
     tdx_meminfo=$(pamt_meminfo_tdx)
     if [ "$tdx_meminfo" -eq 0 ]; then
@@ -411,15 +484,20 @@ case $TESTCASE in
   10)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_10/
     # 10 repeat times while loop
     for i in {1..10}; do
       test_print_trc "Start TDVM1 and TDVM2 launch and dpamt check, repeat times: $i"
       # launch TDVM1 with 1 vCPU, 1GB memory and port 10021
-      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_10/tdvm.1.log 2>&1 &
+      test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_10/tdvm.1.log"
       # launch TDVM2 with 1 vCPU, 96GB memory and port 10022
-      ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 > /dev/null 2>&1 &
-      # wait for TDVM1 and TDVM2 to be launched
-      sleep 60
+      ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_10/tdvm.2.log 2>&1 &
+      test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_10/tdvm.2.log"
+      # wait for all TDVMs fully launched for ssh accessible
+      vm_up_check 10021
+      vm_up_check 10022
       # check if TDX KVM host /proc/meminfo tdx field value is zero
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
@@ -429,8 +507,8 @@ case $TESTCASE in
         test_print_trc "TDX KVM host /proc/meminfo tdx field is $tdx_meminfo after TDVMs lauched"
       fi
       # shutdown TDVM1
-      vm_shutdown 10021 || die "Failed to shutdown TDVM1"
-      sleep 10
+      vm_shutdown 10021 "td_pamt" || die "Failed to shutdown TDVM1"
+      sleep 2
       # check if TDX KVM host /proc/meminfo tdx field value is not zero since TDVM2 is still alive
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
@@ -439,8 +517,8 @@ case $TESTCASE in
         test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM1 shutdown"
       fi
       # shutdown TDVM2
-      vm_shutdown 10022 || die "Failed to shutdown TDVM2"
-      sleep 10
+      vm_shutdown 10022 "td_pamt" || die "Failed to shutdown TDVM2"
+      sleep 2
       # check if TDX KVM host /proc/meminfo tdx field value is zero
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
@@ -456,21 +534,32 @@ case $TESTCASE in
   11)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_11/
     # 10 repeat times while loop
     for i in {1..10}; do
       test_print_trc "Start TDVM1, TDVM2, TDVM3, TDVM4 and TDVM5 launch and dpamt check, repeat times: $i"
       # launch TDVM1 with 1 vCPU, 1GB memory and port 10021
-      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_11/tdvm.1.log 2>&1 &
+      test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_11/tdvm.1.log"
       # launch TDVM2 with 1 vCPU, 4GB memory and port 10022
-      ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_11/tdvm.2.log 2>&1 &
+      test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_11/tdvm.2.log"
       # launch TDVM3 with 1 vCPU, 8GB memory and port 10023
-      ./qemu_dpamt.sh 1 8 10023 $GUEST_IMAGE_3 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 8 10023 $GUEST_IMAGE_3 > /tmp/tdpamt_11/tdvm.3.log 2>&1 &
+      test_print_trc "tdvm 3 launched, VM boot log at /tmp/tdpamt_11/tdvm.3.log"
       # launch TDVM4 with 1 vCPU, 32GB memory and port 10024
-      ./qemu_dpamt.sh 1 32 10024 $GUEST_IMAGE_4 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 32 10024 $GUEST_IMAGE_4 > /tmp/tdpamt_11/tdvm.4.log 2>&1 &
+      test_print_trc "tdvm 4 launched, VM boot log at /tmp/tdpamt_11/tdvm.4.log"
       # launch TDVM5 with 1 vCPU, 96GB memory and port 10025
-      ./qemu_dpamt.sh 1 96 10025 $GUEST_IMAGE_5 > /dev/null 2>&1 &
-      # wait for all TDVMs to be launched
-      sleep 60
+      ./qemu_dpamt.sh 1 96 10025 $GUEST_IMAGE_5 > /tmp/tdpamt_11/tdvm.5.log 2>&1 &
+      test_print_trc "tdvm 5 launched, VM boot log at /tmp/tdpamt_11/tdvm.5.log"
+      # wait for all TDVMs fully launched for ssh accessible
+      vm_up_check 10021
+      vm_up_check 10022
+      vm_up_check 10023
+      vm_up_check 10024
+      vm_up_check 10025
       # check if TDX KVM host /proc/meminfo tdx field value is zero
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
@@ -480,8 +569,8 @@ case $TESTCASE in
         test_print_trc "TDX KVM host /proc/meminfo tdx field is $tdx_meminfo after all TDVMs lauched"
       fi
       # shutdown all TDVMs one by one
-      vm_shutdown 10021 || die "Failed to shutdown TDVM1"
-      sleep 10
+      vm_shutdown 10021 "td_pamt" || die "Failed to shutdown TDVM1"
+      sleep 2
       # check if TDX KVM host /proc/meminfo tdx field value is not zero since TDVM2, TDVM3, TDVM4 and TDVM5 are still alive
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
@@ -489,32 +578,32 @@ case $TESTCASE in
       else
         test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM1 shutdown"
       fi
-      vm_shutdown 10022 || die "Failed to shutdown TDVM2"
-      sleep 10
+      vm_shutdown 10022 "td_pamt" || die "Failed to shutdown TDVM2"
+      sleep 2
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
         die "TDX KVM host /proc/meminfo tdx field value is zero after TDVM2 shutdown"
       else
         test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM2 shutdown"
       fi
-      vm_shutdown 10023 || die "Failed to shutdown TDVM3"
-      sleep 10
+      vm_shutdown 10023 "td_pamt" || die "Failed to shutdown TDVM3"
+      sleep 2
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
         die "TDX KVM host /proc/meminfo tdx field value is zero after TDVM3 shutdown"
       else
         test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM3 shutdown"
       fi
-      vm_shutdown 10024 || die "Failed to shutdown TDVM4"
-      sleep 10
+      vm_shutdown 10024 "td_pamt" || die "Failed to shutdown TDVM4"
+      sleep 2
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
         die "TDX KVM host /proc/meminfo tdx field value is zero after TDVM4 shutdown"
       else
         test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM4 shutdown"
       fi
-      vm_shutdown 10025 || die "Failed to shutdown TDVM5"
-      sleep 10
+      vm_shutdown 10025 "td_pamt" || die "Failed to shutdown TDVM5"
+      sleep 2
       # check if TDX KVM host /proc/meminfo tdx field value is zero
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
@@ -529,15 +618,20 @@ case $TESTCASE in
   12)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_12/
     # 100 repeat times while loop
     for i in {1..100}; do
       test_print_trc "Start TDVM1 and TDVM2 launch and dpamt check, repeat times: $i"
       # launch TDVM1 with 1 vCPU, 1GB memory and port 10021
-      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_12/tdvm.1.log 2>&1 &
+      test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_12/tdvm.1.log"
       # launch TDVM2 with 1 vCPU, 96GB memory and port 10022
-      ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 > /dev/null 2>&1 &
-      # wait for TDVM1 and TDVM2 to be launched
-      sleep 60
+      ./qemu_dpamt.sh 1 96 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_12/tdvm.2.log 2>&1 &
+      test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_12/tdvm.2.log"
+      # wait for all TDVMs fully launched for ssh accessible
+      vm_up_check 10021
+      vm_up_check 10022
       # check if TDX KVM host /proc/meminfo tdx field value is zero
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
@@ -547,8 +641,8 @@ case $TESTCASE in
         test_print_trc "TDX KVM host /proc/meminfo tdx field is $tdx_meminfo after TDVMs lauched"
       fi
       # shutdown TDVM1
-      vm_shutdown 10021 || pkill td_pamt_10021 || die "Failed to shutdown TDVM1"
-      sleep 10
+      vm_shutdown 10021 "td_pamt" || die "Failed to shutdown TDVM1"
+      sleep 2
       # check if TDX KVM host /proc/meminfo tdx field value is not zero since TDVM2 is still alive
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
@@ -557,8 +651,8 @@ case $TESTCASE in
         test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM1 shutdown"
       fi
       # shutdown TDVM2
-      vm_shutdown 10022 || pkill td_pamt_10022 || die "Failed to shutdown TDVM2"
-      sleep 10
+      vm_shutdown 10022 "td_pamt" || die "Failed to shutdown TDVM2"
+      sleep 2
       # check if TDX KVM host /proc/meminfo
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
@@ -574,21 +668,32 @@ case $TESTCASE in
   13)
     tdx_basic_check;
     pamt_basic_check;
+    # create VM launching log dir under /tmp/
+    mkdir -p /tmp/tdpamt_13/
     # 100 repeat times while loop
     for i in {1..100}; do
       test_print_trc "Start TDVM1, TDVM2, TDVM3, TDVM4 and TDVM5 launch and dpamt check, repeat times: $i"
       # launch TDVM1 with 1 vCPU, 1GB memory and port 10021
-      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 1 10021 $GUEST_IMAGE_1 > /tmp/tdpamt_13/tdvm.1.log 2>&1 &
+      test_print_trc "tdvm 1 launched, VM boot log at /tmp/tdpamt_13/tdvm.1.log"
       # launch TDVM2 with 1 vCPU, 4GB memory and port 10022
-      ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 4 10022 $GUEST_IMAGE_2 > /tmp/tdpamt_13/tdvm.2.log 2>&1 &
+      test_print_trc "tdvm 2 launched, VM boot log at /tmp/tdpamt_13/tdvm.2.log"
       # launch TDVM3 with 1 vCPU, 8GB memory and port 10023
-      ./qemu_dpamt.sh 1 8 10023 $GUEST_IMAGE_3 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 8 10023 $GUEST_IMAGE_3 > /tmp/tdpamt_13/tdvm.3.log 2>&1 &
+      test_print_trc "tdvm 3 launched, VM boot log at /tmp/tdpamt_13/tdvm.3.log"
       # launch TDVM4 with 1 vCPU, 32GB memory and port 10024
-      ./qemu_dpamt.sh 1 32 10024 $GUEST_IMAGE_4 > /dev/null 2>&1 &
+      ./qemu_dpamt.sh 1 32 10024 $GUEST_IMAGE_4 > /tmp/tdpamt_13/tdvm.4.log 2>&1 &
+      test_print_trc "tdvm 4 launched, VM boot log at /tmp/tdpamt_13/tdvm.4.log"
       # launch TDVM5 with 1 vCPU, 96GB memory and port 10025
-      ./qemu_dpamt.sh 1 96 10025 $GUEST_IMAGE_5 > /dev/null 2>&1 &
-      # wait for all TDVMs to be launched
-      sleep 60
+      ./qemu_dpamt.sh 1 96 10025 $GUEST_IMAGE_5 > /tmp/tdpamt_13/tdvm.5.log 2>&1 &
+      test_print_trc "tdvm 5 launched, VM boot log at /tmp/tdpamt_13/tdvm.5.log"
+      # wait for all TDVMs fully launched for ssh accessible
+      vm_up_check 10021
+      vm_up_check 10022
+      vm_up_check 10023
+      vm_up_check 10024
+      vm_up_check 10025
       # check if TDX KVM host /proc/meminfo tdx field value is zero
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
@@ -598,8 +703,8 @@ case $TESTCASE in
         test_print_trc "TDX KVM host /proc/meminfo tdx field is $tdx_meminfo after all TDVMs lauched"
       fi
       # shutdown all TDVMs one by one
-      vm_shutdown 10021 || pkill td_pamt_10021 || die "Failed to shutdown TDVM1"
-      sleep 10
+      vm_shutdown 10021 "td_pamt" || die "Failed to shutdown TDVM1"
+      sleep 2
       # check if TDX KVM host /proc/meminfo tdx field value is not zero since TDVM2, TDVM3, TDVM4 and TDVM5 are still alive
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
@@ -607,32 +712,32 @@ case $TESTCASE in
       else
         test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM1 shutdown"
       fi
-      vm_shutdown 10022 || pkill td_pamt_10022 || die "Failed to shutdown TDVM2"
-      sleep 10
+      vm_shutdown 10022 "td_pamt" || die "Failed to shutdown TDVM2"
+      sleep 2
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
         die "TDX KVM host /proc/meminfo tdx field value is zero after TDVM2 shutdown"
       else
         test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM2 shutdown"
       fi
-      vm_shutdown 10023 || pkill td_pamt_10023 || die "Failed to shutdown TDVM3"
-      sleep 10
+      vm_shutdown 10023 "td_pamt" || die "Failed to shutdown TDVM3"
+      sleep 2
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
         die "TDX KVM host /proc/meminfo tdx field value is zero after TDVM3 shutdown"
       else
         test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM3 shutdown"
       fi
-      vm_shutdown 10024 || pkill td_pamt_10024 || die "Failed to shutdown TDVM4"
-      sleep 10
+      vm_shutdown 10024 "td_pamt" || die "Failed to shutdown TDVM4"
+      sleep 2
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
         die "TDX KVM host /proc/meminfo tdx field value is zero after TDVM4 shutdown"
       else
         test_print_trc "TDX KVM host /proc/meminfo tdx field value is $tdx_meminfo after TDVM4 shutdown"
       fi
-      vm_shutdown 10025 || pkill td_pamt_10025 || die "Failed to shutdown TDVM5"
-      sleep 10
+      vm_shutdown 10025 "td_pamt" || die "Failed to shutdown TDVM5"
+      sleep 2
       # check if TDX KVM host /proc/meminfo tdx field value is zero
       tdx_meminfo=$(pamt_meminfo_tdx)
       if [ "$tdx_meminfo" -eq 0 ]; then
