@@ -23,13 +23,11 @@ BIOS_IMAGE="/ovmf/in_use/OVMF.xx_yy_zz.fd"
 # QEMU
 QEMU_IMAGE="/qemu/in_use/qemu-system-x86_64.xx_yy_zz"
 
-# GUEST_IMAGE
-GUEST_IMAGE="/guest/os/image/in_use/guest-os.xx.img"
-
 # Common test parameter
 CPUS=$1
 MEM=$2
 PORT=$3
+GUEST_IMAGE=$4
 CID=$(( "$PORT" - 10000 ))
 TELNET=$(( "$PORT" - 1000 ))
 
