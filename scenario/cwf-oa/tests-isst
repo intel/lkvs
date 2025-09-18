@@ -1,0 +1,61 @@
+# This file collects the isst cases for Intel® server platforms
+# here assume the platform supports SST perf profile level 0,3,4
+# user can adjust the case lists based on the actual SUT SST
+# perf profile level support status
+# @hw_dep:
+# @other_dep:
+# @other_warn: which turbostat 2>/dev/null @ turbostat tool is required, please get it from the latest upstream kernel-tools
+# @other_warn: which stress 2>/dev/null @ stress tool is required, please install stress-ng.x86_64 and run command: ln -s /usr/bin/stress-ng /usr/bin/stress
+# @other_warn: which intel-speed-select 2>/dev/null @ intel-speed-select tool is required, please get it from the latest upstream kernel-tools
+
+intel_sst.sh -t isst_pp_config_enable_status
+intel_sst.sh -t isst_legacy_driver_sysfs
+intel_sst.sh -t isst_cap
+intel_sst.sh -t isst_unlock_status
+intel_sst.sh -t isst_pp_config_level1_config
+intel_sst.sh -t isst_pp_config_level2_config
+intel_sst.sh -t isst_pp_config_level3_config
+intel_sst.sh -t isst_pp_config_level4_config
+intel_sst.sh -t isst_pp_config_level1_config_cgroup
+intel_sst.sh -t isst_pp_config_level2_config_cgroup
+intel_sst.sh -t isst_pp_config_level3_config_cgroup
+intel_sst.sh -t isst_pp_config_level4_config_cgroup
+intel_sst.sh -t isst_base_freq_pp_level3_change
+intel_sst.sh -t isst_base_freq_pp_level4_change
+intel_sst.sh -t isst_cp_enable_prop_type
+intel_sst.sh -t isst_cp_set_config_clos_min_0
+intel_sst.sh -t isst_cp_set_config_clos_min_1
+intel_sst.sh -t isst_cp_set_config_clos_min_2
+intel_sst.sh -t isst_cp_set_config_clos_min_3
+intel_sst.sh -t isst_cp_set_config_clos_max_0
+intel_sst.sh -t isst_cp_set_config_clos_max_1
+intel_sst.sh -t isst_cp_set_config_clos_max_2
+intel_sst.sh -t isst_cp_set_config_clos_max_3
+intel_sst.sh -t isst_cp_set_config_clos_prop_0
+intel_sst.sh -t isst_cp_set_config_clos_prop_1
+intel_sst.sh -t isst_cp_set_config_clos_prop_2
+intel_sst.sh -t isst_cp_set_config_clos_prop_3
+intel_sst.sh -t isst_cp_assoc_set_get_clos_0
+intel_sst.sh -t isst_cp_assoc_set_get_clos_1
+intel_sst.sh -t isst_cp_assoc_set_get_clos_2
+intel_sst.sh -t isst_cp_assoc_set_get_clos_3
+intel_sst.sh -t isst_cp_max_cpu_assoc_set_get_clos_0
+intel_sst.sh -t isst_cp_max_cpu_assoc_set_get_clos_1
+intel_sst.sh -t isst_cp_max_cpu_assoc_set_get_clos_2
+intel_sst.sh -t isst_cp_max_cpu_assoc_set_get_clos_3
+intel_sst.sh -t isst_cp_disable_prop_type
+intel_sst.sh -t isst_cp_enable_ordered_type
+intel_sst.sh -t isst_cp_disable_ordered_type
+intel_sst.sh -t isst_bf_baseline_freq_test
+intel_sst.sh -t isst_hp_bf_freq_test_pp_level0
+intel_sst.sh -t isst_hp_bf_freq_test_pp_level3
+intel_sst.sh -t isst_hp_bf_freq_test_pp_level4
+intel_sst.sh -t isst_hp_bf_freq_pp_level0_orderred_type_test
+intel_sst.sh -t isst_hp_bf_freq_pp_level3_orderred_type_test
+intel_sst.sh -t isst_hp_bf_freq_pp_level4_orderred_type_test
+intel_sst.sh -t isst_hp_tf_freq_test_pp_level0
+intel_sst.sh -t isst_hp_tf_freq_test_pp_level3
+intel_sst.sh -t isst_hp_tf_freq_test_pp_level4
+intel_sst.sh -t isst_hp_tf_freq_pp_level0_ordered_type_test
+intel_sst.sh -t isst_hp_tf_freq_pp_level3_ordered_type_test
+intel_sst.sh -t isst_hp_tf_freq_pp_level4_ordered_type_test
