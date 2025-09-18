@@ -42,6 +42,11 @@ More details please refer to following.
 ## KVM Features
 (TODO)
 
+## Scenario
+it's a collection of specific test files selected for particular scenario, for example, tests designed for GraniteRapids + OpenEuler OS platform:
+  * [scenario_file](scenario/gnr-oe)
+refer to the [scenario documentation](/scenario/README.md) for more details
+
 # Report a problem
 
 Submit an [issue](https://github.com/intel/lkvs/issues) or initiate a discussion.
