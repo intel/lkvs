@@ -8,15 +8,20 @@ FRED architecture defines simple new transitions that change privilege level (ri
 
 • Improve software robustness by ensuring that event delivery establishes the full supervisor context and that event return establishes the full user context.
 
-At the moment, it includes two tests: 
-1) Check FRED is enabled or not through checking cr4 32 bit. 1 represents enable.
-2) Doubile fault trigger. It will trigger double fault intensively to see whether double fault will be detected. Its main logic is that changing RSP to 4096 which is a invalid RSP value before kernel handles a page fault, then a double fault will be triggered when kernel handles the first page fault.
 ```
 
 ## Usage
 ```
-make
-insmod fred_test_driver
-echo "fred_enable" > /dev/fred_test_device This will trigger the FRED enable checking test.
-echo "double_fault" > /dev/fred_test_device This will trigger double fault test and kernel will crash.
+Run case as
+./fred_test.sh -t <case name>
 ```
+You also can run the cases together with runtests command, e.g.
+
+```
+cd ..
+./runtests -f fred/tests -o logfile
+```
+
+## Expected result
+
+All test results should show pass, no fail.
