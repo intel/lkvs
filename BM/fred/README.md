@@ -11,8 +11,14 @@ FRED architecture defines simple new transitions that change privilege level (ri
 ```
 
 ## Usage
+Before executing the case, make the BM folder
 ```
-Run case as
+cd ../
+make
+```
+Then run case as
+
+```
 ./fred_test.sh -t <case name>
 ```
 You also can run the cases together with runtests command, e.g.

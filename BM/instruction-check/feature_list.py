@@ -225,6 +225,14 @@ feature_list = {
         "cpuid": ['7', '0', '1', '0', 'd', '10'],
         "platforms": {"CWF"}
     },
+    "FRED": {
+        "cpuid": ['7', '0', '1', '0', 'a', '17'],
+        "platforms": {"CWF"}
+    },
+    "LKGS": {
+        "cpuid": ['7', '0', '1', '0', 'a', '18'],
+        "platforms": {"CWF"}
+    },
     "PREFETCHI": {
         "cpuid": ['7', '0', '1', '0', 'd', '14'],
         "platforms": {"GNR"}
