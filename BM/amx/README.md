@@ -24,8 +24,8 @@ It will be checked if the result is correct or not.
 
     To compile,
     for amx_bf16, amx_int8 test:  
-    $ make
-    for extra amx_fp16 test:
+    $ make  
+    for extra amx_fp16 test:  
     $ make fp16
 
     To clean,  

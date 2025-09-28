@@ -18,21 +18,18 @@
 #      5: break by futex
 #  -t, --thread-count [Should not be less than 1]
 #  -c, --cycle-number [Should not be less than 1]
-#  -i, --instruction-type [0:TDPBF16PS 1:TDPBSSD 2:TDPBSUD 3:TDPBUSD 4:TDPBUUD 5:TDPFP16PS]
+#  -i, --instruction-type [0:TDPBF16PS 1:TDPBSSD 2:TDPBSUD 3:TDPBUSD 4:TDPBUUD]
 
+# stress tests on cycles
 tmul -b 4 -t 10 -c 100000 -i 0
 tmul -b 4 -t 10 -c 100000 -i 1
 tmul -b 4 -t 10 -c 100000 -i 2
 tmul -b 4 -t 10 -c 100000 -i 3
 tmul -b 4 -t 10 -c 100000 -i 4
-# amx_fp16 instruction based tests
-tmul -b 4 -t 10 -c 100000 -i 5
 
-# stress tests
+# stress tests on threads
 tmul -b 1 -t 10000 -c 10 -i 0
 tmul -b 1 -t 10000 -c 10 -i 1
 tmul -b 1 -t 10000 -c 10 -i 2
 tmul -b 1 -t 10000 -c 10 -i 3
 tmul -b 1 -t 10000 -c 10 -i 4
-# amx_fp16 instruction based tests
-tmul -b 1 -t 10000 -c 10 -i 5
