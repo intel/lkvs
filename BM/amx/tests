@@ -18,7 +18,7 @@
 #      5: break by futex
 #  -t, --thread-count [Should not be less than 1]
 #  -c, --cycle-number [Should not be less than 1]
-#  -i, --instruction-type [0:TDPBF16PS 1:TDPBSSD 2:TDPBSUD 3:TDPBUSD 4:TDPBUUD 5:TDPFP16PS]
+#  -i, --instruction-type [0:TDPBF16PS 1:TDPBSSD 2:TDPBSUD 3:TDPBUSD 4:TDPBUUD]
 
 # functional tests
 tmul -b 0 -t 10 -c 10 -i 0
@@ -46,4 +46,3 @@ tmul -b 1 -t 10 -c 10 -i 4
 tmul -b 2 -t 10 -c 10 -i 4
 tmul -b 3 -t 10 -c 10 -i 4
 tmul -b 5 -t 10 -c 10 -i 4
-# amx_fp16 instruction based tests
