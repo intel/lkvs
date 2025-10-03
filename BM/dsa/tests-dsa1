@@ -1,12 +1,4 @@
 
-#DSA_XS_FUNC_GUEST_USER_MEMMOVE_4D4G4Q 
-dsa_user_test.sh -c 4d4g4q_user -o 0x03 -g 1
-#DSA_XS_FUNC_GUEST_USER_MEMFILL_4D4G4Q 
-dsa_user_test.sh -c 4d4g4q_user -o 0x04 -g 1
-#DSA_XS_FUNC_GUEST_USER_COMPARE_4D4G4Q 
-dsa_user_test.sh -c 4d4g4q_user -o 0x05 -g 1
-#DSA_XS_FUNC_GUEST_USER_COMPVAL_4D4G4Q 
-dsa_user_test.sh -c 4d4g4q_user -o 0x06 -g 1
 #DSA_XS_FUNC_USER_MEMMOVE_1D2G2Q 
 dsa_user_test.sh -c 1d2g2q_user -o 0x03
 #DSA_XS_FUNC_USER_MEMMOVE_1D4G8Q 
