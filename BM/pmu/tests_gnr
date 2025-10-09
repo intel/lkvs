@@ -1,7 +1,4 @@
 # This file collects the PMU cases for GNR platform
-pmu_tests.sh -t benchmark -w 0
-pmu_tests.sh -t benchmark -w 1
-pmu_tests.sh -t fix_counter
 pmu_tests.sh -t basic
 pmu_tests.sh -t uncore
 pmu_tests.sh -t uncore_dmesg

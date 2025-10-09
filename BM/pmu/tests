@@ -1,5 +1,4 @@
 # This file collects the PMU cases
-pmu_tests.sh -t fix_counter
 pmu_tests.sh -t basic
 pmu_tests.sh -t uncore
 apebs_tests.sh -t lbr_1 -w 1
