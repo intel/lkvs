@@ -9,10 +9,12 @@ that cause only minimal performance perturbation to the software being traced.
 Need prepare intel-pt.h and libipt.so for building PT related cases.
 You can get them in https://github.com/intel/libipt.
 
-## Usage
-
-Need libipt.so.2 and add it into LD_LIBRARY_PATH before running PT cases.
-You can build libipt.so.2 in https://github.com/intel/libipt.
+1. git clone https://github.com/intel/libipt
+2. cd libipt
+3. mkdir build && cd build
+4. cmake ../
+5. make
+6. make install
 
 ```
 # Disable branch and check no TIP/FUP/TNT.
