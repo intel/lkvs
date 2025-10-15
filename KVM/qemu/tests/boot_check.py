@@ -7,6 +7,8 @@
 #
 # History:  July. 2024 - Xudong Hao - creation
 
+from avocado.utils import cpu
+from virttest import env_process
 from virttest import error_context
 
 
@@ -22,7 +24,16 @@ def run(test, params, env):
     :param params: Dictionary with the test parameters
     :param env: Dictionary with test environment.
     """
-    vm = env.get_vm(params["main_vm"])
+    params["start_vm"] = 'yes'
+    if (params.get("vm_secure_guest_type") is not None) and (params['vm_secure_guest_type'] == 'tdx'):
+        # TD can not boot up with vCPU number larger than host pCPU
+        host_cpu = cpu.online_count()
+        if params.get_numeric("smp") > host_cpu:
+            test.cancel("Platform doesn't support to run this test")
+
+    vm_name = params['main_vm']
+    env_process.preprocess_vm(test, params, env, vm_name)
+    vm = env.get_vm(vm_name)
     vm.verify_alive()
     timeout = params.get_numeric("login_timeout", 240)
     session = vm.wait_for_login(timeout=timeout)
