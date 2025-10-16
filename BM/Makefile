@@ -31,11 +31,13 @@ all:
 		fi					\
 	done
 	cat $(MAKE_LKVS_LOG)
-ifeq ($(shell cat $(MAKE_LKVS_LOG)),)
-	@exit 0
-else
-	@exit 2
-endif
+	@if [ -s ${MAKE_TOOLS_LOG} ]; then \
+		echo "Some subfolder failed to build"; \
+		exit 2; \
+	else \
+		echo "All subfolder built successfully"; \
+		exit 0; \
+	fi
 
 clean:
 	@for dir in $(SUBDIRS); do 				\
