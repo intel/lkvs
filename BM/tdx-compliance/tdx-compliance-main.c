@@ -349,7 +349,7 @@ static u64 get_cr0(void)
 {
 	u64 cr0;
 
-	asm volatile("mov %%cr0,%0\n\t" : "=r" (cr0) : __FORCE_ORDER);
+	asm volatile("mov %%cr0,%0\n\t" : "=r" (cr0));
 
 	return cr0;
 }
@@ -358,7 +358,7 @@ static u64 get_cr4(void)
 {
 	u64 cr4;
 
-	asm volatile("mov %%cr4,%0\n\t" : "=r" (cr4) : __FORCE_ORDER);
+	asm volatile("mov %%cr4,%0\n\t" : "=r" (cr4));
 
 	return cr4;
 }
