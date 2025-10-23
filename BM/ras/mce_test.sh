@@ -39,36 +39,36 @@ mce_test() {
   apei-inj)
     load_edac_driver
     cd mce-test/cases/function/apei-inj/
-    sh runtest.sh
+    bash runtest.sh
     ;;
   core_recovery_ifu)
     cd mce-test/cases/function/core_recovery/
-    sh runtest_ifu.sh
+    bash runtest_ifu.sh
     ;;
   core_recovery_dcu)
     cd mce-test/cases/function/core_recovery/
-    sh runtest_dcu.sh
+    bash runtest_dcu.sh
     ;;
   edac)
     cd mce-test/cases/function/edac/
-    sh runtest.sh
+    bash runtest.sh
     ;;
   einj-ext)
     load_edac_driver
     cd mce-test/cases/function/einj-ext/
-    sh runtest.sh
+    bash runtest.sh
     ;;
   emca-inj)
     cd mce-test/cases/function/emca-inj/
-    sh runtest.sh
+    bash runtest.sh
     ;;
   erst-inject)
     cd mce-test/cases/function/erst-inject/
-    sh runtest.sh
+    bash runtest.sh
     ;;
   pfa)
     cd mce-test/cases/function/pfa/
-    sh runtest.sh
+    bash runtest.sh
     ;;
   esac
   mce_check_result $TEST_SCENARIO $?
