@@ -47,9 +47,10 @@ def avocado_install(test, params, guest_bm_path, vm, session):
     if "ubuntu" in vm.get_distro().lower():
         env_cmd = "python3 -m venv /root/.local/"
         session.cmd_status(env_cmd)
-        install_cmd = "/root/.local/bin/pip install avocado-framework"
+        pip_bin = "/root/.local/bin/pip"
     else:
-        install_cmd = "pip install --user avocado-framework"
+        pip_bin = "pip"
+    install_cmd = "%s list | grep avocado || %s install avocado-framework" % (pip_bin, pip_bin)
     status = session.cmd_status(install_cmd)
     if status:
         raise exceptions.TestError("Test framework installation failed.")
