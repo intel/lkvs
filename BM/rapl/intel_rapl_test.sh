@@ -466,9 +466,9 @@ create_test_load() {
 # Clear all workload from system
 clear_all_test_load() {
   for load in "stress" "$GPU_LOAD"; do
-    for pid in $(pgrep "$load"); do
-      do_cmd "kill -9 $pid"
-    done
+    if pgrep "$load" &>/dev/null; then
+      do_cmd "pkill -9 $load"
+    fi
   done
 }
 
