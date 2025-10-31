@@ -340,6 +340,16 @@ time_full_test() {
 # Function to record and filter PT's branch events, cycles, and instructions
 # while executing uname command
 pebs_test() {
+  # Check the supportnness of PEBS
+  # When both CPUID.07H.0.EBX[25] and IA32_PERF_CAPABILITIES.PEBS_OUTPUT_PT_AVAIL
+  # (bit[16] of MSR 0x345) are set as 1, then PEBS extensions would be supported by CPU
+  do_cmd "cpuid_check 7 0 0 0 b 25"
+  cpuid_ret=$?
+  bit16=$(rdmsr 0x345 -f 16:16)
+  if [[ cpuid_ret -eq 0 || bit16 -eq 0 ]] then
+    block_test "PEBS is not supported in this platform"
+  fi
+
   perf record -e '{intel_pt/branch=0/,cycles/aux-output/ppp,instructions}' -c 128 -m,4 uname >&$perf_log
   result_check
   sleep 1
