@@ -158,12 +158,14 @@ block_test() {
   exit 2
 }
 
+# Wrapper function to indicate a test is not applicable (NA) to be executed.
+#   $1: Message to explain why the test is not applicable
 skip_test() {
   caller_info="${BASH_SOURCE[1]##*/}:${BASH_LINENO[0]}:${FUNCNAME[1]}()"
   test_print_wrg "skip_test() is called by $caller_info"
   test_print_wrg "SKIPPING TEST: $*"
   exec_teardown
-  exit 0
+  exit 32
 }
 
 # Wrapper function to mark a test as not applicable,
