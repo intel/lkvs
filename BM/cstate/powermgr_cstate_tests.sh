@@ -453,7 +453,7 @@ perf_server_cstate_list() {
   tc_out=$(turbostat -q --show idle sleep 1 2>&1)
   [[ -n "$tc_out" ]] || block_test "Did not get turbostat log"
   test_print_trc "turbostat tool output: $tc_out"
-  tc_out_cstate_list=$(echo "$tc_out" | grep -E "^POLL")
+  tc_out_cstate_list=$(echo "$tc_out" | grep -E "POLL")
 
   perf_cstates=$(perf list | grep cstate | grep "Kernel PMU event")
   [[ -n "$perf_cstates" ]] || block_test "Did not get cstate events by perf list"
