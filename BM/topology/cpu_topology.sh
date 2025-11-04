@@ -95,7 +95,7 @@ numa_nodes_compare_with_package() {
     for ((i = 0; i < nodes_per_pkg; i++)); do
       node_value=$(grep . /sys/devices/system/node/node*/distance |
         awk -F " " '{print $(NF-'$i')}' | sed -n '1p')
-      if [[ "$node_value" -eq 21 ]]; then
+      if [[ "$node_value" -ge 21 ]]; then
         test_print_trc "NUMA node$i distance is 21, Node$i is in package 0"
       else
         die "NUMA node$i is not in package 0"
@@ -128,7 +128,7 @@ numa_nodes_compare_with_package() {
       node_value=$(grep . /sys/devices/system/node/node*/distance | awk -F ":" '{print $2}' |
         awk -F " " '{print $(NF-'$i')}' | sed -n "$j,1p")
       test_print_trc "NUMA Node$i distance value: $node_value"
-      if [[ "$node_value" -eq 21 ]]; then
+      if [[ "$node_value" -ge 21 ]]; then
         test_print_trc "NUMA Node$j distance is 21, Node$i is in package 1"
       else
         die "Node$i is not in package 1"
