@@ -9,3 +9,6 @@
 [submodule "BM/ras/ras-tools"]
 	path = BM/ras/ras-tools
 	url = https://git.kernel.org/pub/scm/linux/kernel/git/aegl/ras-tools.git
+[submodule "BM/ras/mcelog"]
+	path = BM/ras/mcelog
+	url = https://github.com/andikleen/mcelog.git
