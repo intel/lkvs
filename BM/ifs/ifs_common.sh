@@ -864,6 +864,12 @@ ifs_array_off_sib_test() {
   fi
   do_cmd "echo 0 | sudo tee /sys/devices/system/cpu/cpu${off_cpu}/online"
   do_cmd "echo $cpu > ${IFS_PATH}/${RUN_TEST}"
+  status_out=$(cat "$IFS_PATH"/"$STATUS")
+  if [[ "$status_out" == "$PASS" ]]; then
+    test_print_trc "IFS ARRAY off sibling cpu:$cpu test pass, status:$status_out"
+  else
+    die "IFS ARRAY off sibling cpu:$cpu test failed, status=$status_out"
+  fi
   # Online the offline cpu after test
   do_cmd "echo 1 | sudo tee /sys/devices/system/cpu/cpu${off_cpu}/online"
 
@@ -923,12 +929,12 @@ ifs_array_cpu_fullload_scan() {
     # Wait the cpu load 100%
     sleep 1
     echo "$cpu" > "$IFS_PATH"/"$RUN_TEST"
-    # Need to check echo > command return value
     ret="$?"
-    if [[ "$ret" -eq 0 ]]; then
-      test_print_trc "Run cpu:$cpu full load IFS ARRAY test pass:$ret"
+    status_out=$(cat "$IFS_PATH"/"$STATUS")
+    if [[ "$ret" -eq 0 && "$status_out" == "$PASS" ]]; then
+      test_print_trc "Run cpu:$cpu full load IFS ARRAY test pass:$ret, status:$status_out"
     else
-      die "Run cpu:$cpu full load IFS ARRAY test failed:$ret"
+      die "Run cpu:$cpu full load IFS ARRAY test failed: ret=$ret, status=$status_out"
     fi
     dmesg_common_check
     sleep 3
