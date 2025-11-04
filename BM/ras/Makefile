@@ -1,4 +1,4 @@
-SUBDIRS := mce-test ras-tools
+SUBDIRS := mce-test ras-tools mcelog
 
 .PHONY: all
 all: $(SUBDIRS)
