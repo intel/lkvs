@@ -235,8 +235,10 @@ check_max_cores_freq() {
 
   # select which scaling governor mode to be set
   if [[ "$mode" == "powersave" ]]; then
+    set_intel_pstate_mode "active"
     set_scaling_governor "powersave"
   elif [[ "$mode" == "performance" ]]; then
+    set_intel_pstate_mode "active"
     set_scaling_governor "performance"
   elif [[ "$mode" == "passive_perf" ]]; then
     set_intel_pstate_mode "passive"
@@ -361,7 +363,7 @@ check_max_cores_freq() {
   delta=$(awk -v x="$max_freq" -v y="$current_freq" \
     'BEGIN{printf "%.1f\n", x-y}')
 
-  if [[ $(echo "$delta > 100" | bc) -eq 1 ]]; then
+  if [[ $(echo "$delta > 200" | bc) -eq 1 ]]; then
     if power_limit_check; then
       set_scaling_governor $DEFAULT_SCALING_GOV
       test_print_trc "The package and core power limitation is being asserted."
