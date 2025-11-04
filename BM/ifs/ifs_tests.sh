@@ -324,6 +324,7 @@ test_ifs() {
       fi
       ;;
     "ifs_array_cpuran_fullload")
+      modprobe -r "$IFS_NAME"
       enable_ifs_trace
 
       for((i=1;i<=TIMES;i++)); do
