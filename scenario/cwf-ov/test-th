@@ -1,7 +1,0 @@
-# This file collects the th cases
-# Precondition:
-# Enable "0-sth.test" policy for TH.
-# For policy set test 
-th_test 1
-# For policy get test
-th_test 2

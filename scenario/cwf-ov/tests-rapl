@@ -1,1 +1,28 @@
-../../BM/rapl/tests-server
+# This file collects RAPL cases which can run against intel_rapl driver
+# on Intel® Architecture-based server platforms.
+# @hw_dep:
+# @other_dep: general_test.sh -t turbostat @ The latest 2024 version turbostat tool is required
+# @other_warn: which stress 2>/dev/null @ stress tool is required, please install stress-ng.x86_64 and run command: ln -s /usr/bin/stress-ng /usr/bin/stress
+# @other_warn: which perf 2>/dev/null @ perf tool is required, please install perf.x86_64 package
+# @other_warn: which rdmsr 2>/dev/null @ rdmsr tool is required, please install msr-tools package
+
+intel_rapl_test.sh -t check_sysfs
+intel_rapl_test.sh -t check_pkg_domain
+# intel_rapl_test.sh -t check_psys_domain
+intel_rapl_test.sh -t check_dram_domain
+intel_rapl_test.sh -t check_psys_domain_msr
+intel_rapl_test.sh -t check_pkg_domain_msr
+intel_rapl_test.sh -t check_pkg_power_limit_msr
+intel_rapl_test.sh -t check_pkg_energy_status
+intel_rapl_test.sh -t check_pkg_energy_status_with_workload
+intel_rapl_test.sh -t check_pkg_power_limit_75
+intel_rapl_test.sh -t check_pkg_power_limit_50
+intel_rapl_test.sh -t check_dram_energy_status
+intel_rapl_test.sh -t check_dram_energy_status_with_workload
+intel_rapl_test.sh -t check_rapl_control_after_power_limit_change
+intel_rapl_test.sh -t sysfs_perf_name_compare
+intel_rapl_test.sh -t sysfs_perf_energy_compare_workload_server
+intel_rapl_test.sh -t sysfs_turbostat_energy_compare_workload_server
+intel_rapl_test.sh -t rapl_control_enable_disable_pl1
+intel_rapl_test.sh -t rapl_control_enable_disable_pl2
+intel_rapl_test.sh -t rapl_control_enable_disable_pl4
