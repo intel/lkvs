@@ -405,7 +405,7 @@ cpus_vm_stress() {
 get_turbostat_log() {
   local turbostat_log=""
   columns="CPU,Busy%"
-  turbostat_log=$($PSTATE_TOOL/turbostat -q --show $columns -i 0.1 sleep 10 2>&1)
+  turbostat_log=$(turbostat -q --show $columns -i 0.1 sleep 10 2>&1)
   echo "$turbostat_log"
 }
 
