@@ -570,10 +570,12 @@ change_governor() {
   elif [ "$flag" = "performance" ] || [ "$flag" = "powersave" ]; then
     # Changing scaling_governor setting to the specified mode
     test_print_trc "Changing scaling_governor setting to $flag"
+    # Initialize array if not already initialized
+    GOVERNOR_STATES=()
     local current_governor
     for cpu in $cpus; do
       current_governor=$(cat "$CPU_SYSFS_PATH/$cpu/cpufreq/scaling_governor")
-      GOVERNOR_STATES+=" $current_governor"
+      GOVERNOR_STATES+=("$current_governor")
       echo "$flag" >"$CPU_SYSFS_PATH"/"$cpu"/cpufreq/scaling_governor
     done
   else
