@@ -172,7 +172,7 @@ set_scaling_governor() {
 set_intel_pstate_mode() {
   local mode=$1
 
-  do_cmd "echo passive > $CPU_PSTATE_SYSFS_PATH/status"
+  do_cmd "echo $mode > $CPU_PSTATE_SYSFS_PATH/status"
 }
 
 # This function is used to kill stress process if it is still running.
