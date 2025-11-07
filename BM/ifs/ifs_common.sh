@@ -53,6 +53,8 @@ IFS_DMESG_OFFLINE="Other thread could not join"
 # drivers/platform/x86/intel/ifs/core.c requirement as follows
 readonly SAPPHIRERAPIDS_X="8f"
 readonly EMERALDRAPIDS_X="cf"
+readonly INTEL_GRANITERAPIDS_X="ad"
+readonly INTEL_ATOM_DARKMONT_X="dd"
 
 readonly INTEL_FAM6="06"
 
@@ -194,10 +196,13 @@ check_cpu_ifs_support_interval_time()
     "$EMERALDRAPIDS_X")
       export INTERVAL_TIME=30;
       ;;
-    *)
-      # Set default interval time for other platforms
+    "$INTEL_GRANITERAPIDS_X")
       export INTERVAL_TIME=1;
-      echo -e "[$INFO] CPU FML:$FML model:0x$MODEL, default: 1s interval time"
+      ;;
+    *)
+      # For all other platforms, set interval to 0
+      export INTERVAL_TIME=0;
+      echo -e "[$INFO] CPU FML:$FML model:0x$MODEL, default: 0s interval time"
       ;;
   esac
 }
