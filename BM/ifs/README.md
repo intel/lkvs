@@ -1,42 +1,39 @@
-# IFS(In Field Scan) Test Cases
+# IFS(In-Field Scan) Test Cases
 
 ## Description
-IFS old name is SAF(Scan At Field ), now the old feature name "SAF" will not be
-used anymore and use the name "IFS" instead.
-IFS is a feature which allows software to periodically test for latent faults
-in non-array portions of the Core.
+In-Field Scan has a roadmap of capabilities that will be included on current and future processors. Scan-at-Field (SAF) and Array Built In Self Test (BIST) are the first two features within the In-Field Scan family, and both are available on 5th Gen Intel® Xeon® processors.
 
 For more explanation about IFS please see the link:
-https://docs.kernel.org/arch/x86/ifs.html
+https://www.intel.com/content/www/us/en/support/articles/000099537/processors/intel-xeon-processors.html
 
-## Usage
-1. Before test, IFS is disabled by default in BIOS, please enable IFS in BIOS setting:
-EDKII Menu – Socket Configuration – Security Configuration(or Processor Configuration) – Memory Encryption (TME) - Enable
-EDKII Menu – Socket Configuration – Security Configuration(or Processor Configuration) – Total Memory Encryption - Enable
-EDKII Menu – Socket Configuration – Security Configuration(or Processor Configuration) – SW Guard Extensions (SGX) - Enable
-EDKII Menu – Socket Configuration – Security Configuration(or Processor Configuration) – In Field Scan (IFS) – Enable SAF - Enable
-EDKII Menu – Socket Configuration – Security Configuration(or Processor Configuration) – In Field Scan (IFS) – Enable SBFT - choose "Enable SBFT and SGX"
+## Pre-requisite
+### Total Memory Encryption (TME)
+The SAF feature of IFS requires the processor to reserve secure memory for loading scan test images. The Array BIST feature does not have this requirement. The SAF flow is dependent on the platform's ability to access the Processor Reserve Memory Region (PRMRR). To enable the PRMRR, the Total Memory Encryption (TME) feature must be enabled in the BIOS.
 
-2. Please make sure ifs_0 scanned image ff-mm-ss-xx.scan files are placed in
+For BIOS setup references:
 ```
-/lib/firmware/intel/ifs_0 sysfs folder.
+Socket Configuration - Processor Configuration - Memory Encryption (TME)
+Socket Configuration - Processor Configuration - IFS - Enable SAF
 ```
-If there is no `/lib/firmware/intel/ifs_0` folder
-`mkdir -p /lib/firmware/intel/ifs_0` to create the folder.
+### Scan Test images
+The SAF tests the logic, caches, and arrays on the core by using scan test images. Array BIST for on-core caches and arrays which does not require a test image.
+After download scan test images:
+1. Create a directory named: **ifs_0** within the /lib/firmware/intel/
+2. Extract the downloaded scan test images (ff-mm-ss-xx.scan) into the folder
 
-ff-mm-ss-xx.scan:  (SPR ifs image file sample:06-af-03-01.scan)
+ff-mm-ss-xx.scan:  (For example, SPR ifs image file sample:06-af-03-01.scan)
   ff: CPU family number in hexadecimal
   mm: CPU model number in hexadecimal
   ss: CPU stepping number in hexadecimal
   xx: scan files number in hexadecimal
 
-3. Kernel Configuration
+### Kernel Configuration
 ```
 CONFIG_X86_PLATFORM_DEVICES = y
 CONFIG_INTEL_IFS = m
 ```
 
-4. How to check if IFS ready for testing?
+## How to check if IFS ready for testing?
 Check ifs dependency:
 ```
 modprobe intel_ifs
@@ -49,19 +46,13 @@ ifs_tests.sh -m 0 -p all -b 1 -n ifs_batch
 ```
 If it passes, all cases can be tested.
 
-### ifs_0 scan test cases, it works on SPR(Sapphire Rapids) platform and future server
+**Scan at Field cases**
 ```
 ./ifs_tests.sh -m 0 -p all -n load_ifs
 It loads ifs driver with ifs mode 0 without any exceptions.
 
 ./ifs_tests.sh -m 0 -p all -b 1 -n ifs_batch
 It loads ifs batch 1 blob file with ifs mode 0 without any exceptions.
-Blob file is located in /lib/firmware/intel/ifs_0/ff-mm-ss-01.scan
-Please check "cat /proc/cpuinfo | head" output
-ff means "cpu family" number in hexadecimal.
-mm means "model" number in hexadecimal.
-ss means "stepping" number in hexadecimal.
-01 means batch 01.
 
 ./ifs_tests.sh -m 0 -p all -b 1 -n legacy_twice_run
 It loads batch 1 and executes ifs_0 scan twice in all cpus.
@@ -79,7 +70,7 @@ It will check image version output is same as MSR output.
 It tests reloading the ifs module without issue.
 ```
 
-### ifs_1 array BIST(Board Integrated System Test), it works on EMR(Emerald Rapids) and future server
+**Array BIST cases**
 ```
 ./ifs_tests.sh -m 1 -p all -n ifs_array_scan
 It tests all cpu ifs_1 array BIST scan test.
