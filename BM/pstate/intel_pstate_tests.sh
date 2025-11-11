@@ -22,6 +22,9 @@ CPU_CPUFREQ_ATTR="affected_cpus cpuinfo_max_freq cpuinfo_min_freq
   scaling_min_freq scaling_setspeed"
 DEFAULT_SCALING_GOV=$(cat $CPU_SYSFS_PATH/cpu0/cpufreq/scaling_governor)
 
+readonly no_turbo_value=$(cat "$CPU_NO_TURBO_NODE")
+readonly pstate_status_value=$(cat "$CPU_PSTATE_SYSFS_PATH/status")
+
 # rdmsr tool is required to run pstate cases
 if which rdmsr 1>/dev/null 2>&1; then
   rdmsr -V 1>/dev/null || block_test "Failed to run rdmsr tool,
@@ -57,6 +60,12 @@ else
   block_test "x86_energy_perf_policy tool is required to run pstate cases,
 please get it from latest upstream tools/power/x86/x86_energy_perf_policy."
 fi
+
+pstate_teardown() {
+    # restore pstate status and no_turbo
+    echo "$no_turbo_value" > "$CPU_NO_TURBO_NODE"
+    echo "$pstate_status_value" > "$CPU_PSTATE_SYSFS_PATH/status"
+}
 
 sysfs_verify() {
   [ $# -ne 2 ] && die "You must supply 2 parameters, ${0##*/} <TYPE> <PATH>"
@@ -1108,3 +1117,5 @@ intel_pstate_test() {
 }
 
 intel_pstate_test
+teardown_handler="pstate_teardown"
+exec_teardown
