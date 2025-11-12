@@ -1,0 +1,8 @@
+# This file collects the FRED cases
+# @hw_dep: cpuid_check 7 0 1 0 a 17 @ CPU doesn't support FRED CPUID.7.1.EAX[17]
+# @hw_dep: cpuid_check 7 0 1 0 a 20 @ CPU doesn't support NMI SOURCE CPUID.7.1.EAX[20]
+# @other_dep: general_test.sh -t kconfig -k "CONFIG_X86_FRED=y" @ No kconfig CONFIG_X86_FRED=y
+nmis_test.sh -t enabling
+nmis_test.sh -t ipi
+nmis_test.sh -t pmi
+nmis_test.sh -t ipi_bt

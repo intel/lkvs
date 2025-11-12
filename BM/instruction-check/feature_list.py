@@ -233,6 +233,10 @@ feature_list = {
         "cpuid": ['7', '0', '1', '0', 'a', '18'],
         "platforms": {"CWF"}
     },
+    "NMIS": {
+        "cpuid": ['7', '0', '1', '0', 'a', '20'],
+        "platforms": {"CWF"}
+    },
     "PREFETCHI": {
         "cpuid": ['7', '0', '1', '0', 'd', '14'],
         "platforms": {"GNR"}
