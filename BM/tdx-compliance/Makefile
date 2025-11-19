@@ -1,4 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
+#
+# This kernel module is rebased to kernel 6.17.
+# To make this folder, please update your env to kernel 6.17
 
 MODULES = tdx-compliance.ko
 

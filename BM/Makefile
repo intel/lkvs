@@ -2,6 +2,8 @@
 # Copyright (c) 2022 Intel Corporation.
 
 SUBDIRS = $(shell ls -d */)
+EXCLUDE_DIRS := tdx-compliance/ workload-xsave/
+SUBDIRS := $(filter-out $(EXCLUDE_DIRS), $(SUBDIRS))
 
 PROXY :=
 
