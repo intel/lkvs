@@ -34,7 +34,7 @@ nmis_ipi_test() {
     local ret=0
     nmi_enable_test
     general_test.sh -t kconfig -k "CONFIG_DEBUG_NMI_SELFTEST=y" || ret=1
-    [ $ret -eq 1 ] || die "CONFIG_DEBUG_NMI_SELFTEST is not set in Kconfig, ipi test cannot be executed!"
+    [ $ret -eq 0 ] || die "CONFIG_DEBUG_NMI_SELFTEST is not set in Kconfig, ipi test cannot be executed!"
     full_dmesg_check "contain" "NMI testsuite"
     full_dmesg_check "contain" "Good, all   2 testcases passed!"
     full_dmesg_check "null" "NMI without source information! Disable source reporting."
