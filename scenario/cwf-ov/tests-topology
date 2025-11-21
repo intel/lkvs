@@ -1,1 +1,12 @@
-../../BM/topology/tests-server
+# This file collects basic cases which verify CPU Topology
+# on Intel® Architecture-based server platforms.
+# @hw_dep:
+# @other_dep:
+# @other_warn: which cpuid 2>/dev/null @ cpuid tool is required
+# @other_warn: which lstopo 2>/dev/null @ Please install hwloc-gui.x86_64 package or hwloc.x86_64 to get lstopo tool
+
+cpu_topology.sh -t verify_thread_per_core
+cpu_topology.sh -t verify_cores_per_socket
+cpu_topology.sh -t verify_socket_num
+cpu_topology.sh -t verify_level_type
+cpu_topology.sh -t verify_sched_domain_names

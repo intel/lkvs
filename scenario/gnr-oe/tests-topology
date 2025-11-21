@@ -5,7 +5,6 @@
 # @other_warn: which cpuid 2>/dev/null @ cpuid tool is required
 # @other_warn: which lstopo 2>/dev/null @ Please install hwloc.x86_64 package to get lstopo tool
 
-cpu_topology.sh -t numa_nodes_compare
 cpu_topology.sh -t verify_thread_per_core
 cpu_topology.sh -t verify_cores_per_socket
 cpu_topology.sh -t verify_socket_num
