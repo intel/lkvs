@@ -119,6 +119,8 @@ def run(test, params, env):
     test_dir = params["test_dir"]
     feature_names = params.get("features")
     cpuid_args = params.get("cpuid")
+    if feature_names is None and cpuid_args is None:
+        test.error("Failed to find feature or CPUID bit in config file")
     bm_dir = get_baremetal_dir(params)
     src_dir = "%s/tools/cpuid_check" % bm_dir
 
@@ -127,10 +129,8 @@ def run(test, params, env):
         host_exec_bin = prepare_cpuid(test, params, src_dir)
         if feature_names:
             host_feature_cpuid()
-        elif cpuid_args:
+        if cpuid_args:
             host_check_cpuid()
-        else:
-            test.error("Failed to find feature or CPUID bit in config file")
 
     try:
         params["start_vm"] = "yes"
@@ -142,12 +142,11 @@ def run(test, params, env):
         vm_exec_bin = prepare_cpuid(test, params, src_dir, vm, session)
         if feature_names:
             guest_feature_cpuid()
-        elif cpuid_args:
+        if cpuid_args:
             guest_check_cpuid()
-        else:
-            test.error("Failed to find feature or CPUID bit in config file")
 
     finally:
-        process.system("rm %s -f" % host_exec_bin, shell=True, ignore_status=True)
+        if check_host_cpuid:
+            process.system("rm %s -f" % host_exec_bin, shell=True, ignore_status=True)
         session.cmd("rm %s/cpuid* -rf" % test_dir, ignore_all_errors=True)
         session.close()
