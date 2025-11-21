@@ -21,6 +21,9 @@ You also can run the cases together with runtests command, e.g.
 cd ..
 ./runtests -f topology/tests-server -o logfile
 ```
+Note：
+For numa_nodes_compare case, it is designed based on SNC-disabled, so if your env
+is SNC-enabled, this case should not be executed.
 
 These are the basic cases for Intel® CPU Topology, If you have good idea to
 improve CPU Topology cases, you are welcomed to send us the patches, thanks!
