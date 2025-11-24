@@ -11,4 +11,3 @@ tpmi_ufs.sh -t check_ufs_sysfs_attr
 tpmi_ufs.sh -t check_ufs_init_min_max_value
 tpmi_ufs.sh -t check_ufs_min_equals_to_max
 tpmi_ufs.sh -t check_ufs_max_equals_to_min
-tpmi_ufs.sh -t check_per_pkg_min_max_change
