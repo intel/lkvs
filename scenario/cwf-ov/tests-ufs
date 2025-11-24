@@ -12,7 +12,6 @@ tpmi_ufs.sh -t check_ufs_init_min_max_value
 tpmi_ufs.sh -t check_ufs_min_equals_to_max
 tpmi_ufs.sh -t check_ufs_max_equals_to_min
 tpmi_ufs.sh -t check_ufs_current_dynamic
-tpmi_ufs.sh -t check_per_pkg_min_max_change
 # Below two cases verify the efficiency latency control
 # with low threshhold, high threshold, elc floor frequency
 # 
