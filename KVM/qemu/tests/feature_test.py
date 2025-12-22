@@ -22,6 +22,9 @@ def prepare_test_suite(test, vm_test_path, session):
     :param vm_test_path: The absolute path of test suite in guest
     :param session: Guest session
     """
+    if not os.path.exists(os.path.join(vm_test_path, 'Makefile')):
+        return
+
     if not utils_package.package_install("gcc", session):
         test.cancel("Failed to install package gcc.")
 
@@ -59,6 +62,29 @@ def avocado_install(test, params, guest_bm_path, vm, session):
     compile_cmd = "cd %s/tools/cpuid_check && make" % guest_bm_path
     if session.cmd_status(compile_cmd):
         raise exceptions.TestError("Dependence test tool compile failed.")
+
+
+def disable_parallel_run(test, session):
+    """
+    Disable parallel execution in guest.
+    :param test: QEMU test object
+    :param session: Guest session
+    """
+    conf_file = "/etc/avocado/avocado.conf"
+    cmd = "ls %s" % conf_file
+    if session.cmd_status(cmd):
+        cmd = "mkdir -p /etc/avocado && touch %s" % conf_file
+        status, output = session.cmd_status_output(cmd)
+        if status:
+            test.error("Fail to create config file in guest: %s" % output)
+
+    cmd = "cat %s | grep max_parallel_tasks=1" % conf_file
+    if session.cmd_status(cmd):
+        conf_content = "[run]\\nmax_parallel_tasks=1"
+        cmd = "echo -e '%s' > %s" % (conf_content, conf_file)
+        status, output = session.cmd_status_output(cmd)
+        if status:
+            test.error("Fail to add configurations in guest file: %s" % output)
 
 
 def get_test_results(test, output, vm, session):
@@ -104,6 +130,9 @@ def run(test, params, env):
     vm.copy_files_to(bm_dir, test_dir)
     guest_bm_path = os.path.join(test_dir, "BM")
     avocado_install(test, params, guest_bm_path, vm, session)
+    vm_config = params.get_boolean("disable_parallel_run")
+    if vm_config:
+        disable_parallel_run(test, session)
 
     try:
         for feature_dir_name in feature_dir_names.split():
@@ -112,8 +141,11 @@ def run(test, params, env):
             cmd_timeout = params.get_numeric("cmd_timeout", 240)
             if params.get("cmd_timeout"):
                 cmd_timeout = params.get_numeric("cmd_timeout")
+            cases_file = params.get("test_scen")
+            if cases_file is None:
+                cases_file = "tests"
             #run_cmd = "cd %s && ./runtests -f %s/tests" % (guest_bm_path, feature_dir_name)
-            run_cmd = "cd %s && ./runtests.py -f %s -t %s/tests" % (guest_bm_path, feature_dir_name, feature_dir_name)
+            run_cmd = "cd %s && ./runtests.py -f %s -t %s/%s " % (guest_bm_path, feature_dir_name, feature_dir_name, cases_file)
             s, o = session.cmd_status_output(run_cmd, timeout=cmd_timeout)
 
             get_test_results(test, o, vm, session)
@@ -129,4 +161,6 @@ def run(test, params, env):
             test.log.info("Guest feature %s test pass." % feature_dir_name)
     finally:
         session.cmd("rm %s -rf" % guest_bm_path, ignore_all_errors=True)
+        if vm_config:
+            session.cmd("rm /etc/avocado -rf", ignore_all_errors=True)
         session.close()

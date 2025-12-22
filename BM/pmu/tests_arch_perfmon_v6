@@ -1,0 +1,6 @@
+# This file collects the ARCH PerfMon v6 test cases
+pmu_tests.sh -t bitmap_6
+pmu_tests.sh -t umask2_cpuid
+pmu_tests.sh -t zbit_cpuid
+pmu_tests.sh -t umask2
+pmu_tests.sh -t zbit
