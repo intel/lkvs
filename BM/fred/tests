@@ -1,7 +1,7 @@
 # This file collects the FRED cases
 # @hw_dep: cpuid_check 7 0 1 0 a 17 @ CPU doesn't support FRED CPUID.(EAX=07H,ECX=01H):EAX[bit 17]
 # @other_dep: general_test.sh -t kconfig -k "CONFIG_X86_FRED=y" @ No kconfig CONFIG_X86_FRED=y
-fred_test.sh -t cmdline
+fred_test.sh -t kconfig
 fred_test.sh -t dmesg
 fred_test.sh -t cpuid
 fred_test.sh -t cpuinfo

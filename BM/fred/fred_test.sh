@@ -19,10 +19,17 @@ __EOF
 }
 
 ###################### Functions ######################
+# Check if FRED is enabled in Kernel config
+kconfig_test() {
+  general_test.sh -t kconfig -k "CONFIG_X86_FRED=y" || ret=1
+  [ $ret -eq 0 ] || die "CONFIG_X86_FRED=y is not set in Kconfig, FRED is not enabled"
+}
+
 # Check this cpu could support the function which contain the parameter
 # $1: Parameter should be support in cpuinfo
 # Return: 0 for true, otherwise false
 cpu_info_check() {
+  do_cmd "grep -q 'fred=on' '/proc/cmdline'"
   local cpu_func=$1
   [ -n "$cpu_func" ] || die "cpu info check name is null:$cpu_func"
   grep -q "$cpu_func" /proc/cpuinfo || block_test "CPU not support:$cpu_func"
@@ -30,18 +37,15 @@ cpu_info_check() {
   return 0
 }
 
-# Cmdline test: Verify if FRED is enabled in kernel cmdline
-cmdline_test() {
-  do_cmd "grep -q 'fred=on' '/proc/cmdline'"
-}
-
 # Dmesg test: Verify if FRED is initialized
 dmesg_test() {
+  do_cmd "grep -q 'fred=on' '/proc/cmdline'"
   do_cmd "dmesg | grep 'Initialize FRED on CPU'"
 }
 
 # CPUID test: Check FRED CPUID
 cpuid_test() {
+  do_cmd "grep -q 'fred=on' '/proc/cmdline'"
   #CPUID.0x7.1.EAX[17] == 1
   do_cmd "cpuid_check 7 0 1 0 a 17"
 }
@@ -54,13 +58,14 @@ lkgs_cpuid_test() {
 
 # CPUINFO test: Check FRED cpu flag in cpu info
 cpuinfo_test() {
+  do_cmd "grep -q 'fred=on' '/proc/cmdline'"
   do_cmd "cpu_info_check fred"
 }
 
 fred_test() {
   case $TEST_SCENARIO in
-    cmdline)
-      cmdline_test
+    kconfig)
+      kconfig_test
       ;;
     dmesg)
       dmesg_test
