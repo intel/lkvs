@@ -1,0 +1,4 @@
+# This file collects the CWF 3 new Fix counters test cases
+pmu_tests.sh -t counting
+pmu_tests.sh -t sampling
+pmu_tests.sh -t counting_multi
