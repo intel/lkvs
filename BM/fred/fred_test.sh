@@ -21,6 +21,7 @@ __EOF
 ###################### Functions ######################
 # Check if FRED is enabled in Kernel config
 kconfig_test() {
+  local ret=0
   general_test.sh -t kconfig -k "CONFIG_X86_FRED=y" || ret=1
   [ $ret -eq 0 ] || die "CONFIG_X86_FRED=y is not set in Kconfig, FRED is not enabled"
 }
@@ -45,7 +46,6 @@ dmesg_test() {
 
 # CPUID test: Check FRED CPUID
 cpuid_test() {
-  do_cmd "grep -q 'fred=on' '/proc/cmdline'"
   #CPUID.0x7.1.EAX[17] == 1
   do_cmd "cpuid_check 7 0 1 0 a 17"
 }
@@ -58,7 +58,6 @@ lkgs_cpuid_test() {
 
 # CPUINFO test: Check FRED cpu flag in cpu info
 cpuinfo_test() {
-  do_cmd "grep -q 'fred=on' '/proc/cmdline'"
   do_cmd "cpu_info_check fred"
 }
 
