@@ -7,3 +7,4 @@ lam -t 0x10   # io_uring
 lam -t 0x20   # inherit
 lam -t 0x40   # pasid
 lam -t 0x80   # cpuid
+lam -t 0x100  # kconfig

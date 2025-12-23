@@ -14,6 +14,7 @@
 #include <inttypes.h>
 #include <sched.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include <sys/uio.h>
 #include <linux/io_uring.h>
@@ -48,8 +49,9 @@
 #define FUNC_INHERITE           0x20
 #define FUNC_PASID              0x40
 #define FUNC_CPUID              0x80
+#define FUNC_CONFIG             0x100
 
-#define TEST_MASK               0xff
+#define TEST_MASK               0x1ff
 
 #define LOW_ADDR                (0x1UL << 30)
 #define HIGH_ADDR               (0x3UL << 48)
@@ -842,6 +844,43 @@ int handle_cpuid(struct testcases *test)
 	return ret;
 }
 
+int handle_config(struct testcases *test)
+{
+	int ret = 0;
+	char command[256];
+	char result[16];
+	FILE *fp;
+
+	/* Use shell script to check CONFIG_ADDRESS_MASKING */
+	snprintf(command, sizeof(command),
+		 "source %s/../common/common.sh; get_kconfig CONFIG_ADDRESS_MASKING",
+		 dirname(realpath("/proc/self/exe", NULL)));
+
+	fp = popen(command, "r");
+	if (!fp) {
+		printf("Failed to execute shell command\n");
+		return 1;
+	}
+
+	if (fgets(result, sizeof(result), fp)) {
+		/* Remove newline */
+		result[strcspn(result, "\n")] = 0;
+		if (strcmp(result, "y") == 0) {
+			printf("CONFIG_ADDRESS_MASKING=y is set\n");
+			ret = 0;
+		} else {
+			printf("CONFIG_ADDRESS_MASKING is not set to 'y', value: %s\n", result);
+			ret = 1;
+		}
+	} else {
+		printf("Failed to read config value\n");
+		ret = 1;
+	}
+
+	pclose(fp);
+	return ret;
+}
+
 static void run_test(struct testcases *test, int count)
 {
 	int i, ret = 0;
@@ -1002,6 +1041,7 @@ static void cmd_help(void)
 	printf("\t\t0x20:inherit;\n");
 	printf("\t\t0x40:pasid;\n");
 	printf("\t\t0x80:cpuid;\n");
+	printf("\t\t0x100:config;\n");
 
 	printf("\t-h: help\n");
 }
@@ -1240,6 +1280,17 @@ static struct testcases cpuid_cases[] = {
 	},
 };
 
+/* config_cases
+ * kernel config checking.
+ */
+static struct testcases config_cases[] = {
+	{
+		.expected = 0,
+		.test_func = handle_config,
+		.msg = "CONFIG: CONFIG_ADDRESS_MASKING\n",
+	},
+};
+
 int main(int argc, char **argv)
 {
 	int c = 0;
@@ -1304,6 +1355,9 @@ int main(int argc, char **argv)
 
 	if (tests & FUNC_CPUID)
 		run_test(cpuid_cases, ARRAY_SIZE(cpuid_cases));
+
+	if (tests & FUNC_CONFIG)
+		run_test(config_cases, ARRAY_SIZE(config_cases));
 
 	printf("Total tests: %d; Pass:%d\n", tests_cnt, tests_pass);
 
