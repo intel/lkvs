@@ -13,6 +13,12 @@ make
 ./lam -t <testcase_id>
 (for example, cpuid) ./lam -t 0x80
 ```
+You also can run the cases together with runtests command, e.g.
+
+```
+cd ..
+./runtests -f lam/tests -o logfile
+```
 Test results (PASS or FAIL) will be printed out. 
 
 ## Testcase ID
@@ -26,3 +32,4 @@ Test results (PASS or FAIL) will be printed out.
 | 0x20   | inherit  |
 | 0x40   | pasid    |
 | 0x80   | cpuid    |
+| 0x100  | kconfig  |
