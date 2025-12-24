@@ -215,8 +215,16 @@ arch_pebs_gp_reg_group_test() {
 
 arch_pebs_xer_group_test() {
   level="p"
-#  reg_group_test_more_option "OPMASK0" "opmask0" 1
-  reg_group_test_more_option "YMMH0" "YMMH0" 2
+  simdfile="simd.txt"
+  do_cmd "perf record -I? 2>&1|tee $simdfile"
+  if grep 'YMM0-15' $simdfile > /dev/null; then
+    # All 16 YMM registers are recorded, so 4*16=64
+    reg_group_test_more_option "YMM" "YMM" 64
+    clear_files $simdfile
+  else
+    clear_files $simdfile
+    die "SIMD sampling format is incorrect!"
+  fi
 #  reg_group_test_more_option "ZMMH0" "ZMMLH0" 4
 }
 
