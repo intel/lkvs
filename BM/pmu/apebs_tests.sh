@@ -26,16 +26,10 @@ usage() {
 __EOF
 }
 
-lbr_test() {
-  level=$1
-  perfdata="pebs.data"
-  logfile="temp.txt"
-  perf record -o "$perfdata" -b -e cycles:"$level" -a sleep 1 2> "$logfile"
-  sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
-  lbr_count=$(perf report -D -i $perfdata| grep -c "branch stack")
-  test_print_trc "sample_count = $sample_count; lbr_count = $lbr_count"
-  [[ $sample_count -eq 0 ]] && die "samples = 0!"
-  [[ $sample_count -eq $lbr_count ]] || die "samples does not match!"
+clear_files() {
+  for i in "$@"; do
+    [[ -f $i ]] && test_print_trc "Remove file: $i" && rm "$i"
+  done;
 }
 
 lbr_test() {
@@ -54,11 +48,25 @@ xmm_test() {
   level=$1
   perfdata="pebs.data"
   logfile="temp.txt"
-  perf record -o "$perfdata" -IXMM0 -e cycles:"$level" -a sleep 1 2> "$logfile"
+  simdfile="simd.txt"
+  local reg_type=0
+  perf record -I? 2>&1|tee $simdfile
+  grep 'XMM0-15' $simdfile > /dev/null && reg_type=0
+  grep 'XMM0 XMM1' $simdfile > /dev/null && reg_type=1
+  if [[ $reg_type -eq 0 ]]; then
+    xmm_reg="XMM"
+    mul=$((2 * 16))
+  elif [[ $reg_type -eq 1 ]]; then
+    xmm_reg="XMM0"
+    mul=2
+  fi
+ 
+  perf record -o $perfdata -I${xmm_reg} -e cycles:"$level" -a sleep 1 2>&1|tee $logfile
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
-  count=$(perf report -D -i $perfdata| grep -c "XMM0")
+  count=$(perf report -D -i $perfdata| grep -c "${xmm_reg}")
+  clear_files $perfdata $logfile $simdfile
   test_print_trc "before sample_count = $sample_count; count = $count"
-  sample_count=$((sample_count * 2))
+  sample_count=$((sample_count * mul))
   test_print_trc "after sample_count = $sample_count; count = $count"
   [[ $sample_count -eq 0 ]] && die "samples = 0!"
   [[ $sample_count -eq $count ]] || die "samples does not match!"
