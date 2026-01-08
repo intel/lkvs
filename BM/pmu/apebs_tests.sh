@@ -39,6 +39,7 @@ lbr_test() {
   perf record -o "$perfdata" -b -e cycles:"$level" -a sleep 1 2> "$logfile"
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -c "branch stack")
+  clear_files $perfdata $logfile
   test_print_trc "sample_count = $sample_count; count = $count"
   [[ $sample_count -eq 0 ]] && die "samples = 0!"
   [[ $sample_count -eq $count ]] || die "samples does not match!"
@@ -84,6 +85,7 @@ ip_test() {
   perf mem record -o "$perfdata"  -t load -a sleep 1 2> "$logfile"
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -c "data_src")
+  clear_files $perfdata $logfile
   test_print_trc "sample_count = $sample_count; count = $count"
   [[ $sample_count -eq 0 ]] && die "samples = 0!"
   [[ $sample_count -eq $count ]] || die "samples does not match!"
@@ -99,6 +101,7 @@ data_src_test() {
   sleep 1
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -c "data_src")
+  clear_files $perfdata $logfile
   [[ $sample_count -eq 0 ]] && die "samples = 0!"
   [[ $sample_count -eq $count ]] || die "samples does not match!"
 }
