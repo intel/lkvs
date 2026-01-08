@@ -40,6 +40,7 @@ fix_counter_test() {
     test_print_trc "value = $value"
     value=$(echo "$value" | cut -d "," -f 1)
     test_print_trc "value_2 = $value"
+    clear_files $logfile
     if [[ $value -le 1000000 ]] || [[ $value -gt 10000000000 ]]; then
       die "Counters are not correct!"
     fi
@@ -56,6 +57,7 @@ fix_counter_test() {
     test_print_trc "value = $value"
     value=$(echo "$value" | cut -d "," -f 1)
     test_print_trc "value_2 = $value"
+    clear_files $logfile
     if [[ $value -le 1000000 ]] || [[ $value -gt 10000000000 ]]; then
       die "Counters are not correct!"
     fi
@@ -95,10 +97,17 @@ lbr_events_s_test() {
   logfile="temp.txt"
   perf record -o $perfdata -e "{branch-instructions,branch-misses}:S" -j any,counter sleep 1 >& $logfile
   sample_count=$(grep "sample" $logfile| awk '{print $10}' | tr -cd "0-9")
-  [[ $sample_count -eq 0 ]] && die "samples = 0!"
+  if [[ $sample_count -eq 0 ]]; then
+    clear_files $logfile $perfdata
+    die "samples = 0!"
+  fi
   val=$(perf report -D -i $perfdata | grep -c "branch stack counters")
-  [[ $val -eq 0 ]] && die "branch stack counters val = 0!"
+  if [[ $val -eq 0 ]]; then
+    clear_files $logfile $perfdata
+    die "branch stack counters val = 0!"
+  fi
   lbr_vals=$(perf report -D -i $perfdata | grep "branch stack counters" | awk '{print $5}')
+  clear_files $logfile $perfdata
   for lbr_val in $lbr_vals; do
     temp=$(echo "$lbr_val" | cut -d ":" -f 2)
     test_print_trc "counts=$temp, lbr_val=$lbr_val!"
@@ -112,10 +121,17 @@ lbr_events_all_test() {
   logfile="temp.txt"
   perf record -o $perfdata -e "{cpu/branch-instructions,branch_type=any/, cpu/branch-misses,branch_type=counter/}" sleep 1 >& $logfile
   sample_count=$(grep "sample" $logfile| awk '{print $10}' | tr -cd "0-9")
-  [[ $sample_count -eq 0 ]] && die "samples = 0!"
+  if [[ $sample_count -eq 0 ]]; then
+    clear_files $logfile $perfdata
+    die "samples = 0!"
+  fi
   val=$(perf report -D -i $perfdata | grep -c "branch stack counters")
-  [[ $val -eq 0 ]] && die "branch stack counters val = 0!"
+  if [[ $val -eq 0 ]]; then
+    clear_files $logfile $perfdata
+    die "branch stack counters val = 0!"
+  fi
   lbr_vals=$(perf report -D -i $perfdata | grep "branch stack counters" | awk '{print $5}')
+  clear_files $logfile $perfdata
   for lbr_val in $lbr_vals; do
     temp=$(echo "$lbr_val" | cut -d ":" -f 2)
     test_print_trc "counts=$temp, lbr_val=$lbr_val!"
@@ -165,6 +181,7 @@ reg_group_test(){
   perf record -o $perfdata -I$reg -e $event -a sleep 1 2>&1|tee $logfile
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -v events | grep -c "\. $reg" )
+  clear_files $logfile $perfdata
   test_print_trc "before sample_count = $sample_count; count = $count"
   sample_count=$((sample_count))
   test_print_trc "after sample_count = $sample_count; count = $count"
@@ -183,6 +200,7 @@ reg_group_test_more_option(){
   perf record -o $perfdata -I$reg -e $event -a sleep 1 2>&1|tee $logfile
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -v events | grep -c "\. $reg_v" )
+  clear_files $logfile $perfdata
   test_print_trc "before sample_count = $sample_count; count = $count"
   sample_count=$((sample_count * times))
   test_print_trc "after sample_count = $sample_count; count = $count"
@@ -246,9 +264,14 @@ arch_pebs_counter_group_test() {
       ;;
   esac
   sample_count=$(grep "sample" $logfile_s | awk '{print $10}' | tr -cd "0-9")
-  [[ $sample_count -eq 0 ]] && die "samples = 0!"
+  #[[ $sample_count -eq 0 ]] && die "samples = 0!"
+  if [[ $sample_count -eq 0 ]]; then
+    die "samples = 0!"
+    clear_files $logfile $perfdata $perfdata_s $logfile_s
+  fi
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -c "PERF_RECORD_SAMPLE")
+  clear_files $logfile $perfdata $perfdata_s $logfile_s
   [[ $sample_count -eq 0 ]] && die "samples = 0!"
   [[ $sample_count -eq $count ]] || die "samples does not match!"
 }
@@ -262,6 +285,7 @@ arch_pebs_counter_group_stress_test() {
   perf record -o $perfdata -e "$event:p" -a -- sleep 1 2>&1|tee $logfile
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -c "PERF_RECORD_SAMPLE")
+  clear_files $logfile $perfdata
   [[ $sample_count -eq 0 ]] && die "samples = 0!"
   [[ $sample_count -eq $count ]] || die "samples does not match!"
 }
@@ -273,6 +297,7 @@ arch_pebs_gp_counter_test() {
   perf record -o $perfdata -e $event -a sleep 1 2>&1|tee $logfile
   sample_count=$(grep "sample" $logfile| awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -c "PERF_RECORD_SAMPLE")
+  clear_files $logfile $perfdata
   [[ $sample_count -eq 0 ]] && die "samples = 0!"
   [[ $sample_count -eq $count ]] || die "samples does not match!" 
 }
@@ -284,6 +309,7 @@ arch_pebs_basic_group_test() {
   perf record -o $perfdata -e $event -a sleep 1 2>&1|tee $logfile
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -c "PERF_RECORD_SAMPLE")
+  clear_files $logfile $perfdata
   [[ $sample_count -eq 0 ]] && die "samples = 0!"
   [[ $sample_count -eq $count ]] || die "samples does not match!" 
 }
@@ -353,26 +379,30 @@ sampling_test() {
   e_topdown_retiring="topdown-retiring"
   e_topdown_be_bound="topdown-be-bound"
   benchmark="sleep 1"
+  perfdata="perf.data"
   perf_log="perf.log"
   clear_files $perf_log
-  do_cmd "perf record -e $e_topdown_bad_spec $benchmark >& $perf_log"
+  do_cmd "perf record -o $perfdata -e $e_topdown_bad_spec $benchmark >& $perf_log"
   samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
+  clear_files $perf_log $perfdata
   test_print_trc "$e_topdown_bad_spec sample = $samples"
   [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_bad_spec!"
 
-  do_cmd "perf record -e $e_topdown_fe_bound $benchmark >& $perf_log"
+  do_cmd "perf record -o $perfdata -e $e_topdown_fe_bound $benchmark >& $perf_log"
   samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
+  clear_files $perf_log $perfdata
   test_print_trc "$e_topdown_fe_bound sample = $samples"
   [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_fe_bound!"
 
-  do_cmd "perf record -e $e_topdown_retiring $benchmark >& $perf_log"
+  do_cmd "perf record -o $perfdata -e $e_topdown_retiring $benchmark >& $perf_log"
   samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
+  clear_files $perf_log $perfdata
   test_print_trc "$e_topdown_retiring sample = $samples"
   [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_retiring!"
 
-  do_cmd "perf record -e $e_topdown_be_bound $benchmark >& $perf_log"
+  do_cmd "perf record -o $perfdata -e $e_topdown_be_bound $benchmark >& $perf_log"
   samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
-  clear_files $perf_log
+  clear_files $perf_log $perfdata
   test_print_trc "$e_topdown_be_bound sample = $samples"
   [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_be_bound!"
 
