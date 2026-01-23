@@ -62,6 +62,18 @@ please get it from latest upstream tools/power/x86/x86_energy_perf_policy."
 fi
 
 pstate_teardown() {
+    local online_cpu=""
+
+    online_cpu=$(ls /sys/devices/system/cpu/cpu*/online | wc -l)
+    online_cpu=$(($online_cpu+1))
+    test_print_trc "Total CPUs from /sys/devices/: $online_cpu"
+
+    # Hot plug all logic CPUs except cpu0
+    for ((cpu = 1; cpu < online_cpu; cpu++)); do
+        test_print_trc "Hot plug CPU$cpu"
+        echo 1 > $CPU_SYSFS_PATH/cpu$cpu/online
+    done
+
     # restore pstate status and no_turbo
     echo "$no_turbo_value" > "$CPU_NO_TURBO_NODE"
     echo "$pstate_status_value" > "$CPU_PSTATE_SYSFS_PATH/status"
