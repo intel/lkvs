@@ -22,7 +22,8 @@ def prepare_test_suite(test, vm_test_path, session):
     :param vm_test_path: The absolute path of test suite in guest
     :param session: Guest session
     """
-    if not os.path.exists(os.path.join(vm_test_path, 'Makefile')):
+    vm_test_makefile = os.path.join(vm_test_path, 'Makefile')
+    if session.cmd_status("test -f %s" % vm_test_makefile):
         return
 
     if not utils_package.package_install("gcc", session):
