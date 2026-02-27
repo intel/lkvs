@@ -90,12 +90,17 @@ def disable_parallel_run(test, session):
 
 def get_test_results(test, output, vm, session):
     """
-    Install test framework avocado in guest.
+    Copy guest avocado run result to host.
     :param test: QEMU test object
     :param output: The output in guest test
     :param vm: The vm object
     :param session: Guest session
     """
+    # BM test may be terminated with some reasons, then no valid result.
+    test_terminate = "Terminate the test"
+    if test_terminate in output:
+        test.fail("Guest %s " % output)
+
     remove_str = "job.log"
     guest_log = re.sub(remove_str, "", re.search(r'.*JOB LOG\s*:\s(.*)', output).group(1))
     # Delete the symbolic link to avoid remote copy failure
