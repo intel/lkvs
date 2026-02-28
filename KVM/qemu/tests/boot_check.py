@@ -7,9 +7,12 @@
 #
 # History:  July. 2024 - Xudong Hao - creation
 
+import subprocess
+
 from avocado.utils import cpu
 from virttest import env_process
 from virttest import error_context
+from virttest import utils_misc
 
 
 @error_context.context_aware
@@ -41,7 +44,11 @@ def run(test, params, env):
     vcpus = params.get_numeric("smp")
     if vm.get_cpu_count() != vcpus:
         test.fail("CPU number in guest is not same as configured vcpus number")
-    memory = params.get_numeric("mem")
-    if vm.get_totalmem_sys()//1024 != memory:
-        test.fail("Memory in guest is not same as configured")
+    is_max_mem = params.get_boolean("is_max_mem")
+    if is_max_mem:
+        memory = utils_misc.get_usable_memory_size()
+    else:
+        memory = params.get_numeric("mem")
+        if vm.get_totalmem_sys()//1024 != memory:
+            test.fail("Memory in guest is not same as configured")
     session.close()
