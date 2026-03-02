@@ -1,11 +1,12 @@
 import subprocess
 
 cpu_family_mapping = {
-    "SPR" : {0x8F, 143},
-    "EMR" : {0xCF, 207},
-    "GNR" : {0xAD, 173},
-    "SRF" : {0xAF, 175},
-    "CWF" : {0xDD, 221}
+    "SPR": (6, 143),
+    "EMR": (6, 207),
+    "GNR": (6, 173),
+    "SRF": (6, 175),
+    "CWF": (6, 221),
+    "DMR": (19, 1)
 }
 
 feature_list = {
@@ -289,16 +290,19 @@ def get_cpu_family_id():
 
     # Find the line containing "Model:" and extract the family ID
     for line in output_lines:
+        if "CPU family:" in line:
+            # Assuming the family ID follows 'CPU family:' and is separated by spaces
+            family_id = line.split(':')[1].strip()
         if "Model:" in line:
             # Assuming the family ID follows 'Model:' and is separated by spaces
-            family_id = line.split(':')[1].strip()
-            return int(family_id)
+            model_id = line.split(':')[1].strip()
+    return int(family_id), int(model_id)
 
 def get_platform():
     cpu_family_id = get_cpu_family_id()
     platform = None
     for key, values in cpu_family_mapping.items():
-        if cpu_family_id in values:
+        if cpu_family_id == values:
             platform = key
             break
     return platform
