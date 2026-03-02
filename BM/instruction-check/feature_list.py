@@ -214,6 +214,10 @@ feature_list = {
         "cpuid": ['7', '0', '1', '0', 'a', '26'],
         "platforms": {"SRF", "CWF"}
     },
+    "MOVRS": {
+        "cpuid": ['7', '0', '1', '0', 'a', '31'],
+        "platforms": {"DMR"}
+    },
     "AVX_VNNI_INT8": {
         "cpuid": ['7', '0', '1', '0', 'd', '4'],
         "platforms": {"SRF", "CWF"}
@@ -242,9 +246,13 @@ feature_list = {
         "cpuid": ['7', '0', '1', '0', 'd', '14'],
         "platforms": {"GNR"}
     },
-    "AVX10_1": {
+    "AVX10": {
         "cpuid": ['7', '0', '1', '0', 'd', '19'],
-        "platforms": {"GNR"}
+        "platforms": {"GNR", "DMR"}
+    },
+    "APX": {
+        "cpuid": ['7', '0', '1', '0', 'd', '21'],
+        "platforms": {"DMR"}
     },
     "XFD": {
         "cpuid": ['d', '0', '1', '0', 'a', '4'],
@@ -277,6 +285,26 @@ feature_list = {
     "KL_RANDOM_IWKEY": {
         "cpuid": ['19', '0', '0', '0', 'c', '1'],
         "platforms": {}
+    },
+    "AMX_COMPLEX": {
+        "cpuid": ['1E', '0', '1', '0', 'a', '2'],
+        "platforms": {"DMR"}
+    },
+    "AMX_FP8": {
+        "cpuid": ['1E', '0', '1', '0', 'a', '4'],
+        "platforms": {"DMR"}
+    },
+    "AMX_TF32": {
+        "cpuid": ['1E', '0', '1', '0', 'a', '6'],
+        "platforms": {"DMR"}
+    },
+    "AMX_AVX512": {
+        "cpuid": ['1E', '0', '1', '0', 'a', '7'],
+        "platforms": {"DMR"}
+    },
+    "AMX_MOVRS": {
+        "cpuid": ['1E', '0', '1', '0', 'a', '8'],
+        "platforms": {"DMR"}
     }
     # Add more feature_info here
 }
