@@ -7,6 +7,7 @@
 #
 # History:  Dec. 2024 - Farrah Chen - creation
 
+from provider import dmesg_router  # pylint: disable=unused-import
 from virttest import error_context, env_process
 from virttest import data_dir as virttest_data_dir
 

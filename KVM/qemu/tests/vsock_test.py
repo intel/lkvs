@@ -11,6 +11,7 @@
 # Copyright: Red Hat (c) 2024 and Avocado contributors
 # Copy from tp-qemu
 
+from provider import dmesg_router  # pylint: disable=unused-import
 import logging
 import os
 import random
