@@ -181,6 +181,8 @@ Prepare your guest image well, make sure it can be boot as td guest with your ho
 
 Copy this template [tdx_temp.cfg](tdx_temp.cfg) to /root/avocado/data/avocado-vt/backends/qemu/cfg/
 
+> It should be noted that config files under avocado should indent with tab while config files under lkvs should indent with four whitespaces.
+
 ### 4.2.1 Guest OS
 
 We need to set the guest OS in config file, here is the example in tdx_temp.cfg.
