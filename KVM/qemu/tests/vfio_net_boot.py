@@ -11,6 +11,7 @@
 # Copyright: Red Hat (c) 2024 and Avocado contributors
 # Copy from tp-qemu
 
+from provider import dmesg_router  # pylint: disable=unused-import
 from virttest import error_context, utils_net
 
 from avocado.utils import process

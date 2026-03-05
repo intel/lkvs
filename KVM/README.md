@@ -44,6 +44,24 @@ lkvs KVM is a seperate test provider for avocado/avocado-vt.
     avocado run boot_td
 ```
 
+## LKVS dmesg verification switches
+
+LKVS qemu tests support two cfg parameters to route dmesg verification to
+LKVS implementation (`KVM/qemu/provider/utils_misc.py`):
+
+```
+lkvs_verify_host_dmesg = yes
+lkvs_verify_guest_dmesg = yes
+```
+
+These switches can be set in any LKVS qemu case cfg file.
+
+LKVS qemu uses explicit import mode:
+
+- Shared module: `KVM/qemu/provider/dmesg_router.py`
+- Requirement: each test module under `KVM/qemu/tests/*.py` needs
+    `from provider import dmesg_router  # pylint: disable=unused-import`
+
 ## Contributions quick start guide
 
 1) Fork this repo on github

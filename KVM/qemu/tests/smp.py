@@ -7,6 +7,7 @@
 #
 # History: Feb. 2025 - Xudong Hao - creation
 
+from provider import dmesg_router  # pylint: disable=unused-import
 import os
 
 from virttest import data_dir, utils_package, utils_misc
