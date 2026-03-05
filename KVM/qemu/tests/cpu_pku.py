@@ -7,6 +7,7 @@
 #
 # History:  June. 2025 - Xudong Hao - creation
 
+from provider import dmesg_router  # pylint: disable=unused-import
 from virttest import cpu, env_process, error_context
 
 

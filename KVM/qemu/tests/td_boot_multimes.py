@@ -6,6 +6,7 @@
 # Author: Xudong Hao <xudong.hao@intel.com>
 #
 # History:  Jun. 2024 - Xudong Hao - creation
+from provider import dmesg_router  # pylint: disable=unused-import
 from virttest import error_context
 
 

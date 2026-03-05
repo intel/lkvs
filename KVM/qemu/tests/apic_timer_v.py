@@ -7,6 +7,7 @@
 #
 # History:  Jan. 2026 - Xudong Hao - creation
 
+from provider import dmesg_router  # pylint: disable=unused-import
 import os
 import time
 from avocado.utils import process, cpu

@@ -7,6 +7,7 @@
 #
 # History: Nov. 2025 - Farrah Chen - creation
 
+from provider import dmesg_router  # pylint: disable=unused-import
 import os
 import re
 from avocado.utils import process
