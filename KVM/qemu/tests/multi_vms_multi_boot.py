@@ -134,6 +134,10 @@ def run(test, params, env):
     :param env: Dictionary with test environment
     """
 
+    if params.get("boot_destroy_cycle", "no") == "yes":
+        run_boot_destroy_cycle(test, params, env)
+        return
+
     timeout = int(params.get_numeric("login_timeout", 240))
 
     vm_names = params.objects("vms")
@@ -176,3 +180,54 @@ def run(test, params, env):
         finally:
             for vm in started_vms:
                 vm.destroy(gracefully=False)
+
+
+@error_context.context_aware
+def run_boot_destroy_cycle(test, params, env):
+    """
+    Boot and destroy VM cycle repeated 20 times:
+    1) Boot the VM
+    2) Verify guest can login
+    3) Destroy the VM
+    4) Repeat 20 times
+
+    :param test: QEMU test object
+    :param params: Dictionary with the test parameters
+    :param env: Dictionary with test environment
+    """
+
+    timeout = int(params.get_numeric("login_timeout", 240))
+    cycle_count = int(params.get_numeric("boot_destroy_cycles", 20))
+
+    vm_names = params.objects("vms")
+    if not vm_names:
+        test.cancel("No VMs configured for boot_destroy_cycle")
+
+    vm_name = vm_names[0]  # Use the first VM
+    test.log.info("Starting boot/destroy cycle test: %s cycles", cycle_count)
+
+    for cycle in range(1, cycle_count + 1):
+        started_vms = []
+        try:
+            error_context.context(
+                "Boot/Destroy Cycle %s/%s" % (cycle, cycle_count),
+                test.log.info,
+            )
+
+            vm_params = params.object_params(vm_name)
+            vm_params["start_vm"] = "yes"
+            env_process.preprocess_vm(test, vm_params, env, vm_name)
+            vm = env.get_vm(vm_name)
+            started_vms.append(vm)
+
+            # Verify VM is alive and can login
+            vm.verify_alive()
+            session = vm.wait_for_login(timeout=timeout)
+            session.close()
+            test.log.info("Cycle %s/%s: VM login successful", cycle, cycle_count)
+
+        finally:
+            # Destroy the VM
+            for vm in started_vms:
+                vm.destroy(gracefully=False)
+            test.log.info("Cycle %s/%s: VM destroyed", cycle, cycle_count)
