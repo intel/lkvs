@@ -8,11 +8,21 @@
 # History:  July. 2024 - Xudong Hao - creation
 
 from provider import dmesg_router  # pylint: disable=unused-import
-from avocado.utils import cpu
+from avocado.utils import process, cpu
 from virttest import env_process
 from virttest import error_context
 from virttest import utils_misc
+from virttest import utils_package
 
+
+def stress_ng_test(test, vm_cpu, vm_mem, mem_size, time, session=None):
+    if not utils_package.package_install("stress-ng", session):
+        test.cancel("Installation failed. Please install stress-ng manually.")
+    session.cmd(
+        f"stress-ng --cpu {vm_cpu} --io 1 --vm {vm_mem} --vm-bytes {mem_size} --hdd 1 --hdd-bytes 3G --timeout {time} > /tmp/stress_ng.log",
+        ignore_all_errors=True
+    )
+    return
 
 @error_context.context_aware
 def run(test, params, env):
@@ -50,4 +60,30 @@ def run(test, params, env):
         memory = params.get_numeric("mem")
         if vm.get_totalmem_sys()//1024 != memory:
             test.fail("Memory in guest is not same as configured")
+    is_nxhp = params.get_boolean("is_nxhp")
+    if is_nxhp:
+        is_high_mem_nxhp = params.get_boolean("is_high_mem_nxhp")
+        is_low_mem_nxhp = params.get_boolean("is_low_mem_nxhp")
+        nxhp_conf = params.get("nxhp_conf")
+        with open(nxhp_conf, "r") as f:
+            nxhp_value = f.read(1)
+        with open(nxhp_conf, "w") as f:
+            f.write("force")
+        with open(nxhp_conf, "r") as f:
+            nxhp_value_new = f.read(1)
+        if nxhp_value_new != "Y":
+            test.fail("Failed to enable NX huge page")
+        if is_high_mem_nxhp:
+            stress_ng_test(test, 2, 2, "16G", "60s", session)
+        if is_low_mem_nxhp:
+            stress_ng_test(test, 2, 2, "1G", "60s", session)
+        vm.copy_files_from("/tmp/stress_ng.log", "/tmp/stress_ng.log")
+        session.cmd("rm -f /tmp/stress_ng.log")
+        with open("/tmp/stress_ng.log", "r") as f:
+            stress_ng_status = f.readlines()[-1].split()[3]
+        if stress_ng_status != "successful":
+            test.fail("Stress-ng test failed, please check debug.log for details")
+        process.system("rm -f /tmp/stress_ng.log")
+        with open(nxhp_conf, "w") as f:
+            f.write(nxhp_value)
     session.close()
