@@ -475,6 +475,59 @@ counting_multi_test() {
   done
 }
 
+rdpmc_user_disable() {
+  local logfile1="temp1.log"
+  local logfile2="temp2.log"
+  local logfile3="temp3.log"
+  local logfile4="temp4.log"
+  #23H.00H:EBX[2]: RDPMC_USR_DISABLE
+  do_cmd "cpuid_check 23 0 0 0 b 2"
+  [ $? -ne 0 ] && die "Platform does not support RDPMC USR DISABLE feature"
+
+  rdpmc_attr=$1
+  echo $rdpmc_attr > /sys/devices/cpu/rdpmc
+
+  clear_files $logfile1 $logfile2 $logfile3 $logfile4
+  [ -f rdpmc_user_disable_test ] || die "please compile rdpmc_user_disable_test firstly "
+  rdpmc_user_disable_test 0 system gp > $logfile1
+  rdpmc_user_disable_test 0 system fixed > $logfile2
+  rdpmc_user_disable_test 0 process gp > $logfile3
+  rdpmc_user_disable_test 0 process fixed > $logfile4
+  case $rdpmc_attr in
+    0)
+      for file in $logfile1 $logfile2 $logfile3 $logfile4;
+      do
+        cat $file | grep "Receive and handle #GP fault"
+        [ $? -eq 0 ] || die "rdpmc user disable test fail with rdpmc 0"
+        clear_files $file
+      done
+      ;;
+    1)
+      for file in $logfile1 $logfile2;
+      do
+        num=$(cat $file | awk '{print $NF}')
+        clear_files $file
+        [ $num -eq 0 ] || die "rdpmc user disable test fail with rdpmc 1"
+      done
+
+      for file in $logfile3 $logfile4;
+      do
+        num=$(cat $file | awk '{print $NF}')
+        clear_files $file
+        [ $num -gt 0 ] || die "rdpmc user disable test fail with rdpmc 1"
+      done
+      ;;
+    2)
+      for file in $logfile1 $logfile2 $logfile3 $logfile4;
+      do
+        num=$(cat $file | awk '{print $NF}')
+        clear_files $file
+        [ $num -gt 0 ] || die "rdpmc user disable test fail with rdpmc 2"
+      done
+      ;;
+  esac
+}
+
 pmu_test() {
   case $TEST_SCENARIO in
     fix_counter)
@@ -548,6 +601,15 @@ pmu_test() {
       ;;
     counting_multi)
       counting_multi_test
+      ;;
+    rdpmc_user_disable_0)
+      rdpmc_user_disable 0
+      ;;
+    rdpmc_user_disable_1)
+      rdpmc_user_disable 1
+      ;;
+    rdpmc_user_disable_2)
+      rdpmc_user_disable 2
       ;;
     esac
   return 0
