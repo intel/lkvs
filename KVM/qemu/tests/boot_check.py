@@ -24,6 +24,7 @@ def stress_ng_test(test, vm_cpu, vm_mem, mem_size, time, session=None):
     )
     return
 
+
 @error_context.context_aware
 def run(test, params, env):
     """
