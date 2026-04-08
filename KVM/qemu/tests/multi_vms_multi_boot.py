@@ -5,6 +5,7 @@
 
 import logging
 import random
+import resource
 
 from virttest import env_process
 from virttest import error_context
@@ -14,6 +15,50 @@ from provider import dmesg_router  # pylint: disable=unused-import
 LOG = logging.getLogger("avocado.test")
 
 
+def _set_host_nofile_limit(test, params):
+    """Set host nofile soft limit for a large number of guest cases and return original limits."""
+    target_nofile = int(params.get_numeric("host_nofile_limit", 65536))
+    original_limits = resource.getrlimit(resource.RLIMIT_NOFILE)
+    soft_limit, hard_limit = original_limits
+
+    if hard_limit == resource.RLIM_INFINITY:
+        new_soft_limit = target_nofile
+    else:
+        new_soft_limit = min(target_nofile, hard_limit)
+
+    if soft_limit >= new_soft_limit:
+        return original_limits
+
+    resource.setrlimit(resource.RLIMIT_NOFILE, (new_soft_limit, hard_limit))
+    if new_soft_limit < target_nofile:
+        test.log.warning(
+            "host nofile hard limit is %s, case soft limit set to %s instead of %s",
+            hard_limit,
+            new_soft_limit,
+            target_nofile,
+        )
+    else:
+        test.log.info("host nofile soft limit set to %s for this case", new_soft_limit)
+
+    return original_limits
+
+
+def _prepare_auto_calc_guest_count(params):
+    """Generate vm list for auto_calc_guest_count mode."""
+    guest_mem = int(params.get_numeric("mem", params.get_numeric("start_mem", 1024)))
+    guest_count_mem = guest_mem + int(
+        params.get_numeric("guest_count_mem_overhead", 0)
+    )
+    host_usable_mem = int(utils_misc.get_usable_memory_size())
+    guest_num = host_usable_mem // guest_count_mem
+    max_guest_count = params.get("max_guest_count")
+    if max_guest_count:
+        guest_num = min(guest_num, int(max_guest_count))
+    vm_names = ["vm%s" % idx for idx in range(1, guest_num + 1)]
+    params["vms"] = " ".join(vm_names)
+    return guest_count_mem, host_usable_mem, vm_names
+
+
 def _calc_default_mem_series(params, vm_names):
     """
     Calculate a default memory series based on the generator type.
@@ -21,6 +66,7 @@ def _calc_default_mem_series(params, vm_names):
     Supported generators:
       - linear: increments by mem_step from start_mem to memory_limit
       - random_32g_window: random samples within sliding 32G windows
+    Note: auto_calc_guest_count preparation is handled outside this function.
     """
     # Supported: "linear" (default fallback) or "random_32g_window" (used by current cfg)
     mem_generator = params.get("mem_generator", "linear")
@@ -136,43 +182,61 @@ def run(test, params, env):
 
     timeout = int(params.get_numeric("login_timeout", 240))
 
-    vm_names = params.objects("vms")
-    if not vm_names:
-        test.cancel("No VMs configured for multi_vms_multi_boot")
+    auto_calc_guest_count = params.get("auto_calc_guest_count", "no") == "yes"
+    original_nofile_limits = None
+    try:
+        if auto_calc_guest_count:
+            original_nofile_limits = _set_host_nofile_limit(test, params)
 
-    iteration_plan = _resolve_iteration_plan(params, vm_names)
+        vm_names = params.objects("vms")
+        # If auto_calc_guest_count is disabled, vms must be explicitly configured
+        if not vm_names and not auto_calc_guest_count:
+            test.cancel("No VMs configured for multi_vms_multi_boot")
+        # Validate auto_calc_guest_count requirements
+        if auto_calc_guest_count:
+            guest_count_mem, host_usable_mem, vm_names = _prepare_auto_calc_guest_count(params)
+            if host_usable_mem < guest_count_mem:
+                test.fail(
+                    "Not enough usable host memory for auto_calc_guest_count. "
+                    "required=%dM usable=%dM" % (guest_count_mem, host_usable_mem)
+                )
 
-    if not iteration_plan:
-        test.cancel("No valid iterations resolved for multi_vms_multi_boot")
+        iteration_plan = _resolve_iteration_plan(params, vm_names)
 
-    test.log.info("Total iterations: %s, VMs per iteration: %s",
-                  len(iteration_plan), len(vm_names))
+        if not iteration_plan:
+            test.cancel("No valid iterations resolved for multi_vms_multi_boot")
 
-    for iteration, vm_param_overrides in enumerate(iteration_plan, start=1):
-        started_vms = []
-        try:
-            override_desc = ", ".join(
-                "%s(mem=%s)" % (vm_name, vm_param_overrides.get(vm_name, {}).get("mem", "default"))
-                for vm_name in vm_names
-            )
-            error_context.context(
-                "Iteration %s/%s: %s"
-                % (iteration, len(iteration_plan), override_desc),
-                test.log.info,
-            )
+        test.log.info("Total iterations: %s, VMs per iteration: %s",
+                      len(iteration_plan), len(vm_names))
 
-            for vm_name in vm_names:
-                vm_params = params.object_params(vm_name)
-                vm_params["start_vm"] = "yes"
-                for key, value in vm_param_overrides.get(vm_name, {}).items():
-                    vm_params[key] = value
-                env_process.preprocess_vm(test, vm_params, env, vm_name)
-                started_vms.append(env.get_vm(vm_name))
+        for iteration, vm_param_overrides in enumerate(iteration_plan, start=1):
+            started_vms = []
+            try:
+                override_desc = ", ".join(
+                    "%s(mem=%s)" % (vm_name, vm_param_overrides.get(vm_name, {}).get("mem", "default"))
+                    for vm_name in vm_names
+                )
+                error_context.context(
+                    "Iteration %s/%s: %s"
+                    % (iteration, len(iteration_plan), override_desc),
+                    test.log.info,
+                )
 
-            for vm in started_vms:
-                vm.verify_alive()
-                session = vm.wait_for_login(timeout=timeout)
-                session.close()
-        finally:
-            for vm in started_vms:
-                vm.destroy(gracefully=False)
+                for vm_name in vm_names:
+                    vm_params = params.object_params(vm_name)
+                    vm_params["start_vm"] = "yes"
+                    for key, value in vm_param_overrides.get(vm_name, {}).items():
+                        vm_params[key] = value
+                    env_process.preprocess_vm(test, vm_params, env, vm_name)
+                    started_vms.append(env.get_vm(vm_name))
+
+                for vm in started_vms:
+                    vm.verify_alive()
+                    session = vm.wait_for_login(timeout=timeout)
+                    session.close()
+            finally:
+                for vm in started_vms:
+                    vm.destroy(gracefully=False)
+    finally:
+        if original_nofile_limits is not None:
+            resource.setrlimit(resource.RLIMIT_NOFILE, original_nofile_limits)
