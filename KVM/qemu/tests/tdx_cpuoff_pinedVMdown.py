@@ -31,7 +31,6 @@ def run(test, params, env):
     # TD can not boot up with vCPU number larger than host pCPU
     if cpu.online_count() < 64:
         test.cancel("Platform doesn't support to run this test")
-    params["smp"] = 64
 
     for i in range(0, 20):
         params["start_vm"] = "yes"
