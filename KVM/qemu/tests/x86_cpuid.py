@@ -11,64 +11,14 @@ from provider import dmesg_router  # pylint: disable=unused-import
 import os
 import sys
 from avocado.utils import process
-from avocado.core import exceptions
 from virttest import error_context, env_process
-from virttest import utils_package
 from provider.test_utils import get_baremetal_dir
+from provider.cpuid_utils import check_cpuid, prepare_cpuid
 
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 check_dir = "%s/../../../BM/instruction-check" % curr_dir
 sys.path.append(check_dir)
 from feature_list import feature_list
-
-
-def prepare_cpuid(test, params, src_dir, vm=None, session=None):
-    """
-    Compile cpuid test tool in host or guest.
-    Return the execuable test tool with absolute path.
-    :param test: QEMU test object
-    :param params: Dictionary with the test parameters
-    :param src_dir: Test tool srouce code directory of absolute path
-    :param vm: The vm object
-    :param session: Guest session
-    """
-    source_file = params["source_file"]
-    exec_file = params["exec_file"]
-    src_cpuid = os.path.join(src_dir, source_file)
-    if session:
-        test_dir = params["test_dir"]
-        vm.copy_files_to(src_cpuid, test_dir)
-    else:
-        test_dir = src_dir
-
-    if not utils_package.package_install("gcc", session):
-        test.cancel("Failed to install package gcc.")
-
-    compile_cmd = "cd %s && gcc %s -o %s" % (test_dir, source_file, exec_file)
-    if session:
-        status = session.cmd_status(compile_cmd)
-    else:
-        status = process.system(compile_cmd, shell=True)
-    if status:
-        raise exceptions.TestError("Test suite compile failed.")
-
-    return os.path.join(test_dir, exec_file)
-
-
-def check_cpuid(cpuid_arg, exec_bin, session=None):
-    """
-    Run cpuid test in host or guest
-    :param cpuid_arg: The feature to be checked
-    :param exec_bin: The execuable bianry tool with absolute path
-    :param session: Guest session
-    """
-    check_cmd = '%s %s' % (exec_bin, cpuid_arg)
-    func = process.getstatusoutput
-    if session:
-        func = session.cmd_status_output
-    s, o = func(check_cmd)
-
-    return s
 
 
 @error_context.context_aware
