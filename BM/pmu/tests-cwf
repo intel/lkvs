@@ -41,3 +41,4 @@ pmu_tests.sh -t zbit
 pmu_tests.sh -t counting
 pmu_tests.sh -t sampling
 pmu_tests.sh -t counting_multi
+pmu_cstate_tests.sh -t cstate_event_list
