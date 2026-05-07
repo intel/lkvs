@@ -22,3 +22,4 @@ apebs_tests.sh -t ip_1 -w 1
 apebs_tests.sh -t ip_2 -w 1
 apebs_tests.sh -t data_src -w 1
 pmu_tests.sh -t timed_pebs_msr
+pmu_cstate_tests.sh -t cstate_event_list
