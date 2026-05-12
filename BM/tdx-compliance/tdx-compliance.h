@@ -11,6 +11,11 @@
 #define X86_CR4_CET_BIT			23 /* enable Control-flow Enforcement Technology */
 #define X86_CR4_CET			_BITUL(X86_CR4_CET_BIT)
 #define MSR_IA32_VMX_PROCBASED_CTLS3	0x00000492
+/* Compatibility: kzalloc_obj may not be available in older kernels */
+#ifndef kzalloc_obj
+#define kzalloc_obj(type, flags)	((type *)kzalloc(sizeof(type), flags))
+#endif
+
 #define MSR_IA32_U_CET			0x000006a0 /* user mode cet */
 #define MSR_IA32_S_CET			0x000006a2 /* kernel mode cet */
 #define MSR_IA32_PL0_SSP		0x000006a4 /* ring-0 shadow stack pointer */
@@ -98,9 +103,9 @@ struct tdx_module_args {
 };
 
 /* Used to communicate with the TDX module */
-extern u64 __tdcall(u64 fn, struct tdx_module_args *args);
-extern u64 __tdcall_ret(u64 fn, struct tdx_module_args *args);
-extern u64 __tdcall_saved_ret(u64 fn, struct tdx_module_args *args);
+u64 __tdcall(u64 fn, struct tdx_module_args *args);
+u64 __tdcall_ret(u64 fn, struct tdx_module_args *args);
+u64 __tdcall_saved_ret(u64 fn, struct tdx_module_args *args);
 u64 tdcall(u64 fn, struct tdx_module_args *args);
 
 /* Used to request services from the VMM */
