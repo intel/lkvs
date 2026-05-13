@@ -1,5 +1,8 @@
 # This file collects Intel EDAC driver testcases which can run against
-# on Intel 10nm series server
+# Intel server platforms (i10nm: ICX/SPR/EMR/GNR/SRF/CWF, imh: DMR+)
 
 intel_edac.sh -t check_edac_bus
 intel_edac.sh -t check_edac_driver
+intel_edac.sh -t edac_addr_decode
+intel_edac.sh -t edac_mc_index_change
+intel_edac.sh -t edac_mc_check_populated
