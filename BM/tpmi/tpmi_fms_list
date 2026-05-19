@@ -1,3 +1,5 @@
-# Family 06 CPUs from arch/x86/include/asm/intel-family.h
+# CPU models from arch/x86/include/asm/intel-family.h
 #   GNR_X GNR_D SRF CWF
 06: ad    ae    af  dd
+#   DMR_X
+19: 01
