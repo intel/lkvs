@@ -20,8 +20,9 @@ source ../.env
 
 usage() {
   cat <<__EOF
-  usage: ./${0##*/} [-t TESTCASE_ID] [-H]
+  usage: ./${0##*/} [-t TESTCASE_ID] [-l LOOP_TIMES] [-H]
   -t  TEST CASE ID
+  -l  stress loop times, default 10 (for acr_stress)
   -H  show this
 __EOF
 }
@@ -482,7 +483,6 @@ rdpmc_user_disable() {
   local logfile4="temp4.log"
   #23H.00H:EBX[2]: RDPMC_USR_DISABLE
   do_cmd "cpuid_check 23 0 0 0 b 2"
-  [ $? -ne 0 ] && die "Platform does not support RDPMC USR DISABLE feature"
 
   rdpmc_attr=$1
   echo $rdpmc_attr > /sys/devices/cpu/rdpmc
@@ -497,8 +497,9 @@ rdpmc_user_disable() {
     0)
       for file in $logfile1 $logfile2 $logfile3 $logfile4;
       do
-        cat $file | grep "Receive and handle #GP fault"
-        [ $? -eq 0 ] || die "rdpmc user disable test fail with rdpmc 0"
+        if ! cat $file | grep "Receive and handle #GP fault"; then
+          die "rdpmc user disable test fail with rdpmc 0"
+        fi
         clear_files $file
       done
       ;;
@@ -526,6 +527,174 @@ rdpmc_user_disable() {
       done
       ;;
   esac
+}
+
+# ACR (Auto Counter Reload) test functions
+acr_detect_pmu() {
+  local pmu
+  for pmu in cpu cpu_core cpu_atom; do
+    if [[ -f /sys/devices/${pmu}/format/acr_mask ]]; then
+      ACR_PMU=$pmu
+      return 0
+    fi
+  done
+  return 1
+}
+
+acr_cpuid_test() {
+  # 07H.01H:EAX[8] ArchPerfMonExt should be set first
+  do_cmd "cpuid_check 7 0 1 0 a 8"
+  # ACR CPUID
+  do_cmd "cpuid_check 23 0 0 0 a 2"
+}
+
+acr_format_test() {
+  local cputype=$1
+  if [[ -z $cputype ]]; then
+    acr_detect_pmu || die "No PMU exposes acr_mask, platform may not support ACR"
+    cputype=$ACR_PMU
+  fi
+  do_cmd "test -f /sys/devices/${cputype}/format/acr_mask"
+}
+
+acr_basic_test() {
+  local cputype=$1
+  local perfdata="acr_basic.data"
+  local logfile="acr_basic.log"
+  local scriptlog="acr_basic_script.log"
+  local cpunums=""
+
+  if [[ -z $cputype ]]; then
+    acr_detect_pmu || die "No PMU exposes acr_mask, skip ACR basic"
+    cputype=$ACR_PMU
+  fi
+
+  [[ $cputype != "cpu" ]] && cpunums=$(cat /sys/devices/${cputype}/cpus)
+  clear_files $perfdata $logfile $scriptlog
+
+  if [[ -n $cpunums ]]; then
+    perf record -o $perfdata \
+      -e "{${cputype}/instructions,period=200000,acr_mask=0x2/,${cputype}/cycles,period=100000,acr_mask=0x3/}" \
+      -a taskset -c $cpunums sleep 1 >& $logfile
+  else
+    perf record -o $perfdata \
+      -e "{${cputype}/instructions,period=200000,acr_mask=0x2/,${cputype}/cycles,period=100000,acr_mask=0x3/}" \
+      -a sleep 1 >& $logfile
+  fi
+
+  sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
+  [[ -n $sample_count && $sample_count -gt 0 ]] || die "ACR basic: samples = 0!"
+
+  perf script -i $perfdata > $scriptlog 2>&1
+  instr_count=$(grep -c "instructions" $scriptlog)
+  cycles_count=$(grep -c "cycles" $scriptlog)
+  [[ $instr_count -gt 0 ]] || die "ACR basic: no instructions samples in perf script output!"
+  [[ $cycles_count -eq 0 ]] || die "ACR basic: cycles should not produce samples, found $cycles_count!"
+
+  clear_files $perfdata $logfile $scriptlog
+}
+
+acr_ratio_to_prev_test() {
+  local cputype=$1
+  local perfdata="acr_ratio.data"
+  local logfile="acr_ratio.log"
+  local scriptlog="acr_ratio_script.log"
+  local cpunums=""
+
+  if [[ -z $cputype ]]; then
+    acr_detect_pmu || die "No PMU exposes acr_mask, skip ratio-to-prev"
+    cputype=$ACR_PMU
+  fi
+
+  [[ $cputype != "cpu" ]] && cpunums=$(cat /sys/devices/${cputype}/cpus)
+  clear_files $perfdata $logfile $scriptlog
+
+  if [[ -n $cpunums ]]; then
+    perf record -o $perfdata \
+      -e "{${cputype}/instructions/,${cputype}/cycles,period=100000,ratio-to-prev=0.5/}" \
+      -a taskset -c $cpunums sleep 1 >& $logfile
+  else
+    perf record -o $perfdata \
+      -e "{${cputype}/instructions/,${cputype}/cycles,period=100000,ratio-to-prev=0.5/}" \
+      -a sleep 1 >& $logfile
+  fi
+
+  sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
+  [[ -n $sample_count && $sample_count -gt 0 ]] || die "ACR ratio-to-prev: samples = 0!"
+
+  perf script -i $perfdata > $scriptlog 2>&1
+  instr_count=$(grep -c "instructions" $scriptlog)
+  cycles_count=$(grep -c "cycles" $scriptlog)
+  [[ $instr_count -gt 0 ]] || die "ACR ratio-to-prev: no instructions samples in perf script output!"
+  [[ $cycles_count -eq 0 ]] || die "ACR ratio-to-prev: cycles should not produce samples, found $cycles_count!"
+
+  clear_files $perfdata $logfile $scriptlog
+}
+
+acr_stat_test() {
+  local cputype=$1
+  local logfile="acr_stat.log"
+
+  if [[ -z $cputype ]]; then
+    acr_detect_pmu || die "No PMU exposes acr_mask, skip ACR stat"
+    cputype=$ACR_PMU
+  fi
+
+  clear_files $logfile
+  perf stat -e "{${cputype}/instructions,period=200000,acr_mask=0x2/,${cputype}/cycles,period=100000,acr_mask=0x3/}" \
+    -a sleep 1 >& $logfile
+  clear_files $logfile
+}
+
+acr_reject_freq_test() {
+  local cputype
+  acr_detect_pmu || die "No PMU exposes acr_mask, skip ACR reject freq"
+  cputype=$ACR_PMU
+
+  should_fail "perf record -o /dev/null -e '{${cputype}/instructions,acr_mask=0x2/,${cputype}/cycles,acr_mask=0x3/}' -F 1000 -a true 2>/dev/null"
+}
+
+acr_reject_ppp_test() {
+  local cputype
+  acr_detect_pmu || die "No PMU exposes acr_mask, skip ACR reject ppp"
+  cputype=$ACR_PMU
+
+  should_fail "perf record -o /dev/null -e '{${cputype}/instructions,period=200000,acr_mask=0x2/ppp,${cputype}/cycles,period=100000,acr_mask=0x3/}' -a true 2>/dev/null"
+}
+
+acr_reject_contiguity_test() {
+  local cputype
+  acr_detect_pmu || die "No PMU exposes acr_mask, skip ACR reject contiguity"
+  cputype=$ACR_PMU
+
+  should_fail "perf record -o /dev/null -e '{${cputype}/instructions,period=200000,acr_mask=0x2/,dummy,${cputype}/cycles,period=100000,acr_mask=0x3/}' -a true 2>/dev/null"
+}
+
+acr_stress_test() {
+  local cputype=$1
+  : "${STRESS_TIMES:=10}"
+  for ((i = 0; i < STRESS_TIMES; i++)); do
+    acr_basic_test "$cputype"
+    acr_ratio_to_prev_test "$cputype"
+    acr_stat_test "$cputype"
+  done
+}
+
+acr_run_on_supported_pmus() {
+  local fn=$1
+  local has_hybrid=0
+
+  if [[ -f /sys/devices/cpu_atom/format/acr_mask ]]; then
+    has_hybrid=1
+    $fn "cpu_atom"
+  fi
+  if [[ -f /sys/devices/cpu_core/format/acr_mask ]]; then
+    has_hybrid=1
+    $fn "cpu_core"
+  fi
+
+  [[ $has_hybrid -eq 1 ]] && return 0
+  $fn
 }
 
 pmu_test() {
@@ -611,14 +780,44 @@ pmu_test() {
     rdpmc_user_disable_2)
       rdpmc_user_disable 2
       ;;
+    acr_cpuid)
+      acr_cpuid_test
+      ;;
+    acr_format)
+      acr_run_on_supported_pmus acr_format_test
+      ;;
+    acr_basic)
+      acr_run_on_supported_pmus acr_basic_test
+      ;;
+    acr_ratio_to_prev)
+      acr_run_on_supported_pmus acr_ratio_to_prev_test
+      ;;
+    acr_stat)
+      acr_run_on_supported_pmus acr_stat_test
+      ;;
+    acr_reject_freq)
+      acr_reject_freq_test
+      ;;
+    acr_reject_ppp)
+      acr_reject_ppp_test
+      ;;
+    acr_reject_contiguity)
+      acr_reject_contiguity_test
+      ;;
+    acr_stress)
+      acr_run_on_supported_pmus acr_stress_test
+      ;;
     esac
   return 0
 }
 
-while getopts :t:H arg; do
+while getopts :t:l:H arg; do
   case $arg in
     t)
       TEST_SCENARIO=$OPTARG
+      ;;
+    l)
+      STRESS_TIMES=$OPTARG
       ;;
     H)
       usage && exit 0
