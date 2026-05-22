@@ -142,6 +142,10 @@ feature_list = {
         "cpuid": ['7', '0', '0', '0', 'd', '8'],
         "platforms": {}
     },
+    "AVX512_BF16": {
+        "cpuid": ['7', '0', '1', '0', 'a', '5'],
+        "platforms": {"SPR", "EMR", "GNR", "DMR"}
+    },
     "SERIALIZE": {
         "cpuid": ['7', '0', '0', '0', 'd', '14'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}

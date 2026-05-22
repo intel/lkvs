@@ -83,6 +83,7 @@ def run(test, params, env):
         if cpuid_args:
             host_check_cpuid()
 
+    session = None
     try:
         params["start_vm"] = "yes"
         vm_name = params['main_vm']
@@ -99,5 +100,6 @@ def run(test, params, env):
     finally:
         if check_host_cpuid:
             process.system("rm %s -f" % host_exec_bin, shell=True, ignore_status=True)
-        session.cmd("rm %s/cpuid* -rf" % test_dir, ignore_all_errors=True)
-        session.close()
+        if session is not None:
+            session.cmd("rm %s/cpuid* -rf" % test_dir, ignore_all_errors=True)
+            session.close()
