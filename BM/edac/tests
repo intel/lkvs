@@ -6,3 +6,5 @@ intel_edac.sh -t check_edac_driver
 intel_edac.sh -t edac_addr_decode
 intel_edac.sh -t edac_mc_index_change
 intel_edac.sh -t edac_mc_check_populated
+intel_edac.sh -t edac_rrl_mode1
+intel_edac.sh -t edac_rrl_mode2

@@ -159,6 +159,47 @@ edac_mc_index_change() {
   fi
 }
 
+edac_retry_rd_err_log_check() {
+  local mode=$1
+  local MARKER dmesg_output
+
+  if [[ -w /dev/kmsg ]]; then
+    MARKER="EDAC_RRL_MARKER_$(date +%s%N)"
+    echo "$MARKER" > /dev/kmsg
+  fi
+
+  # Reload EDAC driver with retry_rd_err_log parameter
+  modprobe -r "${MC}_edac" 2>/dev/null
+  modprobe "${MC}_edac" retry_rd_err_log="$mode" || die "Failed to load ${MC}_edac with retry_rd_err_log=$mode"
+
+  # Unload and reload to cover kernel teardown paths
+  modprobe -r "${MC}_edac"
+  modprobe "${MC}_edac" retry_rd_err_log="$mode" || die "Failed to reload ${MC}_edac with retry_rd_err_log=$mode"
+
+  # Trigger EDAC address decode to exercise the RRL path
+  echo 0x12345 > "$EDAC_DEBUG_PATH"
+
+  if [[ -w /dev/kmsg ]]; then
+    dmesg_output=$(dmesg | sed -n "/$MARKER/,\$p" | grep -v "$MARKER")
+  else
+    dmesg_output=$(dmesg | tail -n 1000)
+  fi
+
+  if echo "$dmesg_output" | grep -q -e "retry_rd_err_log"; then
+    if [[ "$MC" == "imh" ]]; then
+      if echo "$dmesg_output" | grep -iq "SubChId"; then
+        test_print_trc "EDAC retry_rd_err_log=$mode and SubChId checked successfully"
+      else
+        die "retry_rd_err_log=$mode: Failed to find SubChId in dmesg (required for $MC)"
+      fi
+    else
+      test_print_trc "EDAC retry_rd_err_log=$mode checked successfully"
+    fi
+  else
+    die "Failed to find retry_rd_err_log in dmesg (mode=$mode)"
+  fi
+}
+
 edac_mc_check_populated() {
   local mc_indices sorted_mc_indices populated_indexes sorted_populated
   local SYSFS_EDAC_MC_DIR="/sys/devices/system/edac/mc"
@@ -228,6 +269,12 @@ edac_test() {
   edac_mc_check_populated)
     edac_test_error_inject_iomem
     edac_mc_check_populated
+    ;;
+  edac_rrl_mode1)
+    edac_retry_rd_err_log_check 1
+    ;;
+  edac_rrl_mode2)
+    edac_retry_rd_err_log_check 2
     ;;
   esac
 }
