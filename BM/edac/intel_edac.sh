@@ -71,7 +71,7 @@ edac_test_error_inject() {
   SIZE_KB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
   SIZE_GB=$((SIZE_KB / 1024 / 1024))
   tmp_addr_file="${PWD}/einj_edac.txt"
-  > "$tmp_addr_file"
+  true > "$tmp_addr_file"
 
   for ((i = 0; i < (SIZE_GB + TOLM) * 4; i += 4)); do
     addr_low=$(head -c 32 /dev/urandom | md5sum | head -c 7)
@@ -106,7 +106,7 @@ edac_test_error_inject_iomem() {
 
   tmp_addr_file="${PWD}/einj_iomem.txt"
   iomem_tmp="${PWD}/iomem_tmp"
-  > "$tmp_addr_file"
+  true > "$tmp_addr_file"
 
   URANDOM=$(od -An -N4 -t uL /dev/urandom | tr -d " ")
   grep "System RAM" /proc/iomem | cut -d ':' -f1 > "$iomem_tmp"
@@ -204,8 +204,8 @@ edac_mc_check_populated() {
   local mc_indices sorted_mc_indices populated_indexes sorted_populated
   local SYSFS_EDAC_MC_DIR="/sys/devices/system/edac/mc"
 
-  mc_indices=($(grep -oE "EDAC MC[0-9]+:" "$LOG" | sort -u | grep -oE "[0-9]+"))
-  sorted_mc_indices=($(printf "%s\n" "${mc_indices[@]}" | sort -n))
+  mapfile -t mc_indices < <(grep -oE "EDAC MC[0-9]+:" "$LOG" | sort -u | grep -oE "[0-9]+")
+  mapfile -t sorted_mc_indices < <(printf "%s\n" "${mc_indices[@]}" | sort -n)
 
   [[ -d "$SYSFS_EDAC_MC_DIR" ]] || die "EDAC mc structure not found under $SYSFS_EDAC_MC_DIR"
 
@@ -222,7 +222,7 @@ edac_mc_check_populated() {
   done
 
   [[ ${#populated_indexes[@]} -gt 0 ]] || die "No populated memory controllers found"
-  sorted_populated=($(printf "%s\n" "${populated_indexes[@]}" | sort -n))
+  mapfile -t sorted_populated < <(printf "%s\n" "${populated_indexes[@]}" | sort -n)
 
   test_print_trc "Populated MCs from sysfs: ${sorted_populated[*]}"
   test_print_trc "Decoded MCs from log: ${sorted_mc_indices[*]}"
