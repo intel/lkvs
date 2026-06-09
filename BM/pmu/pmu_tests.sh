@@ -282,7 +282,7 @@ arch_pebs_counter_group_stress_test() {
   logfile="temp.txt"
   #because nmi_watchdog will occupy one fix counter, so disable it
   echo 0 > /proc/sys/kernel/nmi_watchdog
-  event="{branches,branches,branches,branches,branches,branches,branches,branches,cycles,instructions,ref-cycles,topdown-bad-spec,topdown-fe-bound,topdown-retiring"
+  event="{branches,branches,branches,branches,branches,branches,branches,branches,cycles,instructions,ref-cycles,topdown-bad-spec,topdown-fe-bound,topdown-retiring}"
   perf record -o $perfdata -e "$event:p" -a -- sleep 1 2>&1|tee $logfile
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -c "PERF_RECORD_SAMPLE")
@@ -738,7 +738,7 @@ pmu_test() {
     arch_pebs_counter_group)
       arch_pebs_counter_group_test
       ;;
-    arch_pebs_counter_group_stres)
+    arch_pebs_counter_group_stress)
       arch_pebs_counter_group_stress_test
       ;;
     arch_pebs_gp_counter)
