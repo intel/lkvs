@@ -267,8 +267,8 @@ arch_pebs_counter_group_test() {
   sample_count=$(grep "sample" $logfile_s | awk '{print $10}' | tr -cd "0-9")
   #[[ $sample_count -eq 0 ]] && die "samples = 0!"
   if [[ $sample_count -eq 0 ]]; then
-    die "samples = 0!"
     clear_files $logfile $perfdata $perfdata_s $logfile_s
+    die "samples = 0!"
   fi
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -c "PERF_RECORD_SAMPLE")
@@ -284,6 +284,10 @@ arch_pebs_counter_group_stress_test() {
   echo 0 > /proc/sys/kernel/nmi_watchdog
   event="{branches,branches,branches,branches,branches,branches,branches,branches,cycles,instructions,ref-cycles,topdown-bad-spec,topdown-fe-bound,topdown-retiring}"
   perf record -o $perfdata -e "$event:p" -a -- sleep 1 2>&1|tee $logfile
+  if grep "Error" $logfile > /dev/null; then
+    clear_files $logfile $perfdata
+    die "Sampling some events failed!"
+  fi
   sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
   count=$(perf report -D -i $perfdata| grep -c "PERF_RECORD_SAMPLE")
   clear_files $logfile $perfdata
@@ -384,25 +388,25 @@ sampling_test() {
   perf_log="perf.log"
   clear_files $perf_log
   do_cmd "perf record -o $perfdata -e $e_topdown_bad_spec $benchmark >& $perf_log"
-  samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
+  samples=$(perf report -D -i perf.data |grep -A 1 $e_topdown_bad_spec |grep -i "sample" | awk '{print $3}' | tr -cd "0-9")
   clear_files $perf_log $perfdata
   test_print_trc "$e_topdown_bad_spec sample = $samples"
   [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_bad_spec!"
 
   do_cmd "perf record -o $perfdata -e $e_topdown_fe_bound $benchmark >& $perf_log"
-  samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
+  samples=$(perf report -D -i perf.data |grep -A 1 $e_topdown_fe_bound |grep -i "sample" | awk '{print $3}' | tr -cd "0-9")
   clear_files $perf_log $perfdata
   test_print_trc "$e_topdown_fe_bound sample = $samples"
   [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_fe_bound!"
 
   do_cmd "perf record -o $perfdata -e $e_topdown_retiring $benchmark >& $perf_log"
-  samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
+  samples=$(perf report -D -i perf.data |grep -A 1 $e_topdown_retiring |grep -i "sample" | awk '{print $3}' | tr -cd "0-9")
   clear_files $perf_log $perfdata
   test_print_trc "$e_topdown_retiring sample = $samples"
   [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_retiring!"
 
   do_cmd "perf record -o $perfdata -e $e_topdown_be_bound $benchmark >& $perf_log"
-  samples=$(grep "sample" $perf_log | awk '{print $10}' | tr -cd "0-9")
+  samples=$(perf report -D -i perf.data |grep -A 1 $e_topdown_be_bound |grep -i "sample" | awk '{print $3}' | tr -cd "0-9")
   clear_files $perf_log $perfdata
   test_print_trc "$e_topdown_be_bound sample = $samples"
   [[ $samples -eq 0 ]] && die "samples = 0 for $e_topdown_be_bound!"
