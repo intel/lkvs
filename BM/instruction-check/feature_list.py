@@ -309,6 +309,26 @@ feature_list = {
     "AMX_MOVRS": {
         "cpuid": ['1E', '0', '1', '0', 'a', '8'],
         "platforms": {"DMR"}
+    },
+    "ADX": {
+        "cpuid": ['7', '0', '0', '0', 'b', '19'],
+        "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF", "DMR"}
+    },
+    "VMX": {
+        "cpuid": ['1', '0', '0', '0', 'c', '5'],
+        "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF", "DMR"}
+    },
+    "IBRS": {
+        "cpuid": ['7', '0', '0', '0', 'd', '26'],
+        "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF", "DMR"}
+    },
+    "ARCH_CAPABILITIES": {
+        "cpuid": ['7', '0', '0', '0', 'd', '29'],
+        "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF", "DMR"}
+    },
+    "SSBD": {
+        "cpuid": ['7', '0', '0', '0', 'd', '31'],
+        "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF", "DMR"}
     }
     # Add more feature_info here
 }
