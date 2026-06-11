@@ -41,7 +41,7 @@ def run(test, params, env):
 
     try:
         # Collect pre-migration state
-        pre_state = _collect_state(test, session, params, verify_target)
+        pre_state = _collect_state(test, vm, session, params, verify_target)
 
         # For continuity test, start background process before migration
         if verify_target == "continuity":
@@ -68,7 +68,7 @@ def run(test, params, env):
         vm.destroy(gracefully=False)
 
 
-def _collect_state(test, session, params, verify_target):
+def _collect_state(test, vm, session, params, verify_target):
     """Collect guest state before migration for comparison."""
     state = {}
     if verify_target == "cpu_flags":
@@ -76,6 +76,15 @@ def _collect_state(test, session, params, verify_target):
         flags = set(output.strip().split(":")[1].split()) if ":" in output else set()
         state["cpu_flags"] = flags
         test.log.info("Pre-migration CPU flags count: %d", len(flags))
+
+    elif verify_target == "cpuid":
+        cpuid_cmd = params.get("cpuid_dump_cmd", "cpuid -1 -r")
+        output = session.cmd_output(cpuid_cmd, timeout=60)
+        state["cpuid"] = output.strip()
+        test.log.info(
+            "Pre-migration CPUID dump collected (%d lines)",
+            len(output.strip().splitlines()),
+        )
 
     elif verify_target == "cpu_num":
         output = session.cmd_output("nproc").strip()
@@ -131,6 +140,27 @@ def _verify_state(test, session, params, verify_target, pre_state):
         if extra:
             test.log.warning("Extra CPU flags after migration: %s", " ".join(extra))
         test.log.info("CPU flags preserved after migration (%d flags)", len(post_flags))
+
+    elif verify_target == "cpuid":
+        cpuid_cmd = params.get("cpuid_dump_cmd", "cpuid -1 -r")
+        post_output = session.cmd_output(cpuid_cmd, timeout=60).strip()
+        pre_output = pre_state["cpuid"]
+        if pre_output != post_output:
+            pre_lines = pre_output.splitlines()
+            post_lines = post_output.splitlines()
+            diffs = []
+            for i, (pre_l, post_l) in enumerate(zip(pre_lines, post_lines)):
+                if pre_l != post_l:
+                    diffs.append("line %d: before=%r after=%r" % (i + 1, pre_l, post_l))
+            if len(pre_lines) != len(post_lines):
+                diffs.append(
+                    "line count: before=%d after=%d" % (len(pre_lines), len(post_lines))
+                )
+            test.fail("CPUID changed after migration:\n%s" % "\n".join(diffs[:20]))
+        test.log.info(
+            "CPUID preserved after migration (%d lines)",
+            len(post_output.splitlines()),
+        )
 
     elif verify_target == "cpu_num":
         output = session.cmd_output("nproc").strip()
