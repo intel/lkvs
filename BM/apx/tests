@@ -40,3 +40,18 @@ apx_instructions -t nf_inc
 apx_instructions -t nf_dec
 apx_instructions -t cfcmov
 apx_instructions -t push2_pop2
+
+# Ptrace EGPR state injection/retrieval
+apx_ptrace -t ptrace_get
+apx_ptrace -t ptrace_inject
+apx_ptrace -t ptrace_modify
+
+# Signal frame ABI validation
+apx_sigcontext -t sigctx_magic
+apx_sigcontext -t sigctx_xfeatures
+apx_sigcontext -t sigctx_xstatebv
+apx_sigcontext -t sigctx_delivery
+apx_sigcontext -t sigctx_restore
+
+# Multi-threaded context switch
+apx_ctxsw -t ctxsw_threads

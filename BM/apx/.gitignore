@@ -2,4 +2,7 @@ apx_cpuid
 apx_xstate
 apx_egpr
 apx_instructions
+apx_ptrace
+apx_sigcontext
+apx_ctxsw
 *.o
