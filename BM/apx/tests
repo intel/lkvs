@@ -1,0 +1,42 @@
+# This file collects the APX (Advanced Performance Extensions) tests on
+# Intel® Architecture-based platforms.
+# @hw_dep: cpuid_check 7 0 1 0 d 21 @ CPU doesn't support APX CPUID.(EAX=07H,ECX=1):EDX[bit 21]
+# @other_dep: general_test.sh -t kconfig -k "CONFIG_X86_64=y" @ No kconfig CONFIG_X86_64=y
+
+# CPUID feature enumeration
+apx_cpuid
+
+# XSAVE state component 19 (EGPR) basic validation
+apx_xstate -t xstate_size
+apx_xstate -t xstate_offset
+
+# EGPR preserved across signal handling
+apx_xstate -t signal
+
+# EGPR preserved in child after fork
+apx_xstate -t fork
+
+# EGPR preserved across context switch
+apx_xstate -t context_switch
+
+# Basic EGPR read/write functionality
+apx_egpr -t basic_rw
+apx_egpr -t all_regs
+
+# EGPR in syscall boundary (R16-R31 must be caller-saved)
+apx_egpr -t syscall_clobber
+
+# APX instruction encoding tests
+apx_instructions -t ndd_add
+apx_instructions -t ndd_sub
+apx_instructions -t ndd_and
+apx_instructions -t ndd_or
+apx_instructions -t ndd_xor
+apx_instructions -t ndd_shl
+apx_instructions -t ndd_shr
+apx_instructions -t nf_add
+apx_instructions -t nf_sub
+apx_instructions -t nf_inc
+apx_instructions -t nf_dec
+apx_instructions -t cfcmov
+apx_instructions -t push2_pop2
