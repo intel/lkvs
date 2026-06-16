@@ -45,6 +45,19 @@ target_compile_options(apx_egpr PRIVATE ${APX_FLAGS})
 add_executable(apx_instructions apx_instructions.c)
 target_compile_options(apx_instructions PRIVATE ${APX_FLAGS})
 
+# Build apx_ptrace
+add_executable(apx_ptrace apx_ptrace.c)
+target_link_libraries(apx_ptrace PRIVATE apx_xstate_helpers)
+
+# Build apx_sigcontext
+add_executable(apx_sigcontext apx_sigcontext.c)
+target_link_libraries(apx_sigcontext PRIVATE apx_xstate_helpers)
+
+# Build apx_ctxsw
+add_executable(apx_ctxsw apx_ctxsw.c)
+target_link_libraries(apx_ctxsw PRIVATE apx_xstate_helpers pthread)
+
 # Install targets
 install(TARGETS apx_cpuid apx_xstate apx_egpr apx_instructions
+                apx_ptrace apx_sigcontext apx_ctxsw
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (c) 2024 Intel Corporation.
 
-BIN := apx_cpuid apx_xstate apx_egpr apx_instructions
+BIN := apx_cpuid apx_xstate apx_egpr apx_instructions apx_ptrace apx_sigcontext apx_ctxsw
 
 CFLAGS += -O2 -g -std=gnu99 -Wall -no-pie
 NO_FPU_FLAG += -mno-sse -mno-mmx -mno-sse2 -mno-avx -mno-pku
@@ -23,6 +23,18 @@ apx_egpr: apx_egpr.c
 
 apx_instructions: apx_instructions.c
 	gcc $(CFLAGS) $(APX_FLAG) -o $@ $^
+
+apx_ptrace: apx_ptrace.c apx_xstate_helpers.c
+	gcc $(CFLAGS) $(NO_FPU_FLAG) $(APX_FLAG) -c -o apx_xstate_helpers.o apx_xstate_helpers.c
+	gcc $(CFLAGS) -o $@ apx_ptrace.c apx_xstate_helpers.o
+
+apx_sigcontext: apx_sigcontext.c apx_xstate_helpers.c
+	gcc $(CFLAGS) $(NO_FPU_FLAG) $(APX_FLAG) -c -o apx_xstate_helpers.o apx_xstate_helpers.c
+	gcc $(CFLAGS) -o $@ apx_sigcontext.c apx_xstate_helpers.o
+
+apx_ctxsw: apx_ctxsw.c apx_xstate_helpers.c
+	gcc $(CFLAGS) $(NO_FPU_FLAG) $(APX_FLAG) -c -o apx_xstate_helpers.o apx_xstate_helpers.c
+	gcc $(CFLAGS) -pthread -o $@ apx_ctxsw.c apx_xstate_helpers.o
 
 clean:
 	rm -rf $(BIN) *.o
