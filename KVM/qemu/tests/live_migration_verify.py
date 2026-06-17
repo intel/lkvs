@@ -8,6 +8,7 @@ import time
 from provider import dmesg_router  # pylint: disable=unused-import
 
 from virttest import error_context
+from virttest import utils_package
 
 
 @error_context.context_aware
@@ -41,7 +42,7 @@ def run(test, params, env):
 
     try:
         # Collect pre-migration state
-        pre_state = _collect_state(test, vm, session, params, verify_target)
+        pre_state = _collect_state(test, session, params, verify_target)
 
         # For continuity test, start background process before migration
         if verify_target == "continuity":
@@ -68,7 +69,7 @@ def run(test, params, env):
         vm.destroy(gracefully=False)
 
 
-def _collect_state(test, vm, session, params, verify_target):
+def _collect_state(test, session, params, verify_target):
     """Collect guest state before migration for comparison."""
     state = {}
     if verify_target == "cpu_flags":
@@ -79,6 +80,9 @@ def _collect_state(test, vm, session, params, verify_target):
 
     elif verify_target == "cpuid":
         cpuid_cmd = params.get("cpuid_dump_cmd", "cpuid -1 -r")
+        if session.cmd_status("which cpuid") != 0:
+            if not utils_package.package_install("cpuid", session):
+                test.cancel("cpuid package is not available in guest")
         output = session.cmd_output(cpuid_cmd, timeout=60)
         state["cpuid"] = output.strip()
         test.log.info(
