@@ -1,0 +1,7 @@
+# This file collects Intel RAS/MCE testcases that require mcelog specifically.
+# These tests will be skipped on distributions that only support rasdaemon.
+# @other_dep: general_test.sh -t module -p einj @ No module einj
+# @other_dep: which mcelog 2>/dev/null @ mcelog is required for these tests
+
+# PFA (Predictive Failure Analysis) - uses mcelog daemon internally
+mce_test.sh -t pfa
