@@ -22,7 +22,6 @@ OBJS= yogini.o work_AMX.o work_AVX.o work_AVX2.o work_AVX512.o work_VNNI512.o $(
 ASMS= work_AMX.S work_AVX.S work_AVX2.S work_AVX512.S work_VNNI512.S work_VNNI.S work_DOTPROD.S work_PAUSE.S work_TPAUSE.S work_UMWAIT.S work_RDTSC.S work_SSE.S work_MEM.S work_memcpy.S
 GCC11_OBJS=work_VNNI.o
 
-yogini : $(OBJS) $(ASMS)
 ifeq ($(DEBUG), 1)
 override CFLAGS +=      -march=sapphirerapids -g
 else
@@ -34,6 +33,17 @@ override CFLAGS +=      -O3
 override CFLAGS +=      -mtune=skylake-avx512
 #override CFLAGS +=     -mtune=alderlake
 override CFLAGS +=      -mavx512bf16
+
+# work_AMX.c uses AMX tile intrinsics such as _tile_loadconfig(), which
+# require AMX target options at compile time. Do not rely on -march=native
+# because it depends on host CPU features exposed to the container and may
+# otherwise fail with "target specific option mismatch"
+AMX_CFLAGS := -mamx-tile -mamx-bf16
+
+work_AMX.o: CFLAGS += $(AMX_CFLAGS)
+work_AMX.S: CFLAGS += $(AMX_CFLAGS)
+
+yogini : $(OBJS) $(ASMS)
 
 LDFLAGS += -lm
 LDFLAGS += -lpthread

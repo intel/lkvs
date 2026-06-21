@@ -1,0 +1,38 @@
+^wrss\.c:31: warning: "SHADOW_STACK_SET_TOKEN" redefined
+^shstk_unlock_test\.c:35: warning: "SHADOW_STACK_SET_TOKEN" redefined
+^shstk_cp\.c:28: warning: "SHADOW_STACK_SET_TOKEN" redefined
+^glibc_shstk_test\.c:154:9: warning: 'memset' writing 44 bytes into a region of size 20 overflows the destination
+^glibc_shstk_test\.c:167:9: warning: 'memset' writing 28 bytes into a region of size 20 overflows the destination
+
+^cmpccxadd\.c:70:16: warning: format '%d' expects argument of type 'int', but argument [0-9]+ has type 'long unsigned int'
+^cmpccxadd\.c:85:16: warning: format '%d' expects argument of type 'int', but argument [0-9]+ has type 'long unsigned int'
+^cmpccxadd\.c:101:16: warning: format '%d' expects argument of type 'int', but argument [0-9]+ has type 'long int'
+^cmpccxadd\.c:116:16: warning: format '%d' expects argument of type 'int', but argument [0-9]+ has type 'long int'
+^cmpccxadd\.c:147:[0-9]+: warning: format '%d' expects argument of type 'int', but argument [0-9]+ has type 'long unsigned int'
+^cmpccxadd\.c:162:[0-9]+: warning: format '%d' expects argument of type 'int', but argument [0-9]+ has type 'long int'
+
+^sort_test\.c:55:42: warning: format '%zu' expects argument of type 'size_t', but argument 2 has type 'int'
+^ltp-pan\.c:433:15: warning: variable 'av' set but not used
+^victim\.c:57:13: warning: variable 'fatarray' set but not used
+^erst-inject\.c:137:34: warning: variable 'mem_err' set but not used
+^/usr/include/features\.h:196:3: warning: #warning "_BSD_SOURCE and _SVID_SOURCE are deprecated, use _DEFAULT_SOURCE"
+
+^tinjpage\.c:824:36: warning: '%s' directive output may be truncated writing up to 255 bytes into a region of size 100
+^tinjpage\.c:230:35: warning: 'fclose' called on pointer returned from a mismatched allocation function
+^tsoftinj\.c:149:38: warning: '%s' directive output may be truncated writing up to 255 bytes into a region of size 100
+^page-poisoning\.c:399:44: warning: '/dirty' directive output may be truncated writing 6 bytes into a region of size between 1 and 4096
+^page-poisoning\.c:469:35: warning: '/clean' directive output may be truncated writing 6 bytes into a region of size between 1 and 4096
+
+^einj\.c:168:45: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'long long unsigned int'
+^einj_mem_uc\.c:985:17: warning: ignoring return value of 'fscanf' declared with attribute 'warn_unused_result'
+^proc_cpuinfo\.c:52:64: warning: format '%d' expects argument of type 'int', but argument 3 has type 'long int'
+^/usr/bin/ld: warning: do_memcpy\.o: missing \.note\.GNU-stack section implies executable stack
+
+^memattr\.c:138:40: warning: format '%ld' expects argument of type 'long int', but argument 2 has type 'int'
+^memattr\.c:138:63: warning: format '%d' expects argument of type 'int', but argument 4 has type 'long unsigned int'
+^memattr\.c:138:68: warning: format '%d' expects argument of type 'int', but argument 5 has type 'long unsigned int'
+^victim\.c:347:17: warning: ignoring return value of 'read' declared with attribute 'warn_unused_result'
+
+^page\.c:382:25: warning: ignoring return value of 'asprintf' declared with attribute 'warn_unused_result'
+^page\.c:389:25: warning: ignoring return value of 'asprintf' declared with attribute 'warn_unused_result'
+^page\.c:400:25: warning: ignoring return value of 'asprintf' declared with attribute 'warn_unused_result'

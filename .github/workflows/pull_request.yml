@@ -11,11 +11,16 @@ on:
 
 jobs:
   CodeCheck:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Setup Environment
+        shell: bash
         run: |
-          sudo apt install -y python3 python3-pip python3-git python3-ply git shellcheck perl codespell
+          set -euo pipefail
+
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip python3-git python3-ply git shellcheck perl codespell wget
+
           sudo mkdir -p /usr/share/codespell
           sudo wget https://raw.githubusercontent.com/codespell-project/codespell/master/codespell_lib/data/dictionary.txt -O /usr/share/codespell/dictionary.txt
           sudo wget https://raw.githubusercontent.com/torvalds/linux/master/scripts/spelling.txt -O /usr/bin/spelling.txt
@@ -23,37 +28,50 @@ jobs:
           sudo wget https://raw.githubusercontent.com/torvalds/linux/master/scripts/checkpatch.pl -O /bin/checkpatch.pl
           sudo chmod +x /bin/checkpatch.pl
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Check Code
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           ./.github/scripts/pr_check "origin/${{ github.base_ref }}" "${{ github.sha }}"
+
   BuildCheck:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - name: Setup Environment
+      - name: Show runner info
+        shell: bash
         run: |
-          sudo apt remove docker docker-engine docker.io containerd runc -y
-          sudo apt install ca-certificates curl gnupg lsb-release -y
-          sudo mkdir -p /etc/apt/keyrings
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-          sudo apt update
-          sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
+          set -euo pipefail
+
+          echo "===== GitHub runner context ====="
+          echo "Runner OS: ${RUNNER_OS:-unknown}"
+          echo "Runner arch: ${RUNNER_ARCH:-unknown}"
+          echo "GitHub ref: ${GITHUB_REF:-unknown}"
+          echo "GitHub SHA: ${GITHUB_SHA:-unknown}"
+
+          echo "===== /etc/os-release ====="
+          cat /etc/os-release || true
+
+          echo "===== uname ====="
+          uname -a || true
+
+          echo "===== docker ====="
+          docker --version
+          docker info >/dev/null && echo "Docker daemon is ready."
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: recursive
       - name: Build Docker Image
-        run: sudo docker build -f BM/Dockerfile.build -t builder BM
+        run: docker build -f BM/Dockerfile.build.ddt -t builder BM
       - name: Build Project
-        run: sudo ./.github/scripts/build_check
+        run: ./.github/scripts/build_check
+
   python-style-check:
     name: Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
@@ -62,11 +80,11 @@ jobs:
 
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -76,33 +94,74 @@ jobs:
       - name: Run inspekt
         run: inspekt checkall ./KVM --disable-style E501,E265,W601,E402,E722,E741 --disable-lint=W,R,C,E0601,E1002,E1101,E1103,E1120,F0401,I0011,I1101 --enable-lint W0611,W1201 --no-license-check
       - run: echo "This job's status is ${{ job.status }}."
+
   cfg-lint-check:
     name: Cfg lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Get changed files
+      - name: Get changed cfg files
         id: cfg-files
-        uses: tj-actions/changed-files@v46
-        with:
-          files: |
-            ./KVM/qemu/*.cfg
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          MERGE_BASE="$(git merge-base "${BASE}" "${HEAD}")"
+
+          echo "Base SHA: ${BASE}"
+          echo "Head SHA: ${HEAD}"
+          echo "Merge base: ${MERGE_BASE}"
+
+          # Include added, copied, modified, renamed, and type-changed cfg files; exclude deleted files.
+          git diff --name-only --diff-filter=ACMRT "${MERGE_BASE}" "${HEAD}" -- 'KVM/qemu/*.cfg' > changed_cfg_files.txt
+
+          echo "Changed cfg files:"
+          cat changed_cfg_files.txt || true
+
+          {
+            echo "all_changed_files<<EOF"
+            cat changed_cfg_files.txt
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ -s changed_cfg_files.txt ]; then
+            echo "any_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "any_changed=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Set matrix
         id: set-matrix
-        run: echo matrix=$(python3 -c 'print("${{ steps.cfg-files.outputs.all_changed_files }}".split())') >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+
+          with open("changed_cfg_files.txt", "r", encoding="utf-8") as f:
+              files = [line.strip() for line in f if line.strip()]
+
+          print(f"matrix={json.dumps(files)}")
+          PY
       - name: Check cfg files lint
         if: steps.cfg-files.outputs.any_changed == 'true'
+        shell: bash
         run: |
-          ./.github/scripts/cfg-lint-check.py ${{ steps.cfg-files.outputs.all_changed_files }}
+          set -euo pipefail
+          mapfile -t cfg_files < changed_cfg_files.txt
+          echo "Linting cfg files:"
+          printf '  %s\n' "${cfg_files[@]}"
+          ./.github/scripts/cfg-lint-check.py "${cfg_files[@]}"
+
   cartesian-syntax-check:
     name: Cartesian syntax
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: cfg-lint-check
     if: ${{ needs.cfg-lint-check.outputs.matrix != '[]' }}
     strategy:
@@ -112,7 +171,7 @@ jobs:
 
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Parse ${{ matrix.file }} into Cartesian configuration

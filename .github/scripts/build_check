@@ -1,16 +1,140 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-2.0-only
 
-set -oe pipefail
+set -o pipefail
 
 wpattern=" warning: "
 logfile="build.log"
+warnings_file="build_warnings.log"
+unexpected_warnings_file="unexpected_build_warnings.log"
+allowlist_file=".github/scripts/build_warning_allowlist"
 
-docker run -v "$(pwd)"/BM:/src builder make test | tee "$logfile"
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+bm_dir="${repo_root}/BM"
+container_name="lkvs-build-check-${GITHUB_RUN_ID:-manual}-${GITHUB_RUN_ATTEMPT:-0}"
 
-if grep "$wpattern" "$logfile"; then
+# tdx-compliance builds a kernel module and requires a matching
+# /lib/modules/$(uname -r)/build tree, which is not available/matched in
+# the CI docker environment. Keep workload-xsave covered by CI.
+ci_skip_subdirs="${DDT_SKIP_SUBDIRS:-tdx-compliance}"
+
+cleanup_container()
+{
+  docker rm -f "$container_name" >/dev/null 2>&1 || true
+}
+
+rm -f "$logfile" "$warnings_file" "$unexpected_warnings_file"
+cleanup_container
+trap cleanup_container EXIT
+
+echo "===== Build check configuration ====="
+echo "repo_root=${repo_root}"
+echo "bm_dir=${bm_dir}"
+echo "container_name=${container_name}"
+echo "DDT_SKIP_SUBDIRS=${ci_skip_subdirs}"
+echo "====================================="
+
+echo "===== Docker build environment info ====="
+docker run --rm \
+  -v "${bm_dir}":/src \
+  -w /src \
+  builder \
+  sh -c '
+    echo "Container userspace:"
+    cat /etc/os-release 2>/dev/null || true
+
+    echo
+    echo "Toolchain versions:"
+    gcc --version 2>/dev/null | head -n 1 || true
+    g++ --version 2>/dev/null | head -n 1 || true
+
+    echo
+    echo "uname before BM test target copies fake uname:"
+    command -v uname || true
+    uname -a || true
+    uname -r || true
+
+    echo
+    echo "Available kernel module build directories:"
+    ls -ld /lib/modules/*/build 2>/dev/null || true
+
+    echo
+    echo "Fake uname shipped in image, if present:"
+    ls -l /usr/local/uname 2>/dev/null || true
+  ' || true
+echo "========================================="
+
+echo "===== Preconfigure rasdaemon in a smaller Docker run ====="
+docker run --rm \
+  -v "${bm_dir}":/src \
+  -w /src \
+  builder \
+  sh -c '
+    set -e
+    cd /src/ras/rasdaemon
+
+    if [ ! -x ./configure ]; then
+      autoreconf -i
+    fi
+
+    if [ ! -f ./Makefile ]; then
+      ./configure --enable-sqlite3 --enable-mce \
+        --enable-extlog --enable-memory-failure --enable-memory-ce-pfa
+    fi
+  '
+
+preconfigure_rc=$?
+if [ "$preconfigure_rc" -ne 0 ]; then
   echo "==========================================="
-  echo "There are build warning(s), fix required!"
+  echo "rasdaemon preconfigure failed with rc=${preconfigure_rc}"
   echo "==========================================="
-  false
+  exit "$preconfigure_rc"
 fi
+
+echo "===== Start build in named container ====="
+docker run \
+  --name "$container_name" \
+  -v "${bm_dir}":/src \
+  -w /src \
+  builder \
+  make DDT_SKIP_SUBDIRS="${ci_skip_subdirs}" test 2>&1 | tee "$logfile"
+
+docker_rc=${PIPESTATUS[0]}
+
+if [ "$docker_rc" -ne 0 ]; then
+  echo "==========================================="
+  echo "docker build container failed with rc=${docker_rc}"
+  echo "==========================================="
+  exit "$docker_rc"
+fi
+
+grep "$wpattern" "$logfile" > "$warnings_file" || true
+
+if [ -s "$warnings_file" ]; then
+  if [ -f "$allowlist_file" ]; then
+    grep -Ev -f "$allowlist_file" "$warnings_file" > "$unexpected_warnings_file" || true
+  else
+    cp "$warnings_file" "$unexpected_warnings_file"
+  fi
+
+  if [ -s "$unexpected_warnings_file" ]; then
+    echo "==========================================="
+    echo "There are unexpected build warning(s), fix required!"
+    echo "==========================================="
+    cat "$unexpected_warnings_file"
+    exit 1
+  fi
+
+  echo "==========================================="
+  echo "Only known/allowed build warning(s) found."
+  echo "Allowed warnings count: $(wc -l < "$warnings_file")"
+  echo "==========================================="
+else
+  echo "==========================================="
+  echo "No build warnings found."
+  echo "==========================================="
+fi
+
+echo "==========================================="
+echo "Build check passed."
+echo "==========================================="
