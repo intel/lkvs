@@ -13,7 +13,9 @@ RUN dpkg --add-architecture i386
 RUN dpkg --print-foreign-architectures
 RUN \
 	apt-get update && \
-	apt-get install gcc-13 make libelf1 gcc-multilib g++-multilib git cmake -y --no-install-recommends && \
+	apt-get install gcc-14 g++-14 gcc-14-multilib g++-14-multilib make libelf1 gcc-multilib g++-multilib git cmake -y --no-install-recommends && \
+	apt-get install bison flex autoconf automake libtool pkg-config libsqlite3-dev libtraceevent-dev python3 -y --no-install-recommends && \
+	update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 --slave /usr/bin/g++ g++ /usr/bin/g++-14 && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
