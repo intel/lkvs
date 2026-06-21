@@ -5,10 +5,16 @@
 	branch = stable
 [submodule "BM/ras/mce-test"]
 	path = BM/ras/mce-test
-	url = https://github.com/laifryiee/mce-test.git
+	url = https://git.kernel.org/pub/scm/utils/cpu/mce/mce-test.git
 [submodule "BM/ras/ras-tools"]
 	path = BM/ras/ras-tools
 	url = https://git.kernel.org/pub/scm/linux/kernel/git/aegl/ras-tools.git
 [submodule "BM/ras/mcelog"]
 	path = BM/ras/mcelog
 	url = https://github.com/andikleen/mcelog.git
+[submodule "BM/ras/mce-inject"]
+	path = BM/ras/mce-inject
+	url = https://git.kernel.org/pub/scm/utils/cpu/mce/mce-inject.git
+[submodule "BM/ras/rasdaemon"]
+	path = BM/ras/rasdaemon
+	url = https://github.com/mchehab/rasdaemon.git
