@@ -27,47 +27,51 @@ mce_check_result() {
 }
 
 load_edac_driver() {
-  for i in $(find /lib/modules/$(uname -r) -type f | grep edac); do
-    filename=${i##*/}
-    edac_driver=${filename%.ko.xz}
-    modprobe $edac_driver
-  done
+  get_cpu_model
+  case $FML in
+    13)
+      modprobe imh_edac 2>/dev/null
+      ;;
+    *)
+      modprobe i10nm_edac 2>/dev/null
+      ;;
+  esac
 }
 
 mce_test() {
   case $TEST_SCENARIO in
   apei-inj)
     load_edac_driver
-    cd mce-test/cases/function/apei-inj/
+    cd mce-test/cases/function/apei-inj/ || die "Failed to cd"
     bash runtest.sh
     ;;
   core_recovery_ifu)
-    cd mce-test/cases/function/core_recovery/
+    cd mce-test/cases/function/core_recovery/ || die "Failed to cd"
     bash runtest_ifu.sh
     ;;
   core_recovery_dcu)
-    cd mce-test/cases/function/core_recovery/
+    cd mce-test/cases/function/core_recovery/ || die "Failed to cd"
     bash runtest_dcu.sh
     ;;
   edac)
-    cd mce-test/cases/function/edac/
+    cd mce-test/cases/function/edac/ || die "Failed to cd"
     bash runtest.sh
     ;;
   einj-ext)
     load_edac_driver
-    cd mce-test/cases/function/einj-ext/
+    cd mce-test/cases/function/einj-ext/ || die "Failed to cd"
     bash runtest.sh
     ;;
   emca-inj)
-    cd mce-test/cases/function/emca-inj/
+    cd mce-test/cases/function/emca-inj/ || die "Failed to cd"
     bash runtest.sh
     ;;
   erst-inject)
-    cd mce-test/cases/function/erst-inject/
+    cd mce-test/cases/function/erst-inject/ || die "Failed to cd"
     bash runtest.sh
     ;;
   pfa)
-    cd mce-test/cases/function/pfa/
+    cd mce-test/cases/function/pfa/ || die "Failed to cd"
     bash runtest.sh
     ;;
   esac

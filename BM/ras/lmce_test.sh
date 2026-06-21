@@ -29,7 +29,7 @@ lmce_support_check() {
 lmce_check_result() {
   local testcase=$1
 
-  if [[ $2 -eq 0 ]] && grep -q LMCE ${MCELOG_LOGFILE}; then
+  if [[ $2 -eq 0 ]] && mce_log_check "LMCE"; then
         test_print_trc "${testcase} Test PASS"
   else
     die "${testcase} Test FAIL"
@@ -38,8 +38,8 @@ lmce_check_result() {
 
 lmce_test() {
   disable_cmci # disable MCE CMCI before LMCE test execution
-  cat /dev/null > ${MCELOG_LOGFILE} # clear previous decoded MCE event records
-  cd ras-tools/
+  mce_log_clear # clear previous decoded MCE event records
+  cd ras-tools/ || die "Failed to cd to ras-tools/"
   case $TEST_SCENARIO in
   sameaddr_samecore_instr/instr)
     ./lmce -a -c 1 -t INSTR/INSTR
@@ -120,5 +120,5 @@ while getopts :t:H arg; do
 done
 
 lmce_support_check # check whether LMCE feature is supported
-mcelog_config # configure mcelog service
+mce_config # configure MCE logging backend
 lmce_test
