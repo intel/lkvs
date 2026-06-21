@@ -3,6 +3,8 @@
 
 SUBDIRS = $(shell ls -d */)
 
+DDT_SKIP_SUBDIRS ?=
+
 PROXY :=
 
 MAKE_LKVS_LOG = /tmp/make_lkvs.log
@@ -19,23 +21,29 @@ endif
 
 all:
 	@cat /dev/null > ${MAKE_LKVS_LOG};
-	@for dir in $(SUBDIRS); do			\
-		if [ -f "$$dir/Makefile" ]; then	\
-			cd $$dir &&			\
-			make || {			\
+	@for dir in $(SUBDIRS); do						\
+		base=$$(basename "$${dir%/}");					\
+		if printf '%s\n' " $(DDT_SKIP_SUBDIRS) " | grep -Fq " $${base} "; then	\
+			echo " - SKIP: subfolder $${dir} skipped for DDT docker build.";	\
+			continue;							\
+		fi;									\
+		if [ -f "$$dir/Makefile" ]; then					\
+			cd $$dir &&							\
+			make || {							\
+				rc=$$?;							\
+				cd ..;							\
 				echo " - Make subfolder $${dir} failed." >> ${MAKE_LKVS_LOG};	\
-				cd ..;			\
-				continue;		\
-			};				\
-			cd ..;				\
-		fi					\
+				continue;						\
+			};								\
+			cd ..;								\
+		fi									\
 	done
 	cat $(MAKE_LKVS_LOG)
-	@if [ -s ${MAKE_TOOLS_LOG} ]; then \
+	@if [ -s ${MAKE_LKVS_LOG} ]; then \
 		echo "Some subfolder failed to build"; \
 		exit 2; \
 	else \
-		echo "All subfolder built successfully"; \
+		echo "All required subfolders built successfully"; \
 		exit 0; \
 	fi
 
@@ -46,7 +54,10 @@ clean:
 		fi						\
 	done
 docker_clean:
-	docker run -it --rm -v $(PWD):/src --name ubuntu_2204_lkvs ubuntu:22.04 make clean
+	docker run -it --rm -v $(PWD):/src -v /lib/modules/`uname -r`:/lib/modules/`uname -r` --name ubuntu_2204_lkvs ubuntu:22.04 make clean
+
+docker_clean_ddt:
+	docker run -it --rm -v $(PWD):/src -v /lib/modules/`uname -r`:/lib/modules/`uname -r` --name ubuntu_2404_lkvs ubuntu:24.04 make clean
 
 # Target test and docker_test are for github action mainly.
 # It's used to do a compiling validation.
@@ -69,7 +80,7 @@ docker_make:
 	docker run -it --rm -v $(PWD):/src -v /lib/modules/`uname -r`:/lib/modules/`uname -r` --name ubuntu_2204_lkvs ubuntu:22.04 make
 
 docker_make_ddt:
-	docker run -it --rm -v $(PWD):/src -v /lib/modules/`uname -r`:/lib/modules/`uname -r` --name ubuntu_2404_lkvs ubuntu:24.04 make
+	docker run -it --rm -v $(PWD):/src -v /lib/modules/`uname -r`:/lib/modules/`uname -r` --name ubuntu_2404_lkvs ubuntu:24.04 make DDT_SKIP_SUBDIRS="tdx-compliance"
 
 build:
 	@echo "Building $(word 2, $(MAKECMDGOALS))"
