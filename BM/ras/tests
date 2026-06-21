@@ -1,10 +1,13 @@
 # This file collects Intel RAS/MCE testcases which can run against
 # Intel® Architecture-based platforms.
+# These tests work with either mcelog or rasdaemon as the MCE logging backend.
 # @other_dep: general_test.sh -t module -p einj @ No module einj
+# @other_dep: which mcelog 2>/dev/null || which rasdaemon 2>/dev/null @ mcelog or rasdaemon is required
 # @other_warn: which rdmsr 2>/dev/null @ rdmsr tool is required, please install msr-tools
 # @other_warn: which cpuid 2>/dev/null @ cpuid tool is required, please install cpuid
-# @other_warn: which mcelog 2>/dev/null @ mcelog tool is required, please install mcelog
-# @other_warn: which screen 2>/dev/null @ rdmsr tool is required, please install screen
+# @other_warn: which mce-inject 2>/dev/null @ mce-inject tool is required, please install mce-inject
+# @other_warn: which screen 2>/dev/null @ screen tool is required, please install screen
+# @other_warn: which sqlite3 2>/dev/null @ sqlite3 tool is required, please install sqlite3 and sqlite-devel
 
 # error injection test cases
 mce_test.sh -t apei-inj
@@ -14,7 +17,6 @@ mce_test.sh -t edac
 mce_test.sh -t einj-ext
 mce_test.sh -t emca-inj
 mce_test.sh -t erst-inject
-mce_test.sh -t pfa
 
 # LMCE test cases - three-dimensional matrix
 # error-injected addresses: same address vs. different address
@@ -38,3 +40,9 @@ lmce_test.sh -t diffaddr_samesocket_data/data
 lmce_test.sh -t diffaddr_diffsocket_instr/instr
 lmce_test.sh -t diffaddr_diffsocket_instr/data
 lmce_test.sh -t diffddr_diffsocket_data/data
+
+# MCE corrected error threshold (yellow status) test
+bff_test.sh -t bff_yellow
+
+# EINJ v2 error injection test cases
+einjv2_test.sh -t einjv2_memory
