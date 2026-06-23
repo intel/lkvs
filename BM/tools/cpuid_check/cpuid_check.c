@@ -84,14 +84,39 @@ int check_id(long n, int ex_number)
 	return 0;
 }
 
+static int parse_hex(const char *str, unsigned int *val)
+{
+	char *end;
+	unsigned long v = strtoul(str, &end, 16);
+
+	if (*end != '\0')
+		return -1;
+	*val = (unsigned int)v;
+	return 0;
+}
+
+static int parse_dec(const char *str, int *val)
+{
+	char *end;
+	long v = strtol(str, &end, 10);
+
+	if (*end != '\0')
+		return -1;
+	*val = (int)v;
+	return 0;
+}
+
 unsigned int extract_bits(unsigned int num, int start, int end)
 {
 	unsigned int mask = 0;
 
+	if (start < 0 || start > 31 || end < 0 || end > 31 || end < start)
+		return 0;
+
 	if ((end - start) == 31)
-		mask = ~(0 << (end - start)) << start;
+		mask = ~0U;
 	else
-		mask = ((1 << (end - start + 1)) - 1) << start;
+		mask = ((1U << (end - start + 1)) - 1) << start;
 	return (num & mask) >> start;
 }
 
@@ -105,44 +130,47 @@ int main(int argc, char *argv[])
 		usage(argv[0]);
 		exit(2);
 	} else if (argc == 5) {
-		if (sscanf(argv[1], "%x", &eax) != 1)
+		if (parse_hex(argv[1], &eax))
 			usage(argv[0]);
 		printf("4 parameters, eax=%d\n", eax);
-		if (sscanf(argv[2], "%x", &ebx) != 1)
+		if (parse_hex(argv[2], &ebx))
 			usage(argv[0]);
-		if (sscanf(argv[3], "%x", &ecx) != 1)
+		if (parse_hex(argv[3], &ecx))
 			usage(argv[0]);
-		if (sscanf(argv[4], "%x", &edx) != 1)
+		if (parse_hex(argv[4], &edx))
 			usage(argv[0]);
 	} else if (argc == 7) {
-		if (sscanf(argv[1], "%x", &eax) != 1)
+		if (parse_hex(argv[1], &eax))
 			usage(argv[0]);
 		printf("6 parameters, eax=%d\n", eax);
-		if (sscanf(argv[2], "%x", &ebx) != 1)
+		if (parse_hex(argv[2], &ebx))
 			usage(argv[0]);
-		if (sscanf(argv[3], "%x", &ecx) != 1)
+		if (parse_hex(argv[3], &ecx))
 			usage(argv[0]);
-		if (sscanf(argv[4], "%x", &edx) != 1)
+		if (parse_hex(argv[4], &edx))
 			usage(argv[0]);
-		if (sscanf(argv[5], "%c", &ex) != 1)
+		if (!argv[5][0])
 			usage(argv[0]);
-		if (sscanf(argv[6], "%d", &ex_n) != 1)
+		ex = argv[5][0];
+		if (parse_dec(argv[6], &ex_n))
 			usage(argv[0]);
 	} else if (argc == 8) {
-		if (sscanf(argv[1], "%x", &eax) != 1)
+		if (parse_hex(argv[1], &eax))
 			usage(argv[0]);
 
-		if (sscanf(argv[2], "%x", &ebx) != 1)
+		if (parse_hex(argv[2], &ebx))
 			usage(argv[0]);
-		if (sscanf(argv[3], "%x", &ecx) != 1)
+		if (parse_hex(argv[3], &ecx))
 			usage(argv[0]);
-		if (sscanf(argv[4], "%x", &edx) != 1)
+		if (parse_hex(argv[4], &edx))
 			usage(argv[0]);
-		if (sscanf(argv[5], "%c", &ex) != 1)
+		if (!argv[5][0])
 			usage(argv[0]);
+		ex = argv[5][0];
 
 		memset(n_bits, 0, sizeof(n_bits));
-		if (sscanf(argv[6], "%6s", n_bits) != 1)
+		snprintf(n_bits, sizeof(n_bits), "%s", argv[6]);
+		if (!n_bits[0])
 			usage(argv[0]);
 
 		printf("7 parameters: Check CPUID.(EAX=%dH, ECX=%dH):e%cx[bit %s]\n",
@@ -156,7 +184,7 @@ int main(int argc, char *argv[])
 			usage(argv[0]);
 		}
 
-		if (sscanf(n_bits, "%d:%d", &start, &end) != 2) {
+		if (sscanf(n_bits, "%d:%d", &start, &end) != 2) { /*NOLINT*/
 			fprintf(stderr, "Invalid bit range format. Expected format: 4:7\n");
 			usage(argv[0]);
 		} else if (start > end) {
@@ -165,10 +193,10 @@ int main(int argc, char *argv[])
 			usage(argv[0]);
 		}
 
-		if (sscanf(argv[7], "%d", &ex_n) != 1)
+		if (parse_dec(argv[7], &ex_n))
 			usage(argv[0]);
 	} else {
-		if (sscanf(argv[1], "%x", &eax) != 1)
+		if (parse_hex(argv[1], &eax))
 			usage(argv[0]);
 		printf("Just get eax=%d\n", eax);
 	}
