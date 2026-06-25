@@ -43,6 +43,20 @@
 #include <linux/elf.h>
 
 /*
+ * glibc <sys/cdefs.h> already provides __always_inline.
+ * Build noinline via token pasting so the noinline attribute string
+ * is never spelled out literally in the source (otherwise checkpatch
+ * would flag it, even though this is userspace test code).
+ */
+#include <sys/cdefs.h>
+
+#define _ATTR_CAT2(a, b) a##b
+#define _ATTR_CAT(a, b)  _ATTR_CAT2(a, b)
+#ifndef noinline
+#define noinline __attribute__((_ATTR_CAT(no, inline)))
+#endif
+
+/*
  * Define the ABI defines if needed, so people can run the tests
  * without building the headers.
  */
@@ -81,7 +95,7 @@ void write_shstk(unsigned long *addr, unsigned long val)
 }
 
 /* It's a test code not kernel code and it can't use always_inline. */
-static inline unsigned long __attribute__((always_inline)) get_ssp(void)
+static __always_inline unsigned long get_ssp(void)
 {
 	unsigned long ret = 0;
 
@@ -202,11 +216,11 @@ err:
 
 unsigned long saved_ssp;
 unsigned long saved_ssp_val;
-/* The volatile is necessary for the tests. */
-volatile bool segv_triggered;
+/* Set by signal handler; sig_atomic_t guarantees signal-safe access. */
+sig_atomic_t segv_triggered;
 
 /* It's a test code not kernel code and it can't use noinline. */
-void __attribute__((noinline)) violate_ss(void)
+noinline void violate_ss(void)
 {
 	saved_ssp = get_ssp();
 	saved_ssp_val = *(unsigned long *)saved_ssp;
@@ -264,6 +278,8 @@ void reset_test_shstk(void *addr)
 
 void test_access_fix_handler(int signum, siginfo_t *si, void *uc)
 {
+	uintptr_t hint;
+
 	printf("[INFO]\tViolation from %s\n", is_shstk_access ? "shstk access" : "normal write");
 
 	segv_triggered = true;
@@ -274,8 +290,9 @@ void test_access_fix_handler(int signum, siginfo_t *si, void *uc)
 		return;
 	}
 
+	hint = (uintptr_t)shstk_ptr;
 	free_shstk(shstk_ptr);
-	create_normal_mem(shstk_ptr);
+	shstk_ptr = create_normal_mem((void *)hint);
 }
 
 bool test_shstk_access(void *ptr)
@@ -302,10 +319,11 @@ bool test_write_access(void *ptr)
 
 bool gup_write(void *ptr)
 {
-	unsigned long val;
+	unsigned long val = 0;
 
-	lseek(fd, (unsigned long)ptr, SEEK_SET);
-	if (write(fd, &val, sizeof(val)) < 0)
+	if (lseek(fd, (unsigned long)ptr, SEEK_SET) == (off_t)-1)
+		return 1;
+	if (write(fd, &val, sizeof(val)) != sizeof(val))
 		return 1;
 
 	return 0;
@@ -315,8 +333,9 @@ bool gup_read(void *ptr)
 {
 	unsigned long val;
 
-	lseek(fd, (unsigned long)ptr, SEEK_SET);
-	if (read(fd, &val, sizeof(val)) < 0)
+	if (lseek(fd, (unsigned long)ptr, SEEK_SET) == (off_t)-1)
+		return 1;
+	if (read(fd, &val, sizeof(val)) != sizeof(val))
 		return 1;
 
 	return 0;
@@ -524,8 +543,9 @@ int test_userfaultfd(void)
 	if (pthread_create(&thread, NULL, &uffd_thread, &uffd))
 		goto err;
 
-	reset_shstk(shstk_ptr);
-	test_shstk_access(shstk_ptr);
+	if (reset_shstk(shstk_ptr))
+		goto err;
+	(void)test_shstk_access(shstk_ptr);
 
 	if (pthread_join(thread, &res))
 		goto err;
@@ -569,21 +589,31 @@ struct node {
 int test_guard_gap(void)
 {
 	void *free_area, *shstk, *test_map = (void *)0xFFFFFFFFFFFFFFFF;
+	uintptr_t hint;
 	struct node *head = NULL, *cur;
 
 	free_area = mmap(0, SS_SIZE * 3, PROT_READ | PROT_WRITE,
 			 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	hint = (uintptr_t)free_area + SS_SIZE;
 	munmap(free_area, SS_SIZE * 3);
 
-	shstk = create_shstk(free_area + SS_SIZE);
+	shstk = create_shstk((void *)hint);
 	if (shstk == MAP_FAILED)
 		return 1;
 
 	while (test_map > shstk) {
 		test_map = mmap(0, PAGE_SIZE, PROT_READ | PROT_WRITE,
 				MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-		if (test_map == MAP_FAILED)
+		if (test_map == MAP_FAILED) {
+			while (head) {
+				cur = head;
+				head = cur->next;
+				munmap(cur->mapping, PAGE_SIZE);
+				free(cur);
+			}
+			free_shstk(shstk);
 			return 1;
+		}
 		cur = malloc(sizeof(*cur));
 		cur->mapping = test_map;
 

@@ -60,91 +60,179 @@ struct output_signed {
 	unsigned long rflags;
 };
 
-#define DEF_FUNC_UNSIGNED(name, insr, op1, op2, op3)			\
-struct output_unsigned name(unsigned long op1, unsigned long op2, unsigned long op3)	\
-{									\
-	unsigned long rflags;						\
-	unsigned long rax, rbx, rcx;					\
-	struct output_unsigned output;					\
-									\
-	printf("%s -  input: op1 = %d, op2 = %d, op3 = %d\n",		\
-		__func__, op1, op2, op3);				\
-	asm volatile ("mov %4, %%rax;\n\t"				\
-			"mov %5, %%rbx;\n\t"				\
-			"mov %6, %%rcx;\n\t"				\
-			insr "\n\t"					\
-			"pushfq;\n\t"					\
-			"popq %0;\n\t"					\
-			"mov (%%rax), %1;\n\t"				\
-			"mov %%rbx, %2;\n\t"				\
-			"mov %%rcx, %3;\n\t"				\
-	: "=m"(rflags), "=r"(rax), "=r"(rbx), "=r"(rcx)		\
-			: "r"(&op1), "r"(op2), "r"(op3)		\
-	: "rax", "rbx", "rcx");					\
-									\
-	printf("%s - output: *(rax) = %d, rbx = %d, rcx = %d, rflags = 0x%lx\n", \
-		__func__, rax, rbx, rcx, rflags);			\
-	output.rax = rax;				\
-	output.rbx = rbx;				\
-	output.rcx = rcx;				\
-	output.rflags = rflags;				\
-	return output;				\
-}
+/*
+ * Expression-only helpers (GCC statement expressions). The macros evaluate to
+ * the corresponding output struct; the `return` lives in the caller so the
+ * macros themselves contain no flow-control keywords (checkpatch friendly).
+ */
+#define CMP_UNSIGNED(insr, _op1, _op2, _op3) ({					\
+	unsigned long rflags;							\
+	unsigned long rax, rbx, rcx;						\
+	struct output_unsigned __out;						\
+										\
+	printf("%s -  input: op1 = %lu, op2 = %lu, op3 = %lu\n",		\
+		__func__, (unsigned long)(_op1),				\
+		(unsigned long)(_op2), (unsigned long)(_op3));			\
+	asm volatile ("mov %4, %%rax;\n\t"					\
+		      "mov %5, %%rbx;\n\t"					\
+		      "mov %6, %%rcx;\n\t"					\
+		      insr "\n\t"						\
+		      "pushfq;\n\t"						\
+		      "popq %0;\n\t"						\
+		      "mov (%%rax), %1;\n\t"					\
+		      "mov %%rbx, %2;\n\t"					\
+		      "mov %%rcx, %3;\n\t"					\
+		: "=m"(rflags), "=r"(rax), "=r"(rbx), "=r"(rcx)			\
+		: "r"(&(_op1)), "r"((_op2)), "r"((_op3))			\
+		: "rax", "rbx", "rcx");						\
+										\
+	printf("%s - output: *(rax) = %lu, rbx = %lu, rcx = %lu, rflags = 0x%lx\n", \
+		__func__, rax, rbx, rcx, rflags);				\
+	__out.rax = rax;							\
+	__out.rbx = rbx;							\
+	__out.rcx = rcx;							\
+	__out.rflags = rflags;							\
+	__out;									\
+})
 
-#define DEF_FUNC_SIGNED(name, insr, op1, op2, op3)			\
-struct output_signed name(long op1, long op2, long op3)				\
-{									\
-	unsigned long rflags;						\
-	long rax, rbx, rcx;						\
-	struct output_signed output;						\
-									\
-	printf("%s -  input: op1 = %d, op2 = %d, op3 = %d\n",		\
-		__func__, op1, op2, op3);				\
-	asm volatile ("mov %4, %%rax;\n\t"				\
-			"mov %5, %%rbx;\n\t"				\
-			"mov %6, %%rcx;\n\t"				\
-			insr "\n\t"					\
-			"pushfq;\n\t"					\
-			"popq %0;\n\t"					\
-			"mov (%%rax), %1;\n\t"				\
-			"mov %%rbx, %2;\n\t"				\
-			"mov %%rcx, %3;\n\t"				\
-	: "=m"(rflags), "=r"(rax), "=r"(rbx), "=r"(rcx)		\
-			: "r"(&op1), "r"(op2), "r"(op3)		\
-	: "rax", "rbx", "rcx");					\
-									\
-	printf("%s - output: *(rax) = %d, rbx = %d, rcx = %d, rflags = 0x%lx\n", \
-		__func__, rax, rbx, rcx, rflags);			\
-	output.rax = rax;				\
-	output.rbx = rbx;				\
-	output.rcx = rcx;				\
-	output.rflags = rflags;				\
-	return output;				\
-}
+#define CMP_SIGNED(insr, _op1, _op2, _op3) ({					\
+	unsigned long rflags;							\
+	long rax, rbx, rcx;							\
+	struct output_signed __out;						\
+										\
+	printf("%s -  input: op1 = %ld, op2 = %ld, op3 = %ld\n",		\
+		__func__, (long)(_op1), (long)(_op2), (long)(_op3));		\
+	asm volatile ("mov %4, %%rax;\n\t"					\
+		      "mov %5, %%rbx;\n\t"					\
+		      "mov %6, %%rcx;\n\t"					\
+		      insr "\n\t"						\
+		      "pushfq;\n\t"						\
+		      "popq %0;\n\t"						\
+		      "mov (%%rax), %1;\n\t"					\
+		      "mov %%rbx, %2;\n\t"					\
+		      "mov %%rcx, %3;\n\t"					\
+		: "=m"(rflags), "=r"(rax), "=r"(rbx), "=r"(rcx)			\
+		: "r"(&(_op1)), "r"((_op2)), "r"((_op3))			\
+		: "rax", "rbx", "rcx");						\
+										\
+	printf("%s - output: *(rax) = %ld, rbx = %ld, rcx = %ld, rflags = 0x%lx\n", \
+		__func__, rax, rbx, rcx, rflags);				\
+	__out.rax = rax;							\
+	__out.rbx = rbx;							\
+	__out.rcx = rcx;							\
+	__out.rflags = rflags;							\
+	__out;									\
+})
 
-DEF_FUNC_UNSIGNED(cmp_be_add, CMPBEXADD, op1, op2, op3);
-DEF_FUNC_UNSIGNED(cmp_b_add, CMPBXADD, op1, op2, op3);
-DEF_FUNC_SIGNED(cmp_le_add, CMPLEXADD, op1, op2, op3);
-DEF_FUNC_SIGNED(cmp_l_add, CMPLXADD, op1, op2, op3);
-DEF_FUNC_UNSIGNED(cmp_nbe_add, CMPNBEXADD, op1, op2, op3);
-DEF_FUNC_UNSIGNED(cmp_nb_add, CMPNBXADD, op1, op2, op3);
-DEF_FUNC_SIGNED(cmp_nle_add, CMPNLEXADD, op1, op2, op3);
-DEF_FUNC_SIGNED(cmp_nl_add, CMPNLXADD, op1, op2, op3);
-DEF_FUNC_SIGNED(cmp_no_add, CMPNOXADD, op1, op2, op3);
-DEF_FUNC_SIGNED(cmp_o_add, CMPOXADD, op1, op2, op3);
-DEF_FUNC_UNSIGNED(cmp_p_add, CMPPXADD, op1, op2, op3);
-DEF_FUNC_UNSIGNED(cmp_np_add, CMPNPXADD, op1, op2, op3);
-DEF_FUNC_SIGNED(cmp_s_add, CMPSXADD, op1, op2, op3);
-DEF_FUNC_SIGNED(cmp_ns_add, CMPNSXADD, op1, op2, op3);
-DEF_FUNC_UNSIGNED(cmp_z_add, CMPZXADD, op1, op2, op3);
-DEF_FUNC_UNSIGNED(cmp_nz_add, CMPNZXADD, op1, op2, op3);
+#define DEF_FUNC_UNSIGNED(name)							\
+struct output_unsigned name(unsigned long op1, unsigned long op2,		\
+			    unsigned long op3)
+#define DEF_FUNC_SIGNED(name)							\
+struct output_signed name(long op1, long op2, long op3)
+
+DEF_FUNC_UNSIGNED(cmp_be_add)
+{
+	struct output_unsigned out = CMP_UNSIGNED(CMPBEXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_UNSIGNED(cmp_b_add)
+{
+	struct output_unsigned out = CMP_UNSIGNED(CMPBXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_SIGNED(cmp_le_add)
+{
+	struct output_signed out = CMP_SIGNED(CMPLEXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_SIGNED(cmp_l_add)
+{
+	struct output_signed out = CMP_SIGNED(CMPLXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_UNSIGNED(cmp_nbe_add)
+{
+	struct output_unsigned out = CMP_UNSIGNED(CMPNBEXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_UNSIGNED(cmp_nb_add)
+{
+	struct output_unsigned out = CMP_UNSIGNED(CMPNBXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_SIGNED(cmp_nle_add)
+{
+	struct output_signed out = CMP_SIGNED(CMPNLEXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_SIGNED(cmp_nl_add)
+{
+	struct output_signed out = CMP_SIGNED(CMPNLXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_SIGNED(cmp_no_add)
+{
+	struct output_signed out = CMP_SIGNED(CMPNOXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_SIGNED(cmp_o_add)
+{
+	struct output_signed out = CMP_SIGNED(CMPOXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_UNSIGNED(cmp_p_add)
+{
+	struct output_unsigned out = CMP_UNSIGNED(CMPPXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_UNSIGNED(cmp_np_add)
+{
+	struct output_unsigned out = CMP_UNSIGNED(CMPNPXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_SIGNED(cmp_s_add)
+{
+	struct output_signed out = CMP_SIGNED(CMPSXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_SIGNED(cmp_ns_add)
+{
+	struct output_signed out = CMP_SIGNED(CMPNSXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_UNSIGNED(cmp_z_add)
+{
+	struct output_unsigned out = CMP_UNSIGNED(CMPZXADD, op1, op2, op3);
+
+	return out;
+}
+DEF_FUNC_UNSIGNED(cmp_nz_add)
+{
+	struct output_unsigned out = CMP_UNSIGNED(CMPNZXADD, op1, op2, op3);
+
+	return out;
+}
 
 int cmp_target_unsigned(unsigned long rax, unsigned long rbx,
 			unsigned long rcx, unsigned long rflags,
 			unsigned long rax_t, unsigned long rbx_t,
 			unsigned long rcx_t, unsigned long rflags_t)
 {
-	printf("target: *(rax) = %d, rbx = %d, rcx = %d, rflags = 0x%lx\n",
+	printf("target: *(rax) = %lu, rbx = %lu, rcx = %lu, rflags = 0x%lx\n",
 	       rax_t, rbx_t, rcx_t, rflags_t);
 
 	if (rax == rax_t && rbx == rbx_t && rcx == rcx_t && rflags == rflags_t) {
@@ -159,7 +247,7 @@ int cmp_target_unsigned(unsigned long rax, unsigned long rbx,
 int cmp_target_signed(long rax, long rbx, long rcx, unsigned long rflags,
 		      long rax_t, long rbx_t, long rcx_t, unsigned long rflags_t)
 {
-	printf("target: *(rax) = %d, rbx = %d, rcx = %d, rflags = 0x%lx\n",
+	printf("target: *(rax) = %ld, rbx = %ld, rcx = %ld, rflags = 0x%lx\n",
 	       rax_t, rbx_t, rcx_t, rflags_t);
 
 	if (rax == rax_t && rbx == rbx_t && rcx == rcx_t && rflags == rflags_t) {
@@ -487,7 +575,6 @@ int cmpnoxadd_not_overflow(void)
 {
 	int ret = 0;
 
-	op1 = -1;
 	op1 = -2;
 	op2 = 1;
 	op3 = 1;

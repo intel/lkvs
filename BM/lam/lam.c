@@ -15,6 +15,7 @@
 #include <sched.h>
 #include <unistd.h>
 #include <libgen.h>
+#include <limits.h>
 
 #include <sys/uio.h>
 #include <linux/io_uring.h>
@@ -256,14 +257,14 @@ static int handle_lam_test(void *src, unsigned int lam)
 {
 	char *ptr;
 
-	strcpy((char *)src, "USER POINTER");
+	memcpy((char *)src, "USER POINTER", sizeof("USER POINTER"));
 
 	ptr = (char *)set_metadata((__u64)src, lam);
 	if (src == ptr)
 		return 0;
 
 	/* Copy a string into the pointer with metadata */
-	strcpy((char *)ptr, "METADATA POINTER");
+	memcpy((char *)ptr, "METADATA POINTER", sizeof("METADATA POINTER"));
 
 	return (!!strcmp((char *)src, (char *)ptr));
 }
@@ -460,8 +461,8 @@ int mmap_io_uring(struct io_uring_params p, struct io_ring *s)
 		if (sq_ptr != cq_ptr) {
 			printf("failed to mmap uring queue!");
 			munmap(cq_ptr, c_ring->ring_sz);
-			return 1;
 		}
+		return 1;
 	}
 
 	c_ring->head = cq_ptr + p.cq_off.head;
@@ -520,6 +521,9 @@ int handle_uring_cq(struct io_ring *s)
 
 	*cring->head = head;
 	barrier();
+
+	if (!fi)
+		return 1;
 
 	return (len != fi->file_sz);
 }
@@ -592,38 +596,43 @@ int handle_uring_sq(struct io_ring *ring, struct file_io *fi, unsigned long lam)
  */
 int do_uring(unsigned long lam)
 {
-	struct io_ring *ring;
-	struct file_io *fi;
+	struct io_ring *ring = NULL;
+	struct file_io *fi = NULL;
 	struct stat st;
 	int ret = 1;
+	int file_fd = -1;
+	int blocks = 0;
+	off_t file_sz;
 	char path[PATH_MAX] = {0};
 
 	/* get current process path */
-	if (readlink("/proc/self/exe", path, PATH_MAX) <= 0)
+	if (readlink("/proc/self/exe", path, PATH_MAX - 1) <= 0)
 		return 1;
 
-	int file_fd = open(path, O_RDONLY);
-
+	file_fd = open(path, O_RDONLY);
 	if (file_fd < 0)
 		return 1;
 
 	if (fstat(file_fd, &st) < 0)
-		return 1;
+		goto out;
 
-	off_t file_sz = st.st_size;
-
-	int blocks = (int)(file_sz + URING_BLOCK_SZ - 1) / URING_BLOCK_SZ;
+	file_sz = st.st_size;
+	blocks = (int)(file_sz + URING_BLOCK_SZ - 1) / URING_BLOCK_SZ;
 
 	fi = malloc(sizeof(*fi) + sizeof(struct iovec) * blocks);
 	if (!fi)
-		return 1;
+		goto out;
 
+	/* zero iovecs so the cleanup loop only frees buffers
+	 * that handle_uring_sq actually allocated.
+	 */
+	memset(fi, 0, sizeof(*fi) + sizeof(struct iovec) * blocks);
 	fi->file_sz = file_sz;
 	fi->file_fd = file_fd;
 
 	ring = malloc(sizeof(*ring));
 	if (!ring)
-		return 1;
+		goto out;
 
 	memset(ring, 0, sizeof(struct io_ring));
 
@@ -638,21 +647,25 @@ int do_uring(unsigned long lam)
 out:
 	free(ring);
 
-	for (int i = 0; i < blocks; i++) {
-		if (fi->iovecs[i].iov_base) {
-			__u64 addr = ((__u64)fi->iovecs[i].iov_base);
+	if (fi) {
+		for (int i = 0; i < blocks; i++) {
+			if (fi->iovecs[i].iov_base) {
+				__u64 addr = ((__u64)fi->iovecs[i].iov_base);
 
-			switch (lam) {
-			case LAM_U57_BITS: /* Clear bits 62:57 */
-				addr = (addr & ~(LAM_U57_MASK));
-				break;
+				switch (lam) {
+				case LAM_U57_BITS: /* Clear bits 62:57 */
+					addr = (addr & ~(LAM_U57_MASK));
+					break;
+				}
+				free((void *)addr);
+				fi->iovecs[i].iov_base = NULL;
 			}
-			free((void *)addr);
-			fi->iovecs[i].iov_base = NULL;
 		}
+		free(fi);
 	}
 
-	free(fi);
+	if (file_fd >= 0)
+		close(file_fd);
 
 	return ret;
 }
@@ -713,8 +726,9 @@ static int handle_execve(struct testcases *test)
 			return 1;
 
 		/* Get current binary's path and the binary was run by execve */
-		if (readlink("/proc/self/exe", path, PATH_MAX) <= 0)
+		if (readlink("/proc/self/exe", path, PATH_MAX - 1) <= 0)
 			exit(-1);
+		path[PATH_MAX - 1] = '\0';
 
 		/* run binary to get LAM mode and return to parent process */
 		printf("%s\n", path);
@@ -1085,6 +1099,7 @@ int check_dsa_kernel_setting(void)
 	char command[256] = "";
 	char buf[256] = "";
 	char *ptr;
+	long val;
 	int rv = -1;
 
 	snprintf(command, sizeof(command) - 1, "cat %s", dsa_pasid_enable);
@@ -1096,7 +1111,9 @@ int check_dsa_kernel_setting(void)
 			;
 
 		pclose(cmd);
-		rv = strtol(buf, &ptr, 16);
+		val = strtol(buf, &ptr, 16);
+		if (val >= INT_MIN && val <= INT_MAX)
+			rv = (int)val;
 	}
 
 	return rv;
@@ -1155,6 +1172,7 @@ void *allocate_dsa_pasid(void)
 	if (wq == MAP_FAILED)
 		perror("mmap");
 
+	close(fd);
 	return wq;
 }
 
@@ -1209,8 +1227,8 @@ int handle_pasid(struct testcases *test)
 		}
 	}
 
-	ret = ret + err;
-	if (ret > 0)
+	ret = ret | err;
+	if (ret)
 		break;
 
 		tmp = tmp >> 4;

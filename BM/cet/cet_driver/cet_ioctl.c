@@ -108,12 +108,14 @@ void cet_ibt_legal(void)
 
 static inline void cet_xsaves(uint32_t xstate_size)
 {
-	u32 ecx = MSR_IA32_PL3_SSP;
-	u32 eax, ebx, edx;
+	u32 eax, edx;
 
-	asm("rdmsr" : "=a" (eax), "=b" (ebx), "=d" (edx) : "c" (ecx));
-	pr_info("rdmsr 0x6a7: eax:%x, ebx:%x, ecx:%x, edx:%x\n",
-		eax, ebx, ecx, edx);
+	/* rdmsr writes only EDX:EAX; previous code also claimed EBX as
+	 * output, leaving it uninitialized when printed.
+	 */
+	rdmsr(MSR_IA32_PL3_SSP, eax, edx);
+	pr_info("rdmsr 0x6a7: eax:%x, ecx:%x, edx:%x\n",
+		eax, MSR_IA32_PL3_SSP, edx);
 }
 
 static long my_ioctl(struct file *f, unsigned int cmd, unsigned long arg)

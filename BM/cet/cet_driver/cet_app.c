@@ -38,7 +38,10 @@ void shstk_xsaves(int fd)
 	/* Set to cpu 0 to check ssp msr easily */
 	CPU_ZERO(&set);
 	CPU_SET(0, &set);
-	sched_setaffinity(getpid(), sizeof(set), &set);
+	if (sched_setaffinity(getpid(), sizeof(set), &set) != 0) {
+		perror("sched_setaffinity");
+		return;
+	}
 
 	printf("shstk xsaves test: fd:%d\n", fd);
 
@@ -115,8 +118,6 @@ int main(int argc, char *argv[])
 		break;
 	case e_ibt2:
 		ibt_legal(fd);
-		break;
-	default:
 		break;
 	}
 

@@ -41,7 +41,17 @@ int telem_test(char *telem_dev, int size, int idx)
 		return -1;
 	}
 	ptr = (char *)malloc(SAMPLE_SIZE * size * sizeof(char));
-	read(fd, ptr, SAMPLE_SIZE * size);
+	if (!ptr) {
+		printf("malloc failure\n");
+		close(fd);
+		return -1;
+	}
+	if (read(fd, ptr, SAMPLE_SIZE * size) != SAMPLE_SIZE * size) {
+		printf("read telem device %s failure!\n", telem_dev);
+		free(ptr);
+		close(fd);
+		return -1;
+	}
 	for (i = size; i >= 0; i--) {
 		printf("telem value 0x%x= ", i);
 		print_bin(ptr[i]);
@@ -59,13 +69,19 @@ int main(int argc, char *argv[])
 	char *dev;
 	int size, idx;
 
-	if (argc == 5) {
-		cmd = atoi(argv[1]);
-		dev = argv[2];
-		size = atoi(argv[3]);
-		idx = atoi(argv[4]);
-		printf("cmd = %d, dev = %s, size = %d, idx = %d\n", cmd, dev, size, idx);
+	if (argc != 5) {
+		fprintf(stderr,
+			"Usage: %s <cmd> <dev> <size> <idx>\n",
+			argv[0]);
+		return 2;
 	}
+
+	cmd = atoi(argv[1]);
+	dev = argv[2];
+	size = atoi(argv[3]);
+	idx = atoi(argv[4]);
+	printf("cmd = %d, dev = %s, size = %d, idx = %d\n", cmd, dev, size, idx);
+
 	switch (cmd) {
 	case 1:
 		result = telem_test(dev, size, idx);

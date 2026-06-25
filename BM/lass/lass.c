@@ -559,12 +559,6 @@ int test_read_kernel_linear(void)
 	b = rand();
 	kernel_random_addr = ((a << 32) | 0xffff800000000000ul) | b;
 
-	if (kernel_random_addr < KERNEL_START_ADDR) {
-		printf("addr:0x%lx is smaller than 0x%lx\n",
-		       kernel_random_addr, KERNEL_START_ADDR);
-		fail_case("Set addr error!");
-		return 1;
-	}
 	printf("Kernel linear addr:0x%lx\n", kernel_random_addr);
 	if (sigsetjmp(jmpbuf, 1) == 0) {
 		addr_content = *(const int *)kernel_random_addr;
