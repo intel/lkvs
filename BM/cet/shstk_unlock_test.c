@@ -337,7 +337,7 @@ int main(void)
 		} else {
 			/* Parent process fetch the child process's result. */
 			close(fd[1]);
-			if (!read(fd[0], &result, sizeof(result))) {
+			if (read(fd[0], &result, sizeof(result)) != sizeof(result)) {
 				err_num++;
 				fatal_error("read fd failed");
 			}

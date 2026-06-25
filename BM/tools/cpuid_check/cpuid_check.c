@@ -123,8 +123,8 @@ unsigned int extract_bits(unsigned int num, int start, int end)
 int main(int argc, char *argv[])
 {
 	unsigned int eax = 0, ebx = 0, ecx = 0, edx = 0, result_num = 0;
-	int ex_n, test_result = 1, start = 0, end = 0, extract_bits_num = 0;
-	char ex = 'e', n_bits[7];
+	int ex_n = 0, test_result = 1, start = 0, end = 0, extract_bits_num = 0;
+	char ex = 'e', n_bits[7] = {0};
 
 	if (argc == 1) {
 		usage(argv[0]);
@@ -248,6 +248,11 @@ int main(int argc, char *argv[])
 		}
 	} else {
 		printf("Now check cpuid e%cx, bit %d\n", ex, ex_n);
+		if (ex_n < 0 || ex_n >= N) {
+			fprintf(stderr, "Bit index %d out of range [0,%d)\n",
+				ex_n, N);
+			return 1;
+		}
 		test_result = check_id(result_num, ex_n);
 	}
 

@@ -197,9 +197,16 @@ static int do_hack(void *p)
 static void stack_wo_core(void)
 {
 	void *s = malloc(0x100000);
+	pid_t pid;
 
-	if (fork() == 0)
+	pid = fork();
+	if (pid == 0) {
 		do_hack(s);
+		exit(0);
+	}
+	if (pid > 0)
+		waitpid(pid, NULL, 0);
+	free(s);
 }
 
 /* test shstk by clone way */
