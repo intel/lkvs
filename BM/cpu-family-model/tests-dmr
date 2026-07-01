@@ -1,0 +1,8 @@
+# This file collects the CPU family/model CPUID verification cases for
+# Diamond Rapids (DMR) platforms. The single invocation below checks
+# /proc/cpuinfo vendor/family/model and cpuid synthesized family/model
+# against the DMR entry in the platform DB.
+# @hw_dep:
+# @other_dep:
+# @other_warn: which cpuid 2>/dev/null @ cpuid utility is required, please install cpuid
+cpu_family_model_test.sh -p DMR
