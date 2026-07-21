@@ -37,7 +37,7 @@ EOF
 
 usage() {
   cat <<__EOF
-  usage: ./${0##*/} -p PLATFORM [-s LINUX_SOURCE_PATH] [-l] [-H]
+  usage: ./${0##*/} -p PLATFORM [-s LINUX_SOURCE_PATH] [-l] [-h]
   -p  platform to test (e.g. DMR, CWF). Use -l to list supported platforms.
   -s  Path to Linux kernel source tree. When supplied, additionally
       verify the corresponding INTEL_* macro definition in
