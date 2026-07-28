@@ -11,7 +11,9 @@
  *    Gong Chen <gong.chen@intel.com>
  *    Wen Jin <wenx.jin@intel.com>
  *
- * Copy from mce-test
+ * Vendored from the upstream Intel mce-test project:
+ *   https://git.kernel.org/pub/scm/utils/cpu/mce/mce-test.git
+ *   tools/hwpoison/victim.c
  */
 
 #include <stdio.h>
