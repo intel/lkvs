@@ -154,18 +154,26 @@ def get_guest_ip_from_mac(vm, mac, ip_version=4):
     try:
         if os_type == "linux":
             addr_family = "inet" if ip_version == 4 else "inet6"
+            # Disable readline bracketed-paste in the serial shell so command
+            # outputs are not prefixed with \x1b[?2004l escapes that break
+            # downstream JSON parsing.
+            serial_session.cmd_output_safe(
+                "bind 'set enable-bracketed-paste off' 2>/dev/null; true"
+            )
             for ifname in utils_net.get_linux_ifname(serial_session):
-                nic_info = json.loads(
+                link_out = utils_misc.strip_console_codes(
                     serial_session.cmd_output_safe(f"ip -j link show {ifname}")
-                )[0]
+                )
+                nic_info = json.loads(link_out)[0]
                 if nic_info["address"] == mac:
                     if "(disconnected)" in serial_session.cmd_output_safe(
                         f"nmcli -g GENERAL.STATE device show {ifname}"
                     ):
                         serial_session.cmd(f"nmcli device up {ifname}")
-                    ip_info = json.loads(
+                    addr_out = utils_misc.strip_console_codes(
                         serial_session.cmd_output_safe(f"ip -j addr show {ifname}")
-                    )[0]
+                    )
+                    ip_info = json.loads(addr_out)[0]
                     for addr_info in ip_info["addr_info"]:
                         if (
                             addr_info["family"] == addr_family
