@@ -325,7 +325,17 @@ class VFDevice(PFDevice):
 
     def restore(self):
         """
-        Unload the module and restore the device at the end of the test cycle
+        Restore the PF's SR-IOV state at the end of the test cycle.
+
+        VFs use a driver separate from their parent PF (for example iavf for
+        an i40e PF), so calling the inherited PFDevice.restore() would try
+        to bind each VF to self.origin_driver, which was recorded at
+        __init__() time from the PF and therefore names the PF driver. The
+        kernel rejects such a bind (typically with ENOMEM), masking the
+        real test result. Instead, drop sriov_numvfs to 0 to have the
+        kernel destroy and release every VF, then recreate the original
+        pre-test VF count if it was non-zero (kernel will auto-bind the
+        new VFs to the correct VF driver).
         """
         # Skip rebinding each VF back to the kernel driver: the VFs are removed
         # right below by resetting sriov_numvfs, so rebinding them first is
