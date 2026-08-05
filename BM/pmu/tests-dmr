@@ -57,3 +57,5 @@ pmu_tests.sh -t acr_reject_freq
 pmu_tests.sh -t acr_reject_ppp
 pmu_tests.sh -t acr_reject_contiguity
 pmu_tests.sh -t acr_stress -l 10
+pmu_tests.sh -t pebs_mrt_local_ram
+pmu_tests.sh -t pebs_mrt_snoop_hit
