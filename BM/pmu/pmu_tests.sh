@@ -701,6 +701,136 @@ acr_run_on_supported_pmus() {
   $fn
 }
 
+get_pebs_mrt_workload() {
+  local benchmark src
+
+  src="$(pwd)/pebs_mrt_workload.c"
+  benchmark="$(pwd)/pebs_mrt_workload"
+  [[ -f "$src" ]] || die "workload source $src does not exist!"
+  if [[ ! -x "$benchmark" || "$src" -nt "$benchmark" ]]; then
+    gcc -O2 -pthread -o "$benchmark" "$src" || die "failed to build $benchmark"
+  fi
+  [[ -x "$benchmark" ]] || die "benchmark $benchmark does not exist!"
+  echo "$benchmark"
+}
+
+find_first_online_cpu() {
+  local cpu_dir cpu
+
+  for cpu_dir in /sys/devices/system/cpu/cpu[0-9]*; do
+    cpu=${cpu_dir##*cpu}
+    if [[ -f "$cpu_dir/online" ]] && [[ $(cat "$cpu_dir/online") -ne 1 ]]; then
+      continue
+    fi
+    echo "$cpu"
+    return 0
+  done
+
+  die "No online CPU found!"
+}
+
+list_cross_core_worker_cpus() {
+  local reader_cpu=$1
+  local reader_dir="/sys/devices/system/cpu/cpu${reader_cpu}"
+  local reader_core reader_pkg cpu_dir cpu core_id pkg_id workers=""
+
+  [[ -d "$reader_dir" ]] || die "reader CPU $reader_cpu is not present!"
+  reader_core=$(cat "$reader_dir/topology/core_id")
+  reader_pkg=$(cat "$reader_dir/topology/physical_package_id")
+  for cpu_dir in /sys/devices/system/cpu/cpu[0-9]*; do
+    cpu=${cpu_dir##*cpu}
+    [[ "$cpu" == "$reader_cpu" ]] && continue
+    if [[ -f "$cpu_dir/online" ]] && [[ $(cat "$cpu_dir/online") -ne 1 ]]; then
+      continue
+    fi
+    core_id=$(cat "$cpu_dir/topology/core_id")
+    pkg_id=$(cat "$cpu_dir/topology/physical_package_id")
+    if [[ "$pkg_id" == "$reader_pkg" && "$core_id" != "$reader_core" ]]; then
+      workers+="$cpu "
+    fi
+  done
+
+  [[ -n "$workers" ]] || die "No online cross-core CPU pair found!"
+  echo "$workers"
+}
+
+pebs_mrt_local_ram_test() {
+  local perfdata="pebs_mrt_local_ram.data"
+  local perfdump="pebs_mrt_local_ram.dump"
+  local logfile="pebs_mrt_local_ram.log"
+  local benchmark sample_count local_ram_count
+
+  benchmark=$(get_pebs_mrt_workload)
+  clear_files "$perfdata" "$perfdump" "$logfile"
+  do_cmd "perf record -d -o $perfdata -C 0 -c 200 -e '{cpu/event=0x03,umask=0x82/,cpu/mem-loads,ldlat=3/}:P' -- $benchmark -m local-ram -r 0 -i 200000 2>&1|tee $logfile"
+  sample_count=$(grep "sample" "$logfile" | awk '{print $10}' | tr -cd "0-9")
+  [[ -n "$sample_count" ]] || die "No samples found in $logfile!"
+  perf report --stdio -D -i "$perfdata" > "$perfdump"
+  local_ram_count=$(python3 - "$perfdump" <<'PY'
+import sys
+count = 0
+for line in open(sys.argv[1], errors='ignore'):
+    if 'data_src:' not in line:
+        continue
+    value = int(line.split()[-1], 16)
+    if not (value & 0x2):
+        continue
+    region = (value >> 46) & 0x1f
+    lvl_num = (value >> 33) & 0xf
+    remote = (value >> 37) & 0x1
+    if 0x8 <= region <= 0xf and lvl_num == 0xd and remote == 0:
+        count += 1
+print(count)
+PY
+) || die "failed to decode perf data_src values"
+  test_print_trc "sample_count=$sample_count local_ram_count=$local_ram_count"
+  [[ $sample_count -gt 0 ]] || die "samples = 0!"
+  [[ $local_ram_count -gt 0 ]] || die "no local RAM memory-region samples found!"
+  clear_files "$perfdata" "$perfdump" "$logfile"
+}
+
+pebs_mrt_snoop_hit_test() {
+  local perfdata="pebs_mrt_snoop_hit.data"
+  local perfdump="pebs_mrt_snoop_hit.dump"
+  local logfile="pebs_mrt_snoop_hit.log"
+  local benchmark sample_count reader_cpu worker_cpu worker_cpus
+  local snoop_na_count snoop_miss_count snoop_hit_count snoop_hitm_count snoop_none_count
+
+  reader_cpu=$(find_first_online_cpu)
+  worker_cpus=$(list_cross_core_worker_cpus "$reader_cpu")
+  benchmark=$(get_pebs_mrt_workload)
+  for worker_cpu in $worker_cpus; do
+    clear_files "$perfdata" "$perfdump" "$logfile"
+    do_cmd "perf record -d -o $perfdata -c 100 -e 'cpu/mem-loads/P' -- $benchmark -m snoop-hit -r $reader_cpu -w $worker_cpu -i 262144 2>&1|tee $logfile"
+    sample_count=$(grep "sample" "$logfile" | awk '{print $10}' | tr -cd "0-9")
+    perf report --stdio -D -i "$perfdata" > "$perfdump"
+    read -r snoop_na_count snoop_miss_count snoop_hit_count snoop_hitm_count snoop_none_count <<< "$(python3 - "$perfdump" <<'PY'
+import sys
+counts = {1: 0, 2: 0, 4: 0, 8: 0, 16: 0}
+for line in open(sys.argv[1], errors='ignore'):
+  if 'data_src:' not in line:
+      continue
+  value = int(line.split()[-1], 16)
+  region = (value >> 46) & 0x1f
+  lvl_num = (value >> 33) & 0xf
+  snoop = (value >> 19) & 0x1f
+  if region == 0x2 and lvl_num == 0x3 and snoop in counts:
+      counts[snoop] += 1
+print(counts[1], counts[8], counts[4], counts[16], counts[2])
+PY
+    )" || die "failed to decode snoop data_src values"
+    test_print_trc "reader_cpu=$reader_cpu worker_cpu=$worker_cpu sample_count=$sample_count source2_snoop_na=$snoop_na_count source2_snoop_miss=$snoop_miss_count source2_snoop_hit=$snoop_hit_count source2_snoop_hitm=$snoop_hitm_count source2_snoop_none=$snoop_none_count"
+    [[ $sample_count -gt 0 ]] || die "samples = 0!"
+    if [[ $snoop_hit_count -gt 0 ]]; then
+      clear_files "$perfdata" "$perfdump" "$logfile"
+      return 0
+    fi
+  done
+
+  clear_files "$perfdata" "$perfdump" "$logfile"
+  die "no local shared-cache snoop HIT samples found!"
+}
+
 pmu_test() {
   case $TEST_SCENARIO in
     fix_counter)
@@ -810,6 +940,12 @@ pmu_test() {
       ;;
     acr_stress)
       acr_run_on_supported_pmus acr_stress_test
+      ;;
+    pebs_mrt_local_ram)
+      pebs_mrt_local_ram_test
+      ;;
+    pebs_mrt_snoop_hit)
+      pebs_mrt_snoop_hit_test
       ;;
     esac
   return 0
