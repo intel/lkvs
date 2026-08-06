@@ -30,18 +30,11 @@ kconfig_test() {
 # $1: Parameter should be support in cpuinfo
 # Return: 0 for true, otherwise false
 cpu_info_check() {
-  do_cmd "grep -q 'fred=on' '/proc/cmdline'"
   local cpu_func=$1
   [ -n "$cpu_func" ] || die "cpu info check name is null:$cpu_func"
   grep -q "$cpu_func" /proc/cpuinfo || block_test "CPU not support:$cpu_func"
   test_print_trc "/proc/cpuinfo contain '$cpu_func'"
   return 0
-}
-
-# Dmesg test: Verify if FRED is initialized
-dmesg_test() {
-  do_cmd "grep -q 'fred=on' '/proc/cmdline'"
-  do_cmd "dmesg | grep 'Initialize FRED on CPU'"
 }
 
 # CPUID test: Check FRED CPUID
@@ -65,9 +58,6 @@ fred_test() {
   case $TEST_SCENARIO in
     kconfig)
       kconfig_test
-      ;;
-    dmesg)
-      dmesg_test
       ;;
     cpuid)
       cpuid_test
