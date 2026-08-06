@@ -734,6 +734,47 @@ acr_stat_test() {
   clear_files $logfile
 }
 
+acr_period_test() {
+  local cputype=$1
+  local perfdata="acr_period.data"
+  local logfile="acr_period.log"
+  local scriptlog="acr_period.script"
+  local bad_count
+
+  if [[ -z $cputype ]]; then
+    acr_detect_pmu || die "No PMU exposes acr_mask, skip ACR period"
+    cputype=$ACR_PMU
+  fi
+
+  clear_files $perfdata $logfile $scriptlog
+
+  # Use one ACR group.  cycles is used as the companion event because it is
+  # available on all ACR PMUs.
+  # Single quotes in bash -c are intentional (must not expand in outer shell).
+  # shellcheck disable=SC2016
+  if ! perf record -q -o $perfdata \
+    -e "{${cputype}/instructions,period=100000,acr_mask=0x2/,${cputype}/cycles,period=100000,acr_mask=0x0/}:S" \
+    -a bash -c 'end=$((SECONDS + 2)); while (( SECONDS < end )); do :; done' \
+    > $logfile 2>&1; then
+    die "ACR period: perf record failed"
+  fi
+
+  perf script -i $perfdata -F period,event > $scriptlog 2>&1
+  read -r bad_count total_count ratio <<< "$(awk '
+    $2 ~ /instructions/ && $1 ~ /^[0-9]+$/ {
+      total++
+      if ($1 > 10000000) bad++
+    }
+    END {
+      r = (total > 0) ? 100 * bad / total : 0
+      printf "%d %d %.4f", bad + 0, total + 0, r
+    }' "$scriptlog")"
+  test_print_trc "ACR period: total instructions samples = $total_count, implausible = $bad_count, ratio = ${ratio}%"
+
+  clear_files $perfdata $logfile $scriptlog
+  [[ $bad_count -eq 0 ]] || die "ACR period: negative counter delta detected (${ratio}% abnormal)"
+}
+
 acr_reject_freq_test() {
   local cputype
   acr_detect_pmu || die "No PMU exposes acr_mask, skip ACR reject freq"
@@ -1012,6 +1053,9 @@ pmu_test() {
       ;;
     acr_stat)
       acr_run_on_supported_pmus acr_stat_test
+      ;;
+    acr_period)
+      acr_run_on_supported_pmus acr_period_test
       ;;
     acr_reject_freq)
       acr_reject_freq_test
