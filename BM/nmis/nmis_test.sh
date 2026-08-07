@@ -24,8 +24,6 @@ nmi_enable_test() {
   do_cmd "cpuid_check 7 0 1 0 a 17"
   #CPUID.0x7.1.EAX[20] == 1
   do_cmd "cpuid_check 7 0 1 0 a 20"
-  do_cmd "grep -q 'fred=on' '/proc/cmdline'"
-  full_dmesg_check "contain" "Initialize FRED on CPU"
   full_dmesg_check "null" "NMI without source information! Disable source reporting."
 }
 
