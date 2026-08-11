@@ -18,7 +18,7 @@ import tempfile
 import time
 
 from provider import dmesg_router  # pylint: disable=unused-import
-from virttest import error_context, remote, utils_net
+from virttest import error_context, remote, utils_misc, utils_net
 
 from avocado.utils import process
 from avocado.core import exceptions
@@ -160,11 +160,164 @@ def _scp_and_verify(test, vm, session, ip_addr, size_mb):
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
+def _serial_wait_for_mac(session, mac_addr, timeout):
+    """Wait until the guest reports the given MAC on some interface."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        status = session.cmd_status(
+            f"ip -o link | grep -qi '{mac_addr}'",
+            timeout=15,
+        )
+        if status == 0:
+            return True
+        time.sleep(3)
+    return False
+
+
+def _serial_ifname_of_mac(session, mac_addr):
+    """Return the guest interface name that owns mac_addr, or empty string."""
+    out = session.cmd_output_safe(
+        f"ip -o link | awk -v m={mac_addr.lower()} "
+        f"'tolower($0) ~ m {{print $2}}' | head -1 | tr -d ':'"
+    )
+    out = utils_misc.strip_console_codes(out).strip()
+    if out:
+        # Guard against a trailing shell echo of the command itself.
+        out = out.splitlines()[-1].strip()
+    return out
+
+
+def _verify_slot_serial(test, params, vm, session, slot, ext_host):
+    """
+    Verify one passthrough NIC via an existing serial session:
+      - wait for the expected MAC to appear on some guest interface
+      - bring the interface up
+      - wait for a global IPv4 address
+      - ping ext_host through the interface
+      - log the interrupt class (MSI / IO-APIC)
+    """
+    mac_addr = _resolve_vf_mac(slot, params)
+    error_context.context(
+        f"Serial verify slot {slot} MAC {mac_addr} on {vm.name}",
+        test.log.info,
+    )
+    link_timeout = int(params.get("hostdev_serial_link_timeout", 120))
+    ping_count = int(params.get("hostdev_serial_ping_count", 10))
+    ping_timeout = int(params.get("hostdev_serial_ping_timeout", 60))
+
+    if not _serial_wait_for_mac(session, mac_addr, link_timeout):
+        test.fail(
+            f"MAC {mac_addr} (slot {slot}) did not appear in guest "
+            f"{vm.name} within {link_timeout}s"
+        )
+    ifname = _serial_ifname_of_mac(session, mac_addr)
+    if not ifname:
+        test.fail(
+            f"Cannot find guest interface for MAC {mac_addr} "
+            f"(slot {slot}) on {vm.name}"
+        )
+    # Bring the interface up (nmcli covers RHEL/CentOS guests, ip link is a
+    # generic fallback if NetworkManager is absent).
+    session.cmd_output_safe(
+        f"nmcli device up {ifname} 2>/dev/null; "
+        f"ip link set {ifname} up",
+        timeout=30,
+    )
+    addr_family = "inet"
+    deadline = time.time() + link_timeout
+    got_addr = False
+    while time.time() < deadline:
+        addr_out = utils_misc.strip_console_codes(session.cmd_output_safe(
+            f"ip -o -f {addr_family} addr show {ifname} scope global"
+        )).strip()
+        if addr_out:
+            got_addr = True
+            break
+        time.sleep(3)
+    if not got_addr:
+        test.fail(
+            f"{ifname} (MAC {mac_addr}) has no global {addr_family} "
+            f"address on {vm.name}"
+        )
+    status = session.cmd_status(
+        f"ping -4 -c {ping_count} -I {ifname} {ext_host}",
+        timeout=ping_timeout + 30,
+    )
+    if status != 0:
+        test.fail(
+            f"Ping {ext_host} through {ifname} failed on {vm.name}"
+        )
+    # Log the NIC's interrupt class.
+    # i40e/ice/ixgbe name IRQs like "i40e-<ifname>-TxRx-N", so match ifname
+    # as a substring rather than a whole word. Do the classification in
+    # Python to avoid multi-pipe quoting issues in the serial shell.
+    raw = utils_misc.strip_console_codes(session.cmd_output_safe(
+        f"grep {ifname} /proc/interrupts 2>/dev/null; echo __END__"
+    ))
+    raw = raw.split("__END__", 1)[0]
+    seen = []
+    for kw in ("PCI-MSI", "MSI-X", "MSI", "IO-APIC"):
+        if kw in raw and kw not in seen:
+            seen.append(kw)
+    msi_out = " ".join(seen)
+    test.log.info(
+        "Interrupt class for %s (MAC %s) on %s: %s",
+        ifname, mac_addr, vm.name, (msi_out or "unknown"),
+    )
+
+
+def _open_serial_session(vm, timeout=240):
+    """Return a serial login with bracketed-paste disabled for stable output."""
+    session = vm.wait_for_serial_login(timeout=timeout)
+    session.cmd_output_safe(
+        "bind 'set enable-bracketed-paste off' 2>/dev/null; true"
+    )
+    return session
+
+
+def _verify_slots(test, params, vm, pci_slots, ext_host, ip_version):
+    """
+    Dispatch NIC verification for pci_slots based on hostdev_verify_mode:
+      - "ssh" (default): SSH into the guest via each slot's MAC and ping
+      - "serial":        drive verification through the serial console only,
+                         no host-guest IP reachability required
+    """
+    verify_mode = params.get("hostdev_verify_mode", "ssh")
+    if verify_mode == "serial":
+        session = _open_serial_session(vm)
+        try:
+            for slot in pci_slots:
+                _verify_slot_serial(
+                    test, params, vm, session, slot, ext_host
+                )
+        finally:
+            session.close()
+        return
+    for slot in pci_slots:
+        mac_addr = _resolve_vf_mac(slot, params)
+        session = hostdev_utils.ssh_login_from_mac(
+            vm, mac_addr, int(ip_version[-1])
+        )
+        if not session:
+            test.fail(
+                f"Cannot log into {vm.name} via slot {slot} MAC {mac_addr}"
+            )
+        try:
+            _ping_from_vm(test, vm, session, ext_host, ip_version)
+        finally:
+            session.close()
+
+
 def _boot_and_verify(test, params, vm, pci_slots, ext_host, ip_version, action):
     """
     Log into vm via each assigned VF's MAC, ping ext_host, and run the
     selected extra action (e.g. scp) on the last established session.
     """
+    verify_mode = params.get("hostdev_verify_mode", "ssh")
+    if verify_mode == "serial":
+        _verify_slots(test, params, vm, pci_slots, ext_host, ip_version)
+        return
+
     scp_size_mb = int(params.get("scp_file_size_mb", 100))
     ip_wait_timeout = params.get_numeric("vf_ip_wait_timeout", 90)
     last_session = None
@@ -417,11 +570,21 @@ def _hotplug_cycle(test, params, vm, dev_name, pci_slot, ext_host, ip_version,
     vm.devices.simple_hotplug(hotplug_dev, vm.monitor)
 
     mac_addr = _resolve_vf_mac(pci_slot, params)
-    session = _wait_for_vf_session(test, vm, mac_addr, ip_version)
-    try:
-        _ping_from_vm(test, vm, session, ext_host, ip_version)
-    finally:
-        session.close()
+    verify_mode = params.get("hostdev_verify_mode", "ssh")
+    if verify_mode == "serial":
+        session = _open_serial_session(vm)
+        try:
+            _verify_slot_serial(
+                test, params, vm, session, pci_slot, ext_host
+            )
+        finally:
+            session.close()
+    else:
+        session = _wait_for_vf_session(test, vm, mac_addr, ip_version)
+        try:
+            _ping_from_vm(test, vm, session, ext_host, ip_version)
+        finally:
+            session.close()
 
     error_context.context(
         f"Hot-unplug VF {pci_slot} on {vm.name}",
@@ -494,24 +657,11 @@ def _run_hotswap_action(test, params, env, ext_host, ip_version,
 
 def _verify_all_vfs(test, params, vm, pci_slots, ext_host, ip_version):
     """
-    Log into vm via every assigned VF MAC and ping ext_host once per VF to
-    confirm the VF NICs are functional after a guest lifecycle event.
-    Unlike _boot_and_verify, this opens a fresh session per VF so it is safe
-    to call repeatedly across reboots and re-creations.
+    Verify each assigned NIC by MAC, using the mode selected by
+    hostdev_verify_mode. Safe to call repeatedly across reboots and
+    re-creations because each call opens fresh session(s).
     """
-    for slot in pci_slots:
-        mac_addr = _resolve_vf_mac(slot, params)
-        session = hostdev_utils.ssh_login_from_mac(
-            vm, mac_addr, int(ip_version[-1])
-        )
-        if not session:
-            test.fail(
-                f"Cannot log into {vm.name} via VF {slot} MAC {mac_addr}"
-            )
-        try:
-            _ping_from_vm(test, vm, session, ext_host, ip_version)
-        finally:
-            session.close()
+    _verify_slots(test, params, vm, pci_slots, ext_host, ip_version)
 
 
 def _run_reass_reboot(test, params, env, ext_host, ip_version, iterations):
@@ -620,18 +770,18 @@ def _run_many_vms_boot(test, params, vms, available_pci_slots,
 
 
 def _do_live_migration(test, params, vm, pci_slots, ext_host, ip_version):
-    """Hot-unplug every assigned VF, live-migrate the guest, then re-attach
-    each VF on the destination and re-verify the NIC end-to-end.
+    """Hot-unplug every assigned NIC, live-migrate the guest, then re-attach
+    each device on the destination and re-verify the NIC end-to-end.
 
-    PCI passthrough blocks migration, so the VF hostdev(s) must be released
+    PCI passthrough blocks migration, so the hostdev(s) must be released
     before vm.migrate() is invoked. After migration:
       1. A serial console login on the destination confirms the guest
          survived migration.
-      2. Every previously assigned VF is hot-plugged back into the guest.
-      3. Each re-attached VF NIC is verified via MAC-based SSH + ping so
-         the VF is confirmed functional on the destination.
-      4. Every re-attached VF is hot-unplugged again and its removal from
-         the guest is confirmed, so the case leaves no VF plugged in on
+      2. Every previously assigned NIC is hot-plugged back into the guest.
+      3. Each re-attached NIC is verified through the serial console so it
+         is confirmed functional on the destination.
+      4. Every re-attached NIC is hot-unplugged again and its removal from
+         the guest is confirmed, so the case leaves no device plugged in on
          teardown.
     """
     mig_protocol = params.get("mig_protocol", "tcp")
@@ -639,7 +789,7 @@ def _do_live_migration(test, params, vm, pci_slots, ext_host, ip_version):
     serial_timeout = params.get_numeric("serial_login_timeout", 120)
     vm_hostdevs = vm.params.objects("vm_hostdevs")
     error_context.context(
-        f"Hot-unplug {len(vm_hostdevs)} VF(s) on {vm.name} before migration",
+        f"Hot-unplug {len(vm_hostdevs)} NIC(s) on {vm.name} before migration",
         test.log.info,
     )
     for dev_name in vm_hostdevs:
@@ -662,24 +812,52 @@ def _do_live_migration(test, params, vm, pci_slots, ext_host, ip_version):
     vm.wait_for_serial_login(timeout=serial_timeout).close()
 
     error_context.context(
-        f"Hot-plug {len(vm_hostdevs)} VF(s) back to {vm.name} after migration",
+        f"Re-attach {len(vm_hostdevs)} NIC(s) to {vm.name} after migration",
         test.log.info,
     )
     replugged = []
+    rescan_needed = False
     for dev_name, pci_slot in zip(vm_hostdevs, pci_slots):
-        dev_params = vm.params.object_params(dev_name)
-        dev_params["vm_hostdev_host"] = pci_slot
-        hotplug_dev = vm.devices.hostdev_define_by_params(dev_name, dev_params)
-        vm.devices.simple_hotplug(hotplug_dev, vm.monitor)
+        # vm.migrate() rebuilds the destination command line from params, so a
+        # hostdev cold-plugged via vm_hostdevs is already re-created on the
+        # destination QEMU. The migrated guest ejected that device before
+        # migration, however, so it is present in QEMU but invisible to the
+        # guest until a PCI rescan is issued. Devices not present after
+        # migration (e.g. ones hot-plugged at runtime) are defined and
+        # hot-plugged back, which raises a guest hot-add event on its own.
+        hotplug_dev = vm.devices.get(dev_name)
+        if hotplug_dev is None:
+            dev_params = vm.params.object_params(dev_name)
+            dev_params["vm_hostdev_host"] = pci_slot
+            hotplug_dev = vm.devices.hostdev_define_by_params(
+                dev_name, dev_params
+            )
+            vm.devices.simple_hotplug(hotplug_dev, vm.monitor)
+        else:
+            rescan_needed = True
         replugged.append((hotplug_dev, pci_slot))
 
-    error_context.context(
-        f"Verify re-attached VF NIC(s) on {vm.name}", test.log.info,
-    )
-    _verify_all_vfs(test, params, vm, pci_slots, ext_host, ip_version)
+    if rescan_needed:
+        error_context.context(
+            f"Rescan guest PCI bus on {vm.name} so re-created NIC(s) "
+            f"are detected",
+            test.log.info,
+        )
+        session = _open_serial_session(vm, timeout=serial_timeout)
+        try:
+            session.cmd_output_safe(
+                "echo 1 > /sys/bus/pci/rescan", timeout=60
+            )
+        finally:
+            session.close()
 
     error_context.context(
-        f"Hot-unplug {len(replugged)} re-attached VF(s) on {vm.name} "
+        f"Verify re-attached NIC(s) on {vm.name}", test.log.info,
+    )
+    _verify_slots(test, params, vm, pci_slots, ext_host, ip_version)
+
+    error_context.context(
+        f"Hot-unplug {len(replugged)} re-attached NIC(s) on {vm.name} "
         f"after migration",
         test.log.info,
     )
