@@ -118,6 +118,7 @@ def _boot_and_verify(test, params, vm, pci_slots, ext_host, ip_version, action):
     selected extra action (e.g. scp) on the last established session.
     """
     scp_size_mb = int(params.get("scp_file_size_mb", 100))
+    ip_wait_timeout = params.get_numeric("vf_ip_wait_timeout", 90)
     last_session = None
     last_ip = ""
     try:
@@ -126,13 +127,22 @@ def _boot_and_verify(test, params, vm, pci_slots, ext_host, ip_version, action):
         )
         for slot in pci_slots:
             mac_addr = _resolve_vf_mac(slot, params)
-            ip_addr = hostdev_utils.get_guest_ip_from_mac(
-                vm, mac_addr, int(ip_version[-1])
-            )
+            # Multi-VF guests may have several VF NICs racing for DHCP at
+            # once; poll get_guest_ip_from_mac until the target VF has an
+            # address instead of failing on the first empty result.
+            deadline = time.time() + ip_wait_timeout
+            ip_addr = ""
+            while True:
+                ip_addr = hostdev_utils.get_guest_ip_from_mac(
+                    vm, mac_addr, int(ip_version[-1])
+                )
+                if ip_addr or time.time() >= deadline:
+                    break
+                time.sleep(5)
             if not ip_addr:
                 test.fail(
                     f"Cannot resolve guest IP on {vm.name} for VF "
-                    f"{slot} MAC {mac_addr}"
+                    f"{slot} MAC {mac_addr} within {ip_wait_timeout}s"
                 )
             session = hostdev_utils.ssh_login_from_mac(
                 vm, mac_addr, int(ip_version[-1])
