@@ -540,6 +540,76 @@ def _run_reass_lifecycle(
             vm.destroy(gracefully=False)
 
 
+def _do_live_migration(test, params, vm, pci_slots, ext_host, ip_version):
+    """Hot-unplug every assigned VF, live-migrate the guest, then re-attach
+    each VF on the destination and re-verify the NIC end-to-end.
+
+    PCI passthrough blocks migration, so the VF hostdev(s) must be released
+    before vm.migrate() is invoked. After migration:
+      1. A serial console login on the destination confirms the guest
+         survived migration.
+      2. Every previously assigned VF is hot-plugged back into the guest.
+      3. Each re-attached VF NIC is verified via MAC-based SSH + ping so
+         the VF is confirmed functional on the destination.
+      4. Every re-attached VF is hot-unplugged again and its removal from
+         the guest is confirmed, so the case leaves no VF plugged in on
+         teardown.
+    """
+    mig_protocol = params.get("mig_protocol", "tcp")
+    mig_timeout = params.get_numeric("mig_timeout", 300)
+    serial_timeout = params.get_numeric("serial_login_timeout", 120)
+    vm_hostdevs = vm.params.objects("vm_hostdevs")
+    error_context.context(
+        f"Hot-unplug {len(vm_hostdevs)} VF(s) on {vm.name} before migration",
+        test.log.info,
+    )
+    for dev_name in vm_hostdevs:
+        dev = vm.devices.get(dev_name)
+        if dev is not None:
+            vm.devices.simple_unplug(dev, vm.monitor)
+    error_context.context(
+        f"Verify {vm.name} responsive via serial before migration",
+        test.log.info,
+    )
+    vm.wait_for_serial_login(timeout=serial_timeout).close()
+    error_context.context(
+        f"Live migrate {vm.name} via {mig_protocol}", test.log.info,
+    )
+    vm.migrate(mig_timeout, mig_protocol)
+    error_context.context(
+        f"Verify {vm.name} responsive on migration destination",
+        test.log.info,
+    )
+    vm.wait_for_serial_login(timeout=serial_timeout).close()
+
+    error_context.context(
+        f"Hot-plug {len(vm_hostdevs)} VF(s) back to {vm.name} after migration",
+        test.log.info,
+    )
+    replugged = []
+    for dev_name, pci_slot in zip(vm_hostdevs, pci_slots):
+        dev_params = vm.params.object_params(dev_name)
+        dev_params["vm_hostdev_host"] = pci_slot
+        hotplug_dev = vm.devices.hostdev_define_by_params(dev_name, dev_params)
+        vm.devices.simple_hotplug(hotplug_dev, vm.monitor)
+        replugged.append((hotplug_dev, pci_slot))
+
+    error_context.context(
+        f"Verify re-attached VF NIC(s) on {vm.name}", test.log.info,
+    )
+    _verify_all_vfs(test, params, vm, pci_slots, ext_host, ip_version)
+
+    error_context.context(
+        f"Hot-unplug {len(replugged)} re-attached VF(s) on {vm.name} "
+        f"after migration",
+        test.log.info,
+    )
+    for hotplug_dev, pci_slot in replugged:
+        vm.devices.simple_unplug(hotplug_dev, vm.monitor)
+        mac_addr = _resolve_vf_mac(pci_slot, params)
+        _wait_for_mac_removed(test, vm, mac_addr)
+
+
 @error_context.context_aware
 def run(test, params, env):
     """
@@ -559,6 +629,12 @@ def run(test, params, env):
                           reap the QEMU process
         * reass_destroy:  reass_iterations times, create the guest, verify
                           each VF NIC, destroy the QEMU process directly
+        * live_migration: verify VF NICs, hot-unplug every VF, live-migrate
+                          the guest via a local tcp (mig_protocol) channel,
+                          confirm the guest survives via serial login on the
+                          destination, re-attach every VF and re-verify the
+                          NIC, then hot-unplug every VF again so no device is
+                          left plugged in on teardown
 
     Setting hostdev_serial_vfs = yes reruns the boot+verify loop once per VF
     exposed by the PF, each time booting a single-hostdev guest that owns
@@ -632,6 +708,11 @@ def run(test, params, env):
                         test, params, vm, pci_slots,
                         ext_host, ip_version, action,
                     )
+                    if action == "live_migration":
+                        _do_live_migration(
+                            test, params, vm, pci_slots,
+                            ext_host, ip_version,
+                        )
                 finally:
                     vm.destroy(gracefully=False)
             return
@@ -649,5 +730,10 @@ def run(test, params, env):
                 _boot_and_verify(
                     test, params, vm, pci_slots, ext_host, ip_version, action,
                 )
+                if action == "live_migration":
+                    _do_live_migration(
+                        test, params, vm, pci_slots,
+                        ext_host, ip_version,
+                    )
         finally:
             vm.destroy(gracefully=False)
