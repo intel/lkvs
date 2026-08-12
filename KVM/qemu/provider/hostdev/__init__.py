@@ -264,7 +264,20 @@ class VFDevice(PFDevice):
         Override this method to create VFs first, and if the PF is NIC, then
         configure all VFs with fixed MAC address
         """
-        vf_counts = params.get_numeric("hostdev_vf_counts")
+        raw_counts = params.get("hostdev_vf_counts", "1")
+        if str(raw_counts).strip().lower() in ("max", "all", "totalvfs"):
+            # Read the PF's SR-IOV capability from sysfs (sriov_totalvfs, the
+            # maximum number of VFs this PF supports) so the VF pool matches
+            # whatever the actual NIC under test supports.
+            vf_counts = int((self.slot_path / "sriov_totalvfs").read_text().strip())
+            LOG_JOB.info(
+                'hostdev_vf_counts=%s resolved to sriov_totalvfs=%d for "%s"',
+                raw_counts,
+                vf_counts,
+                self.slot_id,
+            )
+        else:
+            vf_counts = int(raw_counts)
         self.create_vfs(vf_counts)
         super().config(params)
         if (self.slot_path / "class").read_text()[2:4] == "02":
@@ -314,5 +327,10 @@ class VFDevice(PFDevice):
         """
         Unload the module and restore the device at the end of the test cycle
         """
+        # Skip rebinding each VF back to the kernel driver: the VFs are removed
+        # right below by resetting sriov_numvfs, so rebinding them first is
+        # redundant and, with dozens of VFs, can fail with ENOMEM after a
+        # max-VF run and abort teardown.
+        self.vfs = []
         super().restore()
         self.create_vfs(self.num_vfs)
