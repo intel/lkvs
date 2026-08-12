@@ -252,8 +252,14 @@ def _hotplug_cycle(test, params, vm, dev_name, pci_slot, ext_host, ip_version,
     _wait_for_mac_removed(test, vm, mac_addr)
 
 
-def _run_hotswap_action(test, params, env, ext_host, ip_version):
-    """Execute hotswap-based actions used by vtd_ras_* variants."""
+def _run_hotswap_action(test, params, env, ext_host, ip_version,
+                        serial_vfs=False):
+    """Execute hotswap-based actions used by vtd_ras_* variants.
+
+    When serial_vfs is True, iterate the hotplug/unplug cycle across every
+    VF exposed by the PF, booting a fresh single-hostdev guest for each VF
+    so successive VF assignment is exercised end-to-end.
+    """
     vm = env.get_all_vms()[0]
     hostdev_driver = params.get("vm_hostdev_driver", "vfio-pci")
     assignment_type = params.get("hostdev_assignment_type")
@@ -270,34 +276,41 @@ def _run_hotswap_action(test, params, env, ext_host, ip_version):
             f"got {len(vm_hostdevs)}"
         )
     dev_name = vm_hostdevs[0]
-    pci_slot = available_pci_slots[0]
     hotswap_iterations = params.get_numeric("hotplug_iterations", 2)
 
-    # Boot the guest with the VF pre-attached so QEMU creates the
-    # pcie-root-port + vfio-pci pair at cold-plug time. simple_hotplug only
-    # supports inserting a single QDevice per call, so the root port must be
-    # present before we plug the hostdev.
-    vm.params[f"vm_hostdev_host_{dev_name}"] = pci_slot
-    vm.create(params=vm.params)
-    vm.verify_alive()
-    vm.wait_for_serial_login(timeout=240).close()
-    # Detach the cold-plugged hostdev to bring the guest into the "no VF"
-    # baseline expected by _hotplug_cycle (which starts with plug).
-    initial_dev = vm.devices.get(dev_name)
-    if initial_dev is not None:
-        vm.devices.simple_unplug(initial_dev, vm.monitor)
-    try:
-        for idx in range(hotswap_iterations):
-            error_context.context(
-                f"Hotswap iteration {idx + 1}/{hotswap_iterations}",
+    slot_iterable = available_pci_slots if serial_vfs else [available_pci_slots[0]]
+    for slot_idx, pci_slot in enumerate(slot_iterable):
+        if serial_vfs:
+            error_context.base_context(
+                f"Serial hotswap on VF {slot_idx + 1}/{len(slot_iterable)} "
+                f"({pci_slot})",
                 test.log.info,
             )
-            _hotplug_cycle(
-                test, params, vm, dev_name, pci_slot, ext_host, ip_version,
-                reuse_dev=initial_dev,
-            )
-    finally:
-        vm.destroy(gracefully=False)
+        # Boot the guest with the VF pre-attached so QEMU creates the
+        # pcie-root-port + vfio-pci pair at cold-plug time. simple_hotplug
+        # only supports inserting a single QDevice per call, so the root
+        # port must be present before we plug the hostdev.
+        vm.params[f"vm_hostdev_host_{dev_name}"] = pci_slot
+        vm.create(params=vm.params)
+        vm.verify_alive()
+        vm.wait_for_serial_login(timeout=240).close()
+        # Detach the cold-plugged hostdev to bring the guest into the "no
+        # VF" baseline expected by _hotplug_cycle (which starts with plug).
+        initial_dev = vm.devices.get(dev_name)
+        if initial_dev is not None:
+            vm.devices.simple_unplug(initial_dev, vm.monitor)
+        try:
+            for idx in range(hotswap_iterations):
+                error_context.context(
+                    f"Hotswap iteration {idx + 1}/{hotswap_iterations}",
+                    test.log.info,
+                )
+                _hotplug_cycle(
+                    test, params, vm, dev_name, pci_slot, ext_host, ip_version,
+                    reuse_dev=initial_dev,
+                )
+        finally:
+            vm.destroy(gracefully=False)
 
 
 def _verify_all_vfs(test, params, vm, pci_slots, ext_host, ip_version):
@@ -449,7 +462,10 @@ def run(test, params, env):
         )
 
         if action == "hotswap":
-            _run_hotswap_action(test, params, env, ext_host, ip_version)
+            _run_hotswap_action(
+                test, params, env, ext_host, ip_version,
+                serial_vfs=serial_vfs,
+            )
             return
 
         if action == "reass_reboot":
