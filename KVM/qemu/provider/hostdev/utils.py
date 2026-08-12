@@ -13,6 +13,7 @@
 
 import json
 import logging
+import re
 import time
 
 from aexpect.remote import wait_for_login
@@ -21,6 +22,17 @@ from virttest import utils_misc, utils_net
 from provider.hostdev import DEV_CLASSES, PCI_DEV_PATH, PCI_DRV_PATH
 
 LOG_JOB = logging.getLogger("avocado.test")
+
+# Some guests colorize `ip`/other tool output (e.g. an `ip -color` alias), which
+# leaves ANSI escape sequences in serial command output and corrupts the values
+# we parse out of it (an IP would come back as "\x1b[35m192.168.0.1\x1b[0m").
+# Strip ANSI control sequences from serial console captures. Covers not only
+# SGR color codes (final byte `m`) but also the bracketed-paste mode toggles
+# (`\x1b[?2004h` / `\x1b[?2004l`) bash emits around every command. Without
+# stripping the paste-off sequence, the first line of `cmd_output_safe`
+# stdout carries a `\x1b[?2004l` prefix, which silently corrupts the ifname
+# parsed for the first interface in a batch listing.
+_ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[a-zA-Z]")
 
 
 def get_pci_by_class(dev_class, driver=None):
@@ -180,6 +192,142 @@ def get_guest_ip_from_mac(vm, mac, ip_version=4):
     return ip_addr
 
 
+def get_guest_ips_from_macs(vm, macs, timeout=240, poll_interval=5,
+                            stall_cycles=6):
+    """
+    Resolve the guest IPv4 address of many MAC addresses in a single pass.
+
+    Unlike get_guest_ip_from_mac(), this opens one serial session and never
+    issues a per-interface command per MAC, which does not scale to the dozens
+    of VFs a max-VF guest owns. It also avoids large `ip -j` JSON dumps: a
+    64-interface dump is routinely truncated on a busy serial console, so the
+    MAC -> ifname map is built from tiny sysfs reads and IPs are polled with
+    compact one-line `ip -o` output. Target interfaces are activated once, then
+    the whole set is polled until every MAC has a global address, the timeout
+    expires, or IP acquisition plateaus (a lab DHCP pool smaller than the VF
+    count can never satisfy every MAC).
+
+    Args:
+        vm (virttest.qemu_vm.VM): The vm object
+        macs (list): MAC addresses to resolve
+        timeout (int): Overall seconds to wait for all IPs
+        poll_interval (int): Seconds between poll cycles
+        stall_cycles (int): Stop after this many poll cycles with no new IP
+            (only once at least one address has been obtained)
+
+    Returns: dict mapping each lowercased MAC to its IP ("" if unresolved)
+    """
+    wanted = {m.lower() for m in macs}
+    result = {m: "" for m in wanted}
+    serial_session = vm.wait_for_serial_login()
+    try:
+        # Build MAC -> ifname from sysfs (one tiny read per NIC) rather than a
+        # huge `ip -j link show` dump the serial console would truncate.
+        mac_dump = serial_session.cmd_output_safe(
+            "for i in /sys/class/net/*; do "
+            'echo "$(basename "$i") $(cat "$i"/address)"; done'
+        )
+        mac_to_if = {}
+        for line in _ANSI_RE.sub("", mac_dump).splitlines():
+            fields = line.split()
+            if len(fields) == 2 and fields[1].lower() in wanted:
+                mac_to_if[fields[1].lower()] = fields[0]
+
+        # Activate every target interface so NetworkManager runs DHCP on it.
+        # `-w 0` returns immediately, so 64 activations do not serialise on
+        # per-device connect timeouts.
+        iflist = " ".join(mac_to_if.values())
+        if iflist:
+            serial_session.cmd_output_safe(
+                f"for i in {iflist}; do "
+                "nmcli -w 0 device connect $i >/dev/null 2>&1; done",
+                timeout=120,
+            )
+
+        deadline = time.time() + timeout
+        resolved = 0
+        stall = 0
+        while True:
+            # Compact one-line-per-address output: "<idx>: <if> inet <ip>/..".
+            addr_dump = serial_session.cmd_output_safe(
+                "ip -o -4 addr show scope global"
+            )
+            if_to_ip = {}
+            for line in _ANSI_RE.sub("", addr_dump).splitlines():
+                fields = line.split()
+                if len(fields) >= 4 and fields[2] == "inet":
+                    if_to_ip[fields[1]] = fields[3].split("/")[0]
+            for mac, ifname in mac_to_if.items():
+                if not result[mac] and ifname in if_to_ip:
+                    result[mac] = if_to_ip[ifname]
+            now_resolved = sum(1 for m in wanted if result[m])
+            if all(result[m] for m in wanted) or time.time() >= deadline:
+                break
+            # Stop early once IP acquisition plateaus: a lab DHCP pool smaller
+            # than the VF count will never satisfy every MAC, so waiting out the
+            # full timeout is pointless once no new address appears for a while.
+            if now_resolved > resolved:
+                resolved = now_resolved
+                stall = 0
+            elif resolved:
+                stall += 1
+                if stall >= stall_cycles:
+                    break
+            # Re-trigger activation for any interface still without an address;
+            # a fire-and-forget connect can occasionally miss a straggler.
+            pending = " ".join(
+                mac_to_if[m] for m in wanted if not result[m] and m in mac_to_if
+            )
+            if pending:
+                serial_session.cmd_output_safe(
+                    f"for i in {pending}; do "
+                    "nmcli -w 0 device connect $i >/dev/null 2>&1; done",
+                    timeout=120,
+                )
+            time.sleep(poll_interval)
+    finally:
+        serial_session.close()
+    for mac in sorted(wanted):
+        LOG_JOB.info("IP address of MAC address(%s) is: %s", mac, result[mac])
+    return result
+
+
+def ssh_login_from_ip(vm, ip_addr):
+    """
+    Establish an SSH login session to a VM given an already-resolved guest IP.
+
+    Args:
+        vm (virttest.qemu_vm.VM): The vm object
+        ip_addr (str): The guest IP address to connect to
+
+    Returns: The ssh session object, or None if ip_addr is empty
+    """
+    if not ip_addr:
+        return None
+    username = vm.params.get("username", "")
+    password = vm.params.get("password", "")
+    prompt = vm.params.get("shell_prompt", r"[\#\$]\s*$")
+    port = vm.params.get("shell_port")
+    linesep = vm.params.get("shell_linesep", "\n").encode().decode("unicode_escape")
+    log_filename = (
+        f'session-{vm.name}-{time.strftime("%m-%d-%H-%M-%S")}-'
+        f"{utils_misc.generate_random_string(4)}.log"
+    )
+    log_filename = utils_misc.get_log_filename(log_filename)
+    log_function = utils_misc.log_line
+    return wait_for_login(
+        "ssh",
+        ip_addr,
+        port,
+        username,
+        password,
+        prompt,
+        linesep,
+        log_filename,
+        log_function,
+    )
+
+
 def ssh_login_from_mac(vm, mac, ip_version=4):
     """
     Establish an SSH login session to a VM using its MAC address.
@@ -192,26 +340,4 @@ def ssh_login_from_mac(vm, mac, ip_version=4):
     Returns: The ssh session object
     """
     ip_addr = get_guest_ip_from_mac(vm, mac, ip_version)
-    if ip_addr:
-        username = vm.params.get("username", "")
-        password = vm.params.get("password", "")
-        prompt = vm.params.get("shell_prompt", r"[\#\$]\s*$")
-        port = vm.params.get("shell_port")
-        linesep = vm.params.get("shell_linesep", "\n").encode().decode("unicode_escape")
-        log_filename = (
-            f'session-{vm.name}-{time.strftime("%m-%d-%H-%M-%S")}-'
-            f"{utils_misc.generate_random_string(4)}.log"
-        )
-        log_filename = utils_misc.get_log_filename(log_filename)
-        log_function = utils_misc.log_line
-        return wait_for_login(
-            "ssh",
-            ip_addr,
-            port,
-            username,
-            password,
-            prompt,
-            linesep,
-            log_filename,
-            log_function,
-        )
+    return ssh_login_from_ip(vm, ip_addr)

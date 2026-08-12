@@ -11,6 +11,7 @@
 # Copyright: Red Hat (c) 2024 and Avocado contributors
 # Copy from tp-qemu
 
+import math
 import os
 import shutil
 import tempfile
@@ -163,6 +164,85 @@ def _boot_and_verify(test, params, vm, pci_slots, ext_host, ip_version, action):
             last_session.close()
 
 
+def _boot_and_verify_max_vfs(test, params, vm, pci_slots, action):
+    """
+    Verify a guest that owns the PF's full VF set.
+
+    Resolving dozens of VF IPs one MAC at a time over the serial console does
+    not scale and is fragile, so batch-resolve every VF IP in a single pass,
+    then ping each VF's guest IP from the host. Connectivity is checked
+    host -> VF rather than guest -> gateway: a max-VF guest is multi-homed
+    with every VF on one subnet, so guest-sourced pings are unreliable
+    (rp_filter and route selection pick a single egress), whereas pinging
+    each VF IP from the host exercises that VF's data path directly and
+    independently.
+
+    Strict pass criteria: every VF must obtain an IP AND every VF IP must be
+    reachable from the host. Any missing IP or any failed ping fails the case
+    with the offending MACs (and IPs when known) logged. For the scp action a
+    single SSH session is established on one working VF.
+    """
+    scp_size_mb = int(params.get("scp_file_size_mb", 100))
+    ip_wait_timeout = params.get_numeric("vf_ip_wait_timeout", 90)
+    macs = [_resolve_vf_mac(slot, params) for slot in pci_slots]
+    total = len(macs)
+    error_context.context(
+        f"Batch-verify {total} VF NIC(s) on {vm.name}", test.log.info
+    )
+    mac_to_ip = hostdev_utils.get_guest_ips_from_macs(
+        vm, macs, timeout=ip_wait_timeout
+    )
+    without_ip = [m for m in macs if not mac_to_ip.get(m.lower())]
+    with_ip = [m for m in macs if mac_to_ip.get(m.lower())]
+    test.log.info(
+        "%d/%d VF NIC(s) on %s obtained an IP", len(with_ip), total, vm.name
+    )
+    if without_ip:
+        test.fail(
+            f"{len(without_ip)}/{total} VF NIC(s) on {vm.name} did not obtain "
+            f"an IP within {ip_wait_timeout}s; missing MACs: "
+            f"{', '.join(without_ip)}"
+        )
+
+    # Ping every VF's guest IP from the host. Every VF must be reachable.
+    error_context.context(
+        f"Ping {total} VF(s) on {vm.name} from the host", test.log.info,
+    )
+    unreachable = []
+    for mac in macs:
+        vf_ip = mac_to_ip[mac.lower()]
+        status = process.system(
+            f"ping -c 3 -W 2 {vf_ip}",
+            shell=True, ignore_status=True,
+        )
+        if status:
+            test.log.warning(
+                "Fail to ping VF IP %s (MAC %s) on %s from the host",
+                vf_ip, mac, vm.name,
+            )
+            unreachable.append((mac, vf_ip))
+    test.log.info(
+        "%d/%d VF NIC(s) on %s reachable from the host",
+        total - len(unreachable), total, vm.name
+    )
+    if unreachable:
+        details = ", ".join(f"{mac}({ip})" for mac, ip in unreachable)
+        test.fail(
+            f"{len(unreachable)}/{total} VF NIC(s) on {vm.name} not reachable "
+            f"from the host; unreachable MAC(IP): {details}"
+        )
+
+    if action == "scp":
+        last_ip = mac_to_ip[macs[-1].lower()]
+        session = hostdev_utils.ssh_login_from_ip(vm, last_ip)
+        if not session:
+            test.fail(f"Cannot log into {vm.name} via VF IP {last_ip}")
+        try:
+            _scp_and_verify(test, vm, session, last_ip, scp_size_mb)
+        finally:
+            session.close()
+
+
 def _assign_and_create(test, vm, available_pci_slots):
     """
     Pop the required number of VF slots from the shared pool, wire them
@@ -181,6 +261,58 @@ def _assign_and_create(test, vm, available_pci_slots):
             )
         pci_slot = available_pci_slots.pop(0)
         vm.params[f"vm_hostdev_host_{dev}"] = pci_slot
+        pci_slots.append(pci_slot)
+    vm.create(params=vm.params)
+    vm.verify_alive()
+    return pci_slots
+
+
+def _assign_and_create_max_vfs(test, params, vm, available_pci_slots):
+    """
+    Assign every available VF (the NIC's real Total VFs) to a single guest,
+    spreading them across as many PCI bridges as needed since a single root
+    bus cannot host them all.
+
+    The number of VFs is whatever the PF actually exposed at runtime
+    (len(available_pci_slots)), so the same case adapts to each NIC's
+    sriov_totalvfs. An optional cap (hostdev_max_assign) limits how many are
+    assigned.
+    """
+    slots_per_bridge = params.get_numeric("hostdev_vf_slots_per_bridge", 31)
+    n = len(available_pci_slots)
+    max_assign = params.get_numeric("hostdev_max_assign", 0)
+    if max_assign and max_assign < n:
+        n = max_assign
+    if n == 0:
+        test.cancel("No VF slots available for max_vfs topology")
+
+    # q35 exposes a PCIe root complex, so conventional PCI slots come from a
+    # pcie-pci-bridge; i440fx (pc) uses a legacy pci-bridge.
+    machine_type = params.get("machine_type", "")
+    default_bridge = (
+        "pcie-pci-bridge" if machine_type.startswith("q35") else "pci-bridge"
+    )
+    bridge_type = params.get("hostdev_vf_bridge_type", default_bridge)
+
+    num_bridges = int(math.ceil(float(n) / slots_per_bridge))
+    controllers = [f"vfbr{b}" for b in range(num_bridges)]
+    existing = vm.params.objects("pci_controllers")
+    vm.params["pci_controllers"] = " ".join(existing + controllers)
+    for name in controllers:
+        vm.params[f"type_{name}"] = bridge_type
+
+    hostdev_names = [f"hostdev{i + 1}" for i in range(n)]
+    vm.params["vm_hostdevs"] = " ".join(hostdev_names)
+    error_context.base_context(
+        f"Assigning {n} VF(s) across {num_bridges} bridge(s) "
+        f"({bridge_type}) for {vm.name}",
+        test.log.info,
+    )
+    pci_slots = []
+    for i, dev in enumerate(hostdev_names):
+        pci_slot = available_pci_slots.pop(0)
+        vm.params[f"vm_hostdev_host_{dev}"] = pci_slot
+        vm.params[f"pci_bus_{dev}"] = controllers[i // slots_per_bridge]
         pci_slots.append(pci_slot)
     vm.create(params=vm.params)
     vm.verify_alive()
@@ -505,9 +637,17 @@ def run(test, params, env):
             return
 
         try:
-            pci_slots = _assign_and_create(test, vm, available_pci_slots)
-            _boot_and_verify(
-                test, params, vm, pci_slots, ext_host, ip_version, action,
-            )
+            if params.get("hostdev_max_vfs") == "yes":
+                pci_slots = _assign_and_create_max_vfs(
+                    test, params, vm, available_pci_slots
+                )
+                _boot_and_verify_max_vfs(
+                    test, params, vm, pci_slots, action,
+                )
+            else:
+                pci_slots = _assign_and_create(test, vm, available_pci_slots)
+                _boot_and_verify(
+                    test, params, vm, pci_slots, ext_host, ip_version, action,
+                )
         finally:
             vm.destroy(gracefully=False)
