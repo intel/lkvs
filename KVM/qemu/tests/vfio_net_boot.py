@@ -540,6 +540,38 @@ def _run_reass_lifecycle(
             vm.destroy(gracefully=False)
 
 
+def _run_many_vms_boot(test, params, vms, available_pci_slots,
+                       ext_host, ip_version):
+    """Boot every registered VM with a single VF assigned from the shared
+    pool, then verify each VF NIC once all guests are up.
+
+    The many_vms topology (vms = "vm1 vm2", vm_hostdevs = hostdev1) covers
+    the scale-out coverage where each guest owns exactly one passthrough
+    VF. Guests are created sequentially so VF assignment order is
+    deterministic; verification happens after every guest is alive to
+    exercise concurrent VF ownership.
+    """
+    vm_slots = []
+    try:
+        for vm in vms:
+            error_context.base_context(
+                f"Booting {vm.name} with one VF", test.log.info
+            )
+            pci_slots = _assign_and_create(test, vm, available_pci_slots)
+            vm_slots.append((vm, pci_slots))
+        for vm, pci_slots in vm_slots:
+            error_context.context(
+                f"Verify VF NIC on {vm.name}", test.log.info
+            )
+            _verify_all_vfs(test, params, vm, pci_slots, ext_host, ip_version)
+    finally:
+        for vm in vms:
+            try:
+                vm.destroy(gracefully=False)
+            except Exception:
+                pass
+
+
 def _do_live_migration(test, params, vm, pci_slots, ext_host, ip_version):
     """Hot-unplug every assigned VF, live-migrate the guest, then re-attach
     each VF on the destination and re-verify the NIC end-to-end.
@@ -640,6 +672,11 @@ def run(test, params, env):
     exposed by the PF, each time booting a single-hostdev guest that owns
     exactly one VF, so a serial (successive) VF assignment path is covered.
 
+    Setting vms to more than one entry (many_vms topology) boots every
+    registered guest with one VF assigned from the shared pool and then
+    verifies each VF NIC concurrently; only the boot action is supported
+    in this mode.
+
     dma_cmd (used to raise dma_entry_limit for large VF pools) is only
     executed for TDX guests where the default kernel limit is otherwise hit
     during hostdev setup; other guest types keep the kernel default.
@@ -691,7 +728,15 @@ def run(test, params, env):
             )
             return
 
-        vm = env.get_all_vms()[0]
+        vms = env.get_all_vms()
+        if len(vms) > 1:
+            _run_many_vms_boot(
+                test, params, vms, available_pci_slots,
+                ext_host, ip_version,
+            )
+            return
+
+        vm = vms[0]
         if serial_vfs:
             slots_snapshot = list(available_pci_slots)
             if not slots_snapshot:
