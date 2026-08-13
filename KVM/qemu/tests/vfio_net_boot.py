@@ -44,6 +44,53 @@ def _iommu_type1_available(test):
                     "DMAR/IOMMU dmesg:\n%s" % dmesg_out)
 
 
+def _kernel_log_grep(pattern):
+    """
+    Return True if the host kernel ring buffer or persistent journal ever
+    reported a line matching the given case-insensitive extended regex.
+
+    Long-lived hosts commonly rotate the dmesg ring buffer, so a plain
+    `dmesg | grep` for boot-time DMAR strings can miss messages that were
+    printed hours or days ago. Fall back to `journalctl -k -b` when it is
+    available; otherwise stay with `dmesg`.
+    """
+    dmesg_hit = process.system(
+        f"dmesg 2>/dev/null | grep -qiE '{pattern}'",
+        shell=True, ignore_status=True,
+    )
+    if dmesg_hit == 0:
+        return True
+    return process.system(
+        f"journalctl -k -b 2>/dev/null | grep -qiE '{pattern}'",
+        shell=True, ignore_status=True,
+    ) == 0
+
+
+def _require_ir_qi_enabled(test):
+    """
+    Cancel the test if the host has not brought Interrupt Remapping and
+    Queued Invalidation up. Both are hard prerequisites for the VT-d
+    behaviour the vtd_ir_qi action wants to exercise; without them the VF
+    interrupt path would fall back to a different mechanism and no longer
+    represent the intent of the case.
+    """
+    ir_patterns = "Enabled IRQ remapping"
+    qi_patterns = "Queued [Ii]nvalidation"
+    if not _kernel_log_grep(ir_patterns):
+        test.cancel(
+            "Host has no 'Enabled IRQ remapping' message in kernel log; "
+            "intel_iommu=on / IR is not active."
+        )
+    if not _kernel_log_grep(qi_patterns):
+        test.cancel(
+            "Host has no 'Queued Invalidation' message in kernel log; "
+            "VT-d QI is not active."
+        )
+    test.log.info(
+        "Host IR remapping and Queued Invalidation both confirmed enabled."
+    )
+
+
 def _resolve_vf_mac(slot, params):
     """Look up the MAC address of a VF slot from its PF manager cache."""
     parent_slot = hostdev_utils.get_parent_slot(slot)
@@ -667,6 +714,12 @@ def run(test, params, env):
                           destination, re-attach every VF and re-verify the
                           NIC, then hot-unplug every VF again so no device is
                           left plugged in on teardown
+        * vtd_ir_qi:      precheck host kernel log for VT-d Interrupt
+                          Remapping + Queued Invalidation, then behave
+                          like boot (ping ext_host from the guest via
+                          the assigned VF). Successful ping implies IR
+                          remapping delivered VF MSI(-X) interrupts
+                          through the QI engine end-to-end.
 
     Setting hostdev_serial_vfs = yes reruns the boot+verify loop once per VF
     exposed by the PF, each time booting a single-hostdev guest that owns
@@ -695,6 +748,8 @@ def run(test, params, env):
                         "Failed to increase dma_entry_limit."
                     )
 
+    if action == "vtd_ir_qi":
+        _require_ir_qi_enabled(test)
     serial_vfs = params.get("hostdev_serial_vfs") == "yes"
     with hostdev_setup(params) as params:
         hostdev_driver = params.get("vm_hostdev_driver", "vfio-pci")
