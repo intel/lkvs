@@ -867,6 +867,67 @@ def _do_live_migration(test, params, vm, pci_slots, ext_host, ip_version):
         _wait_for_mac_removed(test, vm, mac_addr)
 
 
+def _apply_viommu_params(params, vm):
+    """Inject a guest intel-iommu (vIOMMU) device when viommu_mode is set.
+
+    avocado-vt's built-in intel_iommu builder emits the legacy
+    ``x-scalable-mode`` property, which current QEMU renamed to
+    ``scalable-mode``; assemble the device string here so both legacy and
+    scalable vIOMMU modes work on current QEMU. This is a no-op unless the
+    case sets viommu_mode, so other vfio_net_boot cases are unaffected.
+    """
+    mode = params.get("viommu_mode")
+    if not mode:
+        return
+    props = ["caching-mode=on"]
+    if mode == "scalable":
+        props.extend(["scalable-mode=on", "device-iotlb=on"])
+    device = "-device intel-iommu," + ",".join(props)
+    existing = vm.params.get("extra_params", "")
+    vm.params["extra_params"] = (existing + " " + device).strip()
+
+
+def _set_guest_iommu_cmdline(test, params, vm):
+    """Enforce the guest intel_iommu kernel cmdline and reboot to apply it.
+
+    guest_iommu_cmdline is the exact intel_iommu token to set, e.g.
+    ``intel_iommu=off`` or ``intel_iommu=on,sm_off``. grubby dedups by key,
+    so any existing intel_iommu argument is removed first. No-op when unset.
+    """
+    iommu_cmdline = params.get("guest_iommu_cmdline")
+    if not iommu_cmdline:
+        return
+    reboot_timeout = params.get_numeric("guest_iommu_reboot_timeout", 360)
+    error_context.context(
+        f"Set guest kernel cmdline '{iommu_cmdline}' on {vm.name}",
+        test.log.info,
+    )
+    session = _open_serial_session(vm)
+    try:
+        session.cmd(
+            "grubby --update-kernel=$(grubby --default-kernel) "
+            f'--remove-args="intel_iommu" --args="{iommu_cmdline}"',
+            timeout=120,
+        )
+    finally:
+        session.close()
+    session = vm.wait_for_serial_login(timeout=reboot_timeout)
+    session = vm.reboot(
+        session=session, method="shell", timeout=reboot_timeout, serial=True,
+    )
+    try:
+        cmdline = utils_misc.strip_console_codes(
+            session.cmd_output_safe("cat /proc/cmdline")
+        )
+        if iommu_cmdline not in cmdline:
+            test.fail(
+                f"Guest kernel cmdline on {vm.name} does not contain "
+                f"'{iommu_cmdline}' after reboot: {cmdline.strip()}"
+            )
+    finally:
+        session.close()
+
+
 @error_context.context_aware
 def run(test, params, env):
     """
@@ -970,6 +1031,7 @@ def run(test, params, env):
             return
 
         vm = vms[0]
+        _apply_viommu_params(params, vm)
         if serial_vfs:
             slots_snapshot = list(available_pci_slots)
             if not slots_snapshot:
@@ -1005,6 +1067,7 @@ def run(test, params, env):
                 )
             else:
                 pci_slots = _assign_and_create(test, vm, available_pci_slots)
+                _set_guest_iommu_cmdline(test, params, vm)
                 _boot_and_verify(
                     test, params, vm, pci_slots, ext_host, ip_version, action,
                 )
