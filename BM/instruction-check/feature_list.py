@@ -298,10 +298,6 @@ feature_list = {
         "cpuid": ['1E', '0', '1', '0', 'a', '4'],
         "platforms": {"DMR"}
     },
-    "AMX_TF32": {
-        "cpuid": ['1E', '0', '1', '0', 'a', '6'],
-        "platforms": {"DMR"}
-    },
     "AMX_AVX512": {
         "cpuid": ['1E', '0', '1', '0', 'a', '7'],
         "platforms": {"DMR"}
