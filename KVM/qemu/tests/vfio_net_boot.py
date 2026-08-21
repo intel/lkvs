@@ -875,14 +875,23 @@ def _apply_viommu_params(params, vm):
     ``scalable-mode``; assemble the device string here so both legacy and
     scalable vIOMMU modes work on current QEMU. This is a no-op unless the
     case sets viommu_mode, so other vfio_net_boot cases are unaffected.
+
+    caching-mode is emitted by default (required whenever an assigned device
+    shares the vIOMMU). A case with a pure emulated topology and no assigned
+    device can set viommu_caching_mode=no to request a bare ``intel-iommu``,
+    matching sources that omit caching-mode; scalable mode always keeps it.
     """
     mode = params.get("viommu_mode")
     if not mode:
         return
-    props = ["caching-mode=on"]
+    props = []
+    if params.get("viommu_caching_mode", "yes") == "yes" or mode == "scalable":
+        props.append("caching-mode=on")
     if mode == "scalable":
         props.extend(["scalable-mode=on", "device-iotlb=on"])
-    device = "-device intel-iommu," + ",".join(props)
+    device = "-device intel-iommu"
+    if props:
+        device += "," + ",".join(props)
     existing = vm.params.get("extra_params", "")
     vm.params["extra_params"] = (existing + " " + device).strip()
 
@@ -926,6 +935,53 @@ def _set_guest_iommu_cmdline(test, params, vm):
             )
     finally:
         session.close()
+
+
+def _verify_bridge_nic(test, params, vm):
+    """Ping the guest's bridge virtio-net NIC IP from the host.
+
+    Log into the guest to settle the DHCP lease, resolve the NIC's guest IP,
+    then ping it from the host.
+    """
+    error_context.context(
+        f"Verify bridge NIC connectivity on {vm.name}", test.log.info
+    )
+    login_timeout = params.get_numeric("login_timeout", 360)
+    session = vm.wait_for_login(timeout=login_timeout)
+    try:
+        guest_ip = vm.get_address()
+    finally:
+        session.close()
+    if not guest_ip:
+        test.fail(f"Cannot resolve bridge NIC IP for {vm.name}")
+    status = process.system(
+        f"ping -c 5 -W 2 {guest_ip}",
+        shell=True, ignore_status=True,
+    )
+    if status:
+        test.fail(
+            f"Fail to ping bridge NIC IP {guest_ip} of {vm.name} from the host"
+        )
+    test.log.info(
+        "Bridge NIC IP %s of %s reachable from the host", guest_ip, vm.name
+    )
+
+
+def _run_viommu_net(test, params, env):
+    """Boot a guest with a guest vIOMMU and a bridge virtio-net NIC (no
+    assigned device), then ping that NIC from the host.
+
+    Only entered when viommu_net_check is set, so every other vfio_net_boot
+    case runs the unmodified code below.
+    """
+    vm = env.get_all_vms()[0]
+    _apply_viommu_params(params, vm)
+    try:
+        vm.create(params=vm.params)
+        vm.verify_alive()
+        _verify_bridge_nic(test, params, vm)
+    finally:
+        vm.destroy(gracefully=False)
 
 
 @error_context.context_aware
@@ -973,6 +1029,9 @@ def run(test, params, env):
     executed for TDX guests where the default kernel limit is otherwise hit
     during hostdev setup; other guest types keep the kernel default.
     """
+    if params.get("viommu_net_check"):
+        _run_viommu_net(test, params, env)
+        return
     ip_version = params["ip_version"]
     action = params.get("hostdev_action", "boot")
     vm_type = params.get("vm_secure_guest_type")
