@@ -1,0 +1,17 @@
+# This file collects Intel cache-aware scheduler (SCHED_CACHE / llc_balancing)
+# test cases which can run against Intel® Architecture-based server platforms
+# with multiple LLCs (i.e. multiple dies or clusters per socket).
+# @other_dep: test -d /sys/kernel/debug/sched/llc_balancing @ kernel llc_balancing feature not available
+# @other_dep: which stress-ng 2>/dev/null @ stress-ng is required, please install stress-ng
+# @other_warn: which bc 2>/dev/null @ bc tool is required, please install bc
+
+# F1: LLC aggregation — workers converge; disabled means no convergence
+cache_aware_function_tests.sh -t test_llc_agg
+# F2: Preferred LLC re-selection under saturation
+cache_aware_function_tests.sh -t test_llc_reselect
+# F3: Two processes settle onto different LLCs
+cache_aware_function_tests.sh -t test_two_proc
+# F4: Preferred LLC switch threshold (2x occupancy ratio)
+cache_aware_function_tests.sh -t test_pref_switch
+# F5: LLC locality protection — pin vs idle steal
+cache_aware_function_tests.sh -t test_pin_steal
