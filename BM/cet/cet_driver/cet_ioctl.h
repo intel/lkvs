@@ -26,8 +26,12 @@
 })
 #endif
 
+#ifndef CPUID_LEAF_XSTATE
 #define CPUID_LEAF_XSTATE		0xd
+#endif
+#ifndef CPUID_SUBLEAF_XSTATE_USER
 #define CPUID_SUBLEAF_XSTATE_USER	0x0
+#endif
 
 #define MSR_IA32_PL3_SSP	0x000006a7 /* user shadow stack pointer */
 

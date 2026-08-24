@@ -537,8 +537,23 @@ int test_userfaultfd(void)
 	uffdio_register.range.start = (__u64)shstk_ptr;
 	uffdio_register.range.len = 4096;
 	uffdio_register.mode = UFFDIO_REGISTER_MODE_MISSING;
-	if (ioctl(uffd, UFFDIO_REGISTER, &uffdio_register))
+	if (ioctl(uffd, UFFDIO_REGISTER, &uffdio_register)) {
+		/*
+		 * Since Linux v7.2-rc5 (commit 3c58f641e813 "userfaultfd:
+		 * prevent registration of special VMAs"), the kernel rejects
+		 * userfaultfd registration on VM_SHADOW_STACK VMAs with
+		 * -EINVAL to close a CET Shadow Stack bypass. Treat this as
+		 * an expected SKIP rather than a test failure.
+		 */
+		if (errno == EINVAL) {
+			printf("[SKIP]\tUserfaultfd registration on shadow stack rejected by kernel (expected since v7.2-rc5 commit 3c58f641e813).\n");
+			free_shstk(shstk_ptr);
+			close(uffd);
+			signal(SIGSEGV, SIG_DFL);
+			return 0;
+		}
 		goto err;
+	}
 
 	if (pthread_create(&thread, NULL, &uffd_thread, &uffd))
 		goto err;
