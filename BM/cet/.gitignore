@@ -1,5 +1,7 @@
 cet_app
+cet_thread
 glibc_shstk_test
+glibc_shstk_test_legacy
 glibc_supported_shstk_test
 quick_test
 shstk_alloc
@@ -8,5 +10,6 @@ shstk_cpu
 shstk_cpu_legacy
 shstk_huge_page
 shstk_unlock_test
+sig_stack
 test_shadow_stack
 wrss

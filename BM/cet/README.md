@@ -65,5 +65,26 @@ SHSTK enabled binary:
 2. Write one incorrect value into shadow stack
 3. The expected SISEGV should be received after ret instruction
 
+## Kernel space IBT tests
+The kernel IBT cases (`kmod_ibt_*`) load the `cet_driver` kernel module to
+exercise Indirect Branch Tracking in kernel space.
+
+`kmod_ibt_illegal` intentionally performs an indirect jump to a target without
+an `ENDBR` instruction, which triggers a kernel-space Control Protection (#CP)
+fault. The kernel defaults to `ibt_fatal=true`, so the fault ends in `BUG()`
+and crashes the machine.
+
+To run this case you MUST boot the kernel with `ibt=warn` on the cmdline. That
+sets `ibt_fatal=false`, turning the fault into a recoverable `WARN` that logs
+the expected `Missing ENDBR` message. Without `ibt=warn` the case is blocked
+(reported as BLOCK) to avoid crashing the host; with `ibt=off` it is also
+blocked because IBT is disabled.
+
+Add `ibt=warn` and reboot, for example:
+```
+grubby --update-kernel=/boot/vmlinuz-$(uname -r) --args="ibt=warn"
+reboot
+```
+
 ## Expected result
 All test results should show pass, no fail.

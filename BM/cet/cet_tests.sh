@@ -46,7 +46,7 @@ load_cet_driver() {
 
   pat=$(pwd)
   echo "pat:$pat"
-  [[ -e "$KO_FILE" ]] || block_test "No $TEST_MOD_KO exist, please make it first"
+  [[ -e "$KO_FILE" ]] || block_test "No $TEST_MOD_KO exist; build it first with 'make' in cet/cet_driver (requires kernel-devel/headers for $(uname -r))"
   mod_info=$(modinfo "$KO_FILE")
   ker_ver=$(uname -r)
   if [[ "$mod_info" == *"$ker_ver"* ]]; then
@@ -251,6 +251,17 @@ cet_tests() {
       cet_dmesg_check "$bin_file" "$PARM" "$KEYWORD" "$CONTAIN"
       ;;
     kmod_ibt_illegal)
+      # cet_ibt1() in the driver deliberately does an indirect jump to a
+      # target without ENDBR, triggering a kernel-space #CP. With
+      # CONFIG_X86_KERNEL_IBT the kernel defaults to ibt_fatal=true, so the
+      # fault ends in BUG() and crashes the machine. Only ibt=warn
+      # (ibt_fatal=false) turns it into a recoverable WARN that logs the
+      # expected "Missing ENDBR". Guard here to avoid crashing the host.
+      if grep -qw "ibt=off" /proc/cmdline; then
+        block_test "Kernel IBT is disabled via ibt=off; kmod_ibt_illegal needs IBT enabled"
+      fi
+      grep -qw "ibt=warn" /proc/cmdline || \
+        block_test "kmod_ibt_illegal triggers a fatal kernel #CP (BUG) without ibt=warn; boot with ibt=warn to run it safely"
       load_cet_driver
       cet_dmesg_check "$bin_file" "$PARM" "$KEYWORD" "$CONTAIN"
       ;;
