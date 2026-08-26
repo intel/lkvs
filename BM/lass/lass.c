@@ -127,11 +127,11 @@ int cpu_has_lass(void)
 	return (cpuinfo[0] & (1 << 6));
 }
 
-/* Get information from /proc/cmdline */
+/* Check the lass flag exposed by the kernel in /proc/cpuinfo */
 static bool check_lass_enable(void)
 {
 	char buf[256] = {0};
-	char command[256] = "cat /proc/cmdline";
+	char command[256] = "grep -m1 -ow lass /proc/cpuinfo";
 	bool rv = false;
 
 	FILE *cmd = popen(command, "r");
@@ -141,7 +141,7 @@ static bool check_lass_enable(void)
 			;
 		// printf("Get buff:%s\n", buf);
 		pclose(cmd);
-		rv = (strstr(buf, " lass") != 0);
+		rv = (strstr(buf, "lass") != 0);
 		// printf("%s Get lass! rv:%x\n", __func__, rv);
 	}
 
@@ -290,9 +290,9 @@ static int test_read_vsys_address(void)
 	printf("can_read:%d, vsyscall_map_r:%d\n", can_read, vsyscall_map_r);
 
 	if (vsyscall_map_r == can_read)
-		pass_case("Could read vsyscall addr is expected");
+		pass_case("vsyscall read behavior matches expectation");
 	else
-		fail_case("Could not read vsyscall addr is not expected");
+		fail_case("vsyscall read behavior does not match expectation");
 
 	return 0;
 }
@@ -714,9 +714,10 @@ int main(int argc, char *argv[])
 
 	if (!check_lass_enable()) {
 		lass_enable = false;
-		printf(" under default mode without lass defined in cmdline.\n");
+		printf(" no lass flag in /proc/cpuinfo, running under default mode without lass.\n");
+	} else {
+		lass_enable = true;
 	}
-	lass_enable = true;
 
 	check_vsyscall_status();
 
