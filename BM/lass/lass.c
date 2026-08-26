@@ -151,7 +151,7 @@ static bool check_lass_enable(void)
 /* Get information from /proc/cmdline */
 static bool check_vsyscall_status(void)
 {
-	char buf[256] = {0};
+	char buf[4096] = {0};
 	char command[256] = "cat /proc/cmdline";
 	bool rv = false;
 
