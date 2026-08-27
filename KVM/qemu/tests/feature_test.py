@@ -69,12 +69,22 @@ def avocado_install(test, params, guest_bm_path, vm, session):
 def disable_parallel_run(test, session):
     """
     Disable parallel execution in guest.
+
+    The pre-modification state of the avocado config is captured and returned so
+    the caller can restore it after the case, avoiding leaking the setting into
+    other cases running on the same persistent guest image.
     :param test: QEMU test object
     :param session: Guest session
+    :return: dict describing the original state, for restore_parallel_run().
     """
     conf_file = "/etc/avocado/avocado.conf"
-    cmd = "ls %s" % conf_file
-    if session.cmd_status(cmd):
+    conf_bak = "/tmp/lkvs_avocado_conf.bak"
+    dir_exists = session.cmd_status("ls -d /etc/avocado") == 0
+    conf_exists = session.cmd_status("ls %s" % conf_file) == 0
+    if conf_exists:
+        # Preserve the original config so it can be restored later.
+        session.cmd("cp -f %s %s" % (conf_file, conf_bak), ignore_all_errors=True)
+    else:
         cmd = "mkdir -p /etc/avocado && touch %s" % conf_file
         status, output = session.cmd_status_output(cmd)
         if status:
@@ -87,6 +97,28 @@ def disable_parallel_run(test, session):
         status, output = session.cmd_status_output(cmd)
         if status:
             test.error("Fail to add configurations in guest file: %s" % output)
+
+    return {"dir_exists": dir_exists, "conf_exists": conf_exists}
+
+
+def restore_parallel_run(session, state):
+    """
+    Restore /etc/avocado/avocado.conf to the pre-modification default state
+    recorded by disable_parallel_run().
+    :param session: Guest session
+    :param state: dict returned by disable_parallel_run()
+    """
+    conf_file = "/etc/avocado/avocado.conf"
+    conf_bak = "/tmp/lkvs_avocado_conf.bak"
+    if not state["dir_exists"]:
+        # We created /etc/avocado; remove it entirely.
+        session.cmd("rm -rf /etc/avocado", ignore_all_errors=True)
+    elif state["conf_exists"]:
+        # Restore the original config content.
+        session.cmd("mv -f %s %s" % (conf_bak, conf_file), ignore_all_errors=True)
+    else:
+        # Directory existed but the config file did not; drop what we created.
+        session.cmd("rm -f %s" % conf_file, ignore_all_errors=True)
 
 
 def get_test_results(test, output, vm, session):
@@ -138,8 +170,9 @@ def run(test, params, env):
     guest_bm_path = os.path.join(test_dir, "BM")
     avocado_install(test, params, guest_bm_path, vm, session)
     vm_config = params.get_boolean("disable_parallel_run")
+    conf_state = None
     if vm_config:
-        disable_parallel_run(test, session)
+        conf_state = disable_parallel_run(test, session)
 
     try:
         for feature_dir_name in feature_dir_names.split():
@@ -169,5 +202,5 @@ def run(test, params, env):
     finally:
         session.cmd("rm %s -rf" % guest_bm_path, ignore_all_errors=True)
         if vm_config:
-            session.cmd("rm /etc/avocado -rf", ignore_all_errors=True)
+            restore_parallel_run(session, conf_state)
         session.close()
