@@ -4,6 +4,8 @@
 # @other_dep: test -d /sys/kernel/debug/sched/llc_balancing @ kernel llc_balancing feature not available
 # @other_dep: which stress-ng 2>/dev/null @ stress-ng is required, please install stress-ng
 # @other_warn: which bc 2>/dev/null @ bc tool is required, please install bc
+# @other_warn: which perf 2>/dev/null @ perf is required by perf_llc_miss
+# @other_warn: which hackbench 2>/dev/null @ hackbench (from rt-tests) is required by perf_hackbench
 
 # F1: LLC aggregation — workers converge; disabled means no convergence
 cache_aware_function_tests.sh -t test_llc_agg
@@ -15,3 +17,8 @@ cache_aware_function_tests.sh -t test_two_proc
 cache_aware_function_tests.sh -t test_pref_switch
 # F5: LLC locality protection — pin vs idle steal
 cache_aware_function_tests.sh -t test_pin_steal
+
+# PERF1: LLC-load-miss rate — feature ON vs feature OFF
+cache_aware_perf_tests.sh -t perf_llc_miss
+# PERF2: hackbench throughput — feature ON vs feature OFF
+cache_aware_perf_tests.sh -t perf_hackbench
