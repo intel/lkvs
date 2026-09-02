@@ -34,6 +34,10 @@ feature_list = {
         "cpuid": ['7', '0', '0', '0', 'b', '15'],
         "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
     },
+    "AVX2": {
+        "cpuid": ['7', '0', '0', '0', 'b', '5'],
+        "platforms": {"SPR", "EMR", "GNR", "SRF", "CWF"}
+    },
     "AVX512_F": {
         "cpuid": ['7', '0', '0', '0', 'b', '16'],
         "platforms": {"SPR", "EMR", "GNR"}
