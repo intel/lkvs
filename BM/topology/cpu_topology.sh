@@ -632,6 +632,270 @@ generic_sched_domain_names() {
   disable_sched_domain_debug
 }
 
+# Function to verify CPUID leaf 0x1f domains for a QEMU guest booted with the DMR
+# Core Building Block topology (-smp sockets/dies/modules/cores/threads with
+# module sharing L2). Sub-leaf 0 reports thread, sub-leaf 1 core, sub-leaf 2
+# module, sub-leaf 3 die and sub-leaf 4 invalid. Each domain must report a single
+# bit width line and the expected number of logical processors. The cumulative
+# number of logical processors at die level depends on the socket layout and is
+# passed in as the argument.
+qemu_dmr_cpuid_check() {
+  local cpus_on_dies=$1
+  # Thread level
+  thread_type=$(cpuid -l 0x1f -s 0 | grep "level type" | sort -u | awk -F "=" '{print $2}' | awk '{print $1}')
+  test_print_trc "0x1f leaf's subleaf 0 shows $thread_type level type"
+  bit_width_index_0=$(cpuid -l 0x1f -s 0 | grep width | sort -u | wc -l)
+  test_print_trc "0x1f leaf's subleaf 0 bit width line: $bit_width_index_0"
+  num_cpus_at_thead_level=$(cpuid -l 0x1f -s 0 | grep "number of logical processors" | sort -u | awk '{print $NF}')
+  # Remove ( ) around decimal value
+  num_cpus_at_thead_level=${num_cpus_at_thead_level#\(}
+  num_cpus_at_thead_level=${num_cpus_at_thead_level%\)}
+  test_print_trc "0x1f leaf's subleaf 0 num logical cpus at thread level: $num_cpus_at_thead_level"
+
+  # Core level
+  core_type=$(cpuid -l 0x1f -s 1 | grep "level type" | sort -u | awk -F "=" '{print $2}' | awk '{print $1}')
+  test_print_trc "0x1f leaf's subleaf 1 shows $core_type level type"
+  bit_width_index_1=$(cpuid -l 0x1f -s 1 | grep width | sort -u | wc -l)
+  test_print_trc "0x1f leaf's subleaf 1 bit width line: $bit_width_index_1"
+  num_cpus_at_core_level=$(cpuid -l 0x1f -s 1 | grep "number of logical processors" | sort -u | awk '{print $NF}')
+  # Remove ( ) around decimal value
+  num_cpus_at_core_level=${num_cpus_at_core_level#\(}
+  num_cpus_at_core_level=${num_cpus_at_core_level%\)}
+  test_print_trc "0x1f leaf's subleaf 1 num logical cpus at core level: $num_cpus_at_core_level"
+
+  # Module level
+  module_type=$(cpuid -l 0x1f -s 2 | grep "level type" | sort -u | awk -F "=" '{print $2}' | awk '{print $1}')
+  test_print_trc "0x1f leaf's subleaf 2 shows $module_type level type"
+  bit_width_index_2=$(cpuid -l 0x1f -s 2 | grep width | sort -u | wc -l)
+  test_print_trc "0x1f leaf's subleaf 2 bit width line: $bit_width_index_2"
+  num_cpus_at_module_level=$(cpuid -l 0x1f -s 2 | grep "number of logical processors" | sort -u | awk '{print $NF}')
+  # Remove ( ) around decimal value
+  num_cpus_at_module_level=${num_cpus_at_module_level#\(}
+  num_cpus_at_module_level=${num_cpus_at_module_level%\)}
+  test_print_trc "0x1f leaf's subleaf 2 num logical cpus at module level: $num_cpus_at_module_level"
+
+  # Die level
+  die_type=$(cpuid -l 0x1f -s 3 | grep "level type" | sort -u | awk -F "=" '{print $2}' | awk '{print $1}')
+  test_print_trc "0x1f leaf's subleaf 3 shows $die_type level type"
+  bit_width_index_3=$(cpuid -l 0x1f -s 3 | grep width | sort -u | wc -l)
+  test_print_trc "0x1f leaf's subleaf 3 bit width line: $bit_width_index_3"
+  num_cpus_at_die_level=$(cpuid -l 0x1f -s 3 | grep "number of logical processors" | sort -u | awk '{print $NF}')
+  # Remove ( ) around decimal value
+  num_cpus_at_die_level=${num_cpus_at_die_level#\(}
+  num_cpus_at_die_level=${num_cpus_at_die_level%\)}
+  test_print_trc "0x1f leaf's subleaf 3 num logical cpus at die level: $num_cpus_at_die_level"
+
+  # Invalid level type after Die level
+  invalid_type_sub4=$(cpuid -l 0x1f -s 4 | grep "level type" | sort -u | awk -F "=" '{print $2}' | awk '{print $1}')
+  test_print_trc "0x1f leaf's subleaf 4 shows $invalid_type_sub4 level type"
+  bit_width_index_4=$(cpuid -l 0x1f -s 4 | grep width | sort -u | wc -l)
+  test_print_trc "0x1f leaf's subleaf 4 bit width line: $bit_width_index_4"
+
+  if [[ $thread_type == thread ]] && [[ $bit_width_index_0 -eq 1 ]] && [[ $num_cpus_at_thead_level -eq 1 ]]; then
+    test_print_trc "CPUID: level type: thread is correctly detected, all threads bit width are aligned \
+number of logical processors at thread level is correct: $num_cpus_at_thead_level"
+  else
+    die "CPUID: level type: thread is not correctly detected or bit width is not aligned or \
+number of logical processors at thread level is incorrect."
+  fi
+
+  if [[ $core_type == core ]] && [[ $bit_width_index_1 -eq 1 ]] && [[ $num_cpus_at_core_level -eq 2 ]]; then
+    test_print_trc "CPUID: level type: core is correctly detected, and all cores bit width are aligned \
+number of logical processors at core level is correct: $num_cpus_at_core_level"
+  else
+    die "CPUID: level type: core is not correctly detected or bit width is not aligned or \
+number of logical processors at core level is incorrect."
+  fi
+
+  if [[ $module_type == module ]] && [[ $bit_width_index_2 -eq 1 ]] && [[ $num_cpus_at_module_level -eq 48 ]]; then
+    test_print_trc "CPUID: level type: module is correctly detected, and all modules bit width are aligned \
+number of logical processors at module level is correct: $num_cpus_at_module_level"
+  else
+    die "CPUID: level type: module is not correctly detected or bit width is not aligned or \
+number of logical processors at module level is incorrect."
+  fi
+
+  if [[ $die_type == die ]] && [[ $bit_width_index_3 -eq 1 ]] && [[ $num_cpus_at_die_level -eq $cpus_on_dies ]]; then
+    test_print_trc "CPUID: level type: die is correctly detected, and all dies bit width are aligned \
+number of logical processors at die level is correct: $num_cpus_at_die_level"
+  else
+    die "CPUID: level type: die is not correctly detected or bit width is not aligned or \
+number of logical processors at die level is incorrect."
+  fi
+
+  if [[ $invalid_type_sub4 == invalid ]] && [[ $bit_width_index_4 -eq 1 ]]; then
+    test_print_trc "CPUID: level type: invalid is correctly detected, and all dies bit width are aligned"
+  else
+    die "CPUID: level type: invalid is not correctly detected or bit width is not aligned"
+  fi
+}
+
+# Function to verify cache topo in qemu, 0x04H is Cache parameter leaf
+# EAX Bits 25-14: Maximum number of addressable IDs for logical processors sharing this cache.
+# EAX Bits 31-26: Maximum number of addressable IDs for processor cores in the physical
+# The case will check both EAX bits 25-14 and bits 31-26 for each cache type
+# There are 4 cache type: subleaf 0: data cache, cache level is 0x1 (L1 d cache)
+# Subleaf 1: instruction cache, cache level is 0x1 (L1 i cache)
+# Subleaf 2: unified cache, cache level is 0x2 (L2 cache)
+# Subleaf 3: unified cahce, cache level is 0x3 (L3 Cache)
+qemu_dmr_cache_topo() {
+  # subleaf 0: L1 data cache, cache level is 0x1 (L1 d cache), which is per core
+  l1_d_cache_type=$(cpuid -1 -l 0x4H -s 0 | grep "type" | awk -F "=" '{print $2}' | awk '{print $1}')
+  test_print_trc "Leaf 0x04H subleaf 0 cache type: $l1_d_cache_type"
+  l1_d_cache_level=$(cpuid -1 -l 0x4h -s 0 | grep "cache level" | sed -n '1,1p' | awk -F "=" '{print $2}')
+  l1_d_level_num=${l1_d_cache_level#*(}
+  l1_d_level_num=${l1_d_level_num%*)}
+  test_print_trc "Leaf 0x04H subleaf 0 cache type: $l1_d_level_num"
+  if [[ $l1_d_cache_type == data ]] && [[ $l1_d_level_num -eq 1 ]]; then
+    test_print_trc "L1 data cache type and level is detected correctly."
+  else
+    die "Did not correctly detect L1 data cache type or level "
+  fi
+
+  # Calculate maximum number of addressable IDs for logical processors sharing each cache
+  # Based on configures setting: -smp cpus=192,sockets=1,dies=4,modules=24,cores=2,threads=1
+  # L1 data cache is per core, L1 instruction is per core
+  # L2 unified cache is per module, L3 unified cache is per die
+  # socket bit: 1, dies bit: 2, modules bit: 5, cores bit: 1, threads bit: 0
+  # (When thread is 1, which means the index is 0, so the bit is 0)
+  # test_l1_i_max_id_cpus_per_core=1 << apic_core_offset) -1=(1<<0)-1=0
+  # test_l1_d_max_id_cpus_per_core=1 << apic_core_offset) -1=(1<<0)-1=0
+  # test_l2_max_id_cpus_per_module=1 << apic_core_offset) -1=(1<<0+1)-1=1
+  # test_l3_max_id_cpus_per_die=1 << apic_core_offset) -1=(1<<0+1+5)-1=63
+
+  # Test maximum IDs for CPUs sharing L1 data cache, which is per core
+  max_l1_d_cpus_sharing_cached=$(cpuid -1 -l 0x4H -s 0 | grep "maximum IDs for CPUs" | awk '{print $NF}')
+  max_l1_d_cpus_sharing_cached=${max_l1_d_cpus_sharing_cached#\(}
+  max_l1_d_cpus_sharing_cached=${max_l1_d_cpus_sharing_cached%\)}
+  test_print_trc "CPUID Leaf subleaf 0 maximum IDs for CPUs sharing data cache: $max_l1_d_cpus_sharing_cached"
+  if [[ $max_l1_d_cpus_sharing_cached -eq 0 ]]; then
+    test_print_trc "maximum IDs for CPUs sharing L1 data cache is expected value: 0"
+  else
+    die "maximum IDs for CPUs sharing L1 data cache is not expected value: 0"
+  fi
+
+  # Test in L1 data cache, maximum IDs for cores in pkg
+  max_cores_l1_d=$(cpuid -1 -l 0x4H -s 0 | grep "maximum IDs for cores in pkg" | awk '{print $NF}')
+  max_cores_l1_d=${max_cores_l1_d#\(}
+  max_cores_l1_d=${max_cores_l1_d%\)}
+  test_print_trc "CPUID Leaf subleaf 0 maximum IDs for CPUs sharing data cache: $max_cores_l1_d"
+  # test_max_cores_in_package=1 << (socket_level_offset - core_level_offset)) - 1=1<<(0+1+5+2-0)-1=255
+  # But there is max bits for maximum IDs for cores in pkg is 6 bits
+  # So if 255 > 63, then maximum IDs for cores in pkg will show 63
+  if [[ $max_cores_l1_d -eq 63 ]]; then
+    test_print_trc "In L1 data cache, maximum IDs for cores in pkg expected: 63"
+  else
+    die "maximum IDs for CPUs sharing L1 data cache is not expected value: 63"
+  fi
+
+  # subleaf 1: L1 instruction cache, cache level is 0x1 (L1 i cache), which is per core
+  l1_i_cache_type=$(cpuid -1 -l 0x4H -s 1 | grep "type" | awk -F "=" '{print $2}' | awk '{print $1}')
+  test_print_trc "Leaf 0x04H subleaf 0 cache type: $l1_i_cache_type"
+  l1_i_cache_level=$(cpuid -1 -l 0x4h -s 1 | grep "cache level" | sed -n '1,1p' | awk -F "=" '{print $2}')
+  l1_i_level_num=${l1_i_cache_level#*(}
+  l1_i_level_num=${l1_i_level_num%*)}
+  test_print_trc "Leaf 0x04H subleaf 0 cache type: $l1_i_level_num"
+  if [[ $l1_i_cache_type == instruction ]] && [[ $l1_i_level_num -eq 1 ]]; then
+    test_print_trc "L1 instruction cache type and level is detected correctly."
+  else
+    die "Did not correctly detect L1 instruction cache type or level "
+  fi
+
+  # Test maximum IDs for CPUs sharing L1 instruction cache, which is per core
+  max_l1_i_cpus_sharing_cached=$(cpuid -1 -l 0x4H -s 1 | grep "maximum IDs for CPUs" | awk '{print $NF}')
+  max_l1_i_cpus_sharing_cached=${max_l1_i_cpus_sharing_cached#\(}
+  max_l1_i_cpus_sharing_cached=${max_l1_i_cpus_sharing_cached%\)}
+  test_print_trc "CPUID Leaf subleaf 1 maximum IDs for CPUs sharing instruction cache: $max_l1_i_cpus_sharing_cached"
+  if [[ $max_l1_i_cpus_sharing_cached -eq 0 ]]; then
+    test_print_trc "maximum IDs for CPUs sharing L1 instruction cache is expected value: 0"
+  else
+    die "maximum IDs for CPUs sharing L1 instruction cache is not expected value: 0"
+  fi
+
+  # Test in L1 instruction cache, maximum IDs for cores in pkg
+  max_cores_l1_i=$(cpuid -1 -l 0x4H -s 1 | grep "maximum IDs for cores in pkg" | awk '{print $NF}')
+  max_cores_l1_i=${max_cores_l1_i#\(}
+  max_cores_l1_i=${max_cores_l1_i%\)}
+  test_print_trc "CPUID Leaf subleaf 1 maximum IDs for CPUs sharing instruction cache: $max_cores_l1_i"
+  if [[ $max_cores_l1_i -eq 63 ]]; then
+    test_print_trc "In L1 instruction cache, maximum IDs for cores in pkg expected: 63"
+  else
+    die "maximum IDs for CPUs sharing L1 instruction cache is not expected value: 63"
+  fi
+
+  # Subleaf 2: unified cache, cache level is 0x2 (L2 cache), which is per module
+  l2_cache_type=$(cpuid -1 -l 0x4H -s 2 | grep "type" | awk -F "=" '{print $2}' | awk '{print $1}')
+  test_print_trc "Leaf 0x04H subleaf 0 cache type: $l2_cache_type"
+  l2_cache_level=$(cpuid -1 -l 0x4h -s 2 | grep "cache level" | sed -n '1,1p' | awk -F "=" '{print $2}')
+  l2_level_num=${l2_cache_level#*(}
+  l2_level_num=${l2_level_num%*)}
+  test_print_trc "Leaf 0x04H subleaf 0 cache type: $l2_level_num"
+  if [[ $l2_cache_type == unified ]] && [[ $l2_level_num -eq 2 ]]; then
+    test_print_trc "L2 cache type and level is detected correctly."
+  else
+    die "Did not correctly detect L2 cache unified type or level "
+  fi
+
+  # Test maximum IDs for CPUs sharing L2 unified cache, which is per module
+  max_l2_cpus_sharing_cached=$(cpuid -1 -l 0x4H -s 2 | grep "maximum IDs for CPUs" | awk '{print $NF}')
+  max_l2_cpus_sharing_cached=${max_l2_cpus_sharing_cached#\(}
+  max_l2_cpus_sharing_cached=${max_l2_cpus_sharing_cached%\)}
+  test_print_trc "CPUID Leaf subleaf 2 maximum IDs for CPUs sharing cache: $max_l2_cpus_sharing_cached"
+  # test_l2_max_id_cpus_per_module=1 << apic_core_offset) -1=(1<<0+1)-1=1
+  if [[ $max_l2_cpus_sharing_cached -eq 1 ]]; then
+    test_print_trc "maximum IDs for CPUs sharing L2 cache is expected value: 1"
+  else
+    die "maximum IDs for CPUs sharing L2 cache is not expected value: 1"
+  fi
+
+  # Test in L2 cache, maximum IDs for cores in pkg
+  max_cores_l2=$(cpuid -1 -l 0x4H -s 2 | grep "maximum IDs for cores in pkg" | awk '{print $NF}')
+  max_cores_l2=${max_cores_l2#\(}
+  max_cores_l2=${max_cores_l2%\)}
+  test_print_trc "CPUID Leaf subleaf 2 maximum IDs for CPUs sharing instruction cache: $max_cores_l2"
+  if [[ $max_cores_l2 -eq 63 ]]; then
+    test_print_trc "In L2 cache, maximum IDs for cores in pkg expected: 63"
+  else
+    die "maximum IDs for CPUs sharing L2 cache is not expected value: 63"
+  fi
+
+  # Subleaf 3: unified cache, cache level is 0x3 (L3 Cache)
+  l3_cache_type=$(cpuid -1 -l 0x4H -s 3 | grep "type" | awk -F "=" '{print $2}' | awk '{print $1}')
+  test_print_trc "Leaf 0x04H subleaf 0 cache type: $l3_cache_type"
+  l3_cache_level=$(cpuid -1 -l 0x4h -s 3 | grep "cache level" | sed -n '1,1p' | awk -F "=" '{print $2}')
+  l3_level_num=${l3_cache_level#*(}
+  l3_level_num=${l3_level_num%*)}
+  test_print_trc "Leaf 0x04H subleaf 0 cache type: $l3_level_num"
+  if [[ $l3_cache_type == unified ]] && [[ $l3_level_num -eq 3 ]]; then
+    test_print_trc "L3 cache type and level is detected correctly."
+  else
+    die "Did not correctly detect L3 cache unified type or level"
+  fi
+
+  # Test maximum IDs for CPUs sharing L3 unified cache, which is per die
+  max_l3_cpus_sharing_cached=$(cpuid -1 -l 0x4H -s 3 | grep "maximum IDs for CPUs" | awk '{print $NF}')
+  max_l3_cpus_sharing_cached=${max_l3_cpus_sharing_cached#\(}
+  max_l3_cpus_sharing_cached=${max_l3_cpus_sharing_cached%\)}
+  test_print_trc "CPUID Leaf subleaf 3 maximum IDs for CPUs sharing cache: $max_l3_cpus_sharing_cached"
+  # test_l3_max_id_cpus_per_die=1 << apic_core_offset) -1=(1<<0+1+5)-1=63
+  if [[ $max_l3_cpus_sharing_cached -eq 63 ]]; then
+    test_print_trc "maximum IDs for CPUs sharing L3 cache is expected value: 63"
+  else
+    die "maximum IDs for CPUs sharing L3 cache is not expected value: 63"
+  fi
+
+  # Test in L3 cache, maximum IDs for cores in pkg
+  max_cores_l3=$(cpuid -1 -l 0x4H -s 3 | grep "maximum IDs for cores in pkg" | awk '{print $NF}')
+  max_cores_l3=${max_cores_l3#\(}
+  max_cores_l3=${max_cores_l3%\)}
+  test_print_trc "CPUID Leaf subleaf 3 maximum IDs for CPUs sharing instruction cache: $max_cores_l3"
+  if [[ $max_cores_l3 -eq 63 ]]; then
+    test_print_trc "In L3 cache, maximum IDs for cores in pkg expected: 63"
+  else
+    die "maximum IDs for CPUs sharing L3 cache is not expected value: 63"
+  fi
+}
+
 cpu_topology_test() {
   case $TEST_SCENARIO in
   numa_nodes_compare)
@@ -651,6 +915,15 @@ cpu_topology_test() {
     ;;
   verify_sched_domain_names)
     generic_sched_domain_names
+    ;;
+  verify_qemu_dmr_one_socket_cpuid)
+    qemu_dmr_cpuid_check 192
+    ;;
+  verify_qemu_dmr_two_sockets_cpuid)
+    qemu_dmr_cpuid_check 96
+    ;;
+  verify_qemu_dmr_cache_topo_cpuid)
+    qemu_dmr_cache_topo
     ;;
   esac
   return 0
