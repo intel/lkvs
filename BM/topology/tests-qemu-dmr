@@ -1,0 +1,16 @@
+# This file collects CPU Topology cases that must run inside a QEMU guest
+# booted with a DMR Core Building Block topology. Boot the guest with the
+# matching -smp layout before running the cases:
+#   one socket / cache topo:
+#     -smp cpus=192,sockets=1,dies=4,modules=24,cores=2,threads=1 \
+#     -machine smp-cache.0.cache=l2,smp-cache.0.topology=module
+#   two sockets:
+#     -smp cpus=192,sockets=2,dies=2,modules=24,cores=2,threads=1 \
+#     -machine smp-cache.0.cache=l2,smp-cache.0.topology=module
+# @hw_dep:
+# @other_dep:
+# @other_warn: which cpuid 2>/dev/null @ cpuid tool is required
+
+cpu_topology.sh -t verify_qemu_dmr_one_socket_cpuid
+cpu_topology.sh -t verify_qemu_dmr_two_sockets_cpuid
+cpu_topology.sh -t verify_qemu_dmr_cache_topo_cpuid
