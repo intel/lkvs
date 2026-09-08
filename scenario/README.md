@@ -18,3 +18,8 @@ By having dedicated folders for each scenario, it becomes easier to manage and e
 ```
 ./runtests -f <path_to_scenario_test>
 ```
+
+### KVM
+For KVM tests such as tests-kvm, it provides a case list, and can't run directly. Replace the test cases in KVM/docs/tdx_temp.cfg by the case list in file tests-kvm, and run KVM tests by avocado.
+        # Test cases
+        only tdx_basic td_disable_ept multi_vms.1td_1vm multi_vms.2td.4vcpu tsc_freq.tdvm.default tsc_freq.tdvm.settsc td_huge_resource.half td_huge_resource.max_vcpus
