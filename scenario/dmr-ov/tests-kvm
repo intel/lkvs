@@ -1,0 +1,13 @@
+# This file collects the KVM/QEMU tests on DMR
+
+x86_cpuid.vm.avx10_2
+x86_cpuid.vm.movrs
+x86_cpuid.vm.amx_movrs
+x86_cpuid.vm.sha512
+x86_cpuid.vm.sm3
+x86_cpuid.vm.sm4
+x86_cpuid.vm.amx_fp8
+x86_cpuid.vm.amx_complex
+x86_cpuid.vm.amx_tf32
+x86_cpuid.vm.amx_avx512
+cpu_model.dmr
