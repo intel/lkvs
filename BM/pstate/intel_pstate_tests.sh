@@ -22,8 +22,10 @@ CPU_CPUFREQ_ATTR="affected_cpus cpuinfo_max_freq cpuinfo_min_freq
   scaling_min_freq scaling_setspeed"
 DEFAULT_SCALING_GOV=$(cat $CPU_SYSFS_PATH/cpu0/cpufreq/scaling_governor)
 
-readonly no_turbo_value=$(cat "$CPU_NO_TURBO_NODE")
-readonly pstate_status_value=$(cat "$CPU_PSTATE_SYSFS_PATH/status")
+no_turbo_value=$(cat "$CPU_NO_TURBO_NODE")
+readonly no_turbo_value
+pstate_status_value=$(cat "$CPU_PSTATE_SYSFS_PATH/status")
+readonly pstate_status_value
 
 # rdmsr tool is required to run pstate cases
 if which rdmsr 1>/dev/null 2>&1; then
@@ -65,7 +67,7 @@ pstate_teardown() {
     local online_cpu=""
 
     online_cpu=$(ls /sys/devices/system/cpu/cpu*/online | wc -l)
-    online_cpu=$(($online_cpu+1))
+    online_cpu=$((online_cpu+1))
     test_print_trc "Total CPUs from /sys/devices/: $online_cpu"
 
     # Hot plug all logic CPUs except cpu0
@@ -1129,5 +1131,6 @@ intel_pstate_test() {
 }
 
 intel_pstate_test
+# shellcheck disable=SC2034 # consumed by exec_teardown from test framework
 teardown_handler="pstate_teardown"
 exec_teardown
