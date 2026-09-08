@@ -1,0 +1,5 @@
+# Validate Linux ACPI support for Intel RDT tables.
+# @other_dep: test -r /sys/firmware/acpi/tables/MRRM @ ACPI MRRM is required
+# @other_dep: test -r /sys/firmware/acpi/tables/ERDT @ ACPI ERDT is required
+
+rdt_acpi_table_test.sh -t check_mrrm_erdt
