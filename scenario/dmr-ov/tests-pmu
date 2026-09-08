@@ -1,0 +1,33 @@
+# This file collects the PMU cases for DMR platform
+# PMU core
+pmu_tests.sh -t basic
+# PMU uncore
+pmu_tests.sh -t uncore
+pmu_tests.sh -t uncore_dmesg
+pmu_tests.sh -t uncore_events
+# Arch PEBS
+pmu_tests.sh -t arch_pebs_cpuid
+pmu_tests.sh -t arch_pebs_gp_reg_group
+pmu_tests.sh -t arch_pebs_xer_group
+pmu_tests.sh -t arch_pebs_counter_group
+pmu_tests.sh -t arch_pebs_gp_counter
+pmu_tests.sh -t arch_pebs_basic_group
+# RDPMC user disable
+pmu_tests.sh -t rdpmc_user_disable_0
+pmu_tests.sh -t rdpmc_user_disable_1
+pmu_tests.sh -t rdpmc_user_disable_2
+# PerfMon Cstate event support
+pmu_cstate_tests.sh -t cstate_event_list
+# PMU memory regions tag
+pmu_tests.sh -t pebs_mrt_local_ram
+pmu_tests.sh -t pebs_mrt_snoop_hit
+# PMU Auto Counter Reload
+pmu_tests.sh -t acr_cpuid
+pmu_tests.sh -t acr_format
+pmu_tests.sh -t acr_basic
+pmu_tests.sh -t acr_ratio_to_prev
+pmu_tests.sh -t acr_stat
+pmu_tests.sh -t acr_reject_freq
+pmu_tests.sh -t acr_reject_ppp
+pmu_tests.sh -t acr_reject_contiguity
+pmu_tests.sh -t acr_stress -l 10
