@@ -60,4 +60,3 @@ intel_sst.sh -t isst_bf_baseline_freq_test
 # intel_sst.sh -t isst_hp_tf_freq_pp_level0_ordered_type_test
 # intel_sst.sh -t isst_hp_tf_freq_pp_level3_ordered_type_test
 # intel_sst.sh -t isst_hp_tf_freq_pp_level4_ordered_type_test
-

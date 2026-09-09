@@ -9,4 +9,3 @@ cpu_topology.sh -t numa_nodes_compare
 cpu_topology.sh -t verify_thread_per_core
 cpu_topology.sh -t verify_cores_per_socket
 cpu_topology.sh -t verify_socket_num
-
