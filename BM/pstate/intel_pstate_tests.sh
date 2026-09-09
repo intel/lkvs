@@ -869,6 +869,8 @@ check_governor_perf() {
   local actual_freq_cur=""
   local min_perf_pct=""
 
+  [[ -f "$CPU_SYSFS_PATH/intel_pstate/min_perf_pct" ]] ||
+    block_test "intel_pstate/min_perf_pct sysfs not present"
   min_perf_pct=$(cat $CPU_SYSFS_PATH/intel_pstate/min_perf_pct)
 
   # Check actual CPU freq of CPU1 with different max_perf_pct setting under
@@ -903,6 +905,8 @@ check_governor_powersave() {
   local actual_freq_cur=""
   local min_perf_pct=""
 
+  [[ -f "$CPU_SYSFS_PATH/intel_pstate/min_perf_pct" ]] ||
+    block_test "intel_pstate/min_perf_pct sysfs not present"
   min_perf_pct=$(cat $CPU_SYSFS_PATH/intel_pstate/min_perf_pct)
 
   # Check actual CPU freq of CPU1 with different max_perf_pct setting under
@@ -939,6 +943,8 @@ check_maxperfpct_50() {
   local expected_freq=""
   local max_freq=""
 
+  [[ -f "$CPU_SYSFS_PATH/intel_pstate/min_perf_pct" ]] ||
+    block_test "intel_pstate/min_perf_pct sysfs not present"
   min_perf_pct=$(cat $CPU_SYSFS_PATH/intel_pstate/min_perf_pct)
   max_perf_pct=$(cat $CPU_SYSFS_PATH/intel_pstate/max_perf_pct)
 
@@ -989,6 +995,8 @@ check_minperfpct_50() {
   local expected_freq=""
   local max_freq=""
 
+  [[ -f "$CPU_SYSFS_PATH/intel_pstate/min_perf_pct" ]] ||
+    block_test "intel_pstate/min_perf_pct sysfs not present"
   min_perf_pct=$(cat $CPU_SYSFS_PATH/intel_pstate/min_perf_pct)
   max_perf_pct=$(cat $CPU_SYSFS_PATH/intel_pstate/max_perf_pct)
 
