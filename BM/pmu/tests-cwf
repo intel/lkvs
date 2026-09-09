@@ -60,6 +60,8 @@ pmu_tests.sh -t acr_basic
 pmu_tests.sh -t acr_ratio_to_prev
 pmu_tests.sh -t acr_stat
 pmu_tests.sh -t acr_period
+pmu_tests.sh -t pebs_period
+pmu_tests.sh -t pmi_period
 pmu_tests.sh -t acr_reject_freq
 pmu_tests.sh -t acr_reject_ppp
 pmu_tests.sh -t acr_reject_contiguity

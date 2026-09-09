@@ -617,6 +617,97 @@ rdpmc_user_disable() {
   esac
 }
 
+core_run_on_pmus() {
+  local fn=$1
+  local has_hybrid=0
+
+  if [[ -d /sys/devices/cpu_atom ]]; then
+    has_hybrid=1
+    $fn "cpu_atom"
+  fi
+  if [[ -d /sys/devices/cpu_core ]]; then
+    has_hybrid=1
+    $fn "cpu_core"
+  fi
+
+  [[ $has_hybrid -eq 1 ]] && return 0
+  $fn "cpu"
+}
+
+# Leader sampling on a two-event group.  Detect implausible period values
+# caused by negative counter deltas (48-bit unsigned wrap), and verify that
+# every sample_read group reports the same counter value for both members.
+# $1: tag used in log/file names, $2: PMU name, $3: perf event spec
+period_sample_read_check() {
+  local tag=$1
+  local cputype=$2
+  local event=$3
+  local perfdata="${tag}_period.data"
+  local logfile="${tag}_period.log"
+  local scriptlog="${tag}_period.script"
+  local bad_count total_count ratio
+  local group_count mismatch_count
+
+  [[ -d /sys/devices/${cputype} ]] || die "${tag} period: PMU ${cputype} not found"
+
+  clear_files $perfdata $logfile $scriptlog
+
+  # Single quotes in bash -c are intentional (must not expand in outer shell).
+  # shellcheck disable=SC2016
+  if ! perf record -q -o $perfdata -e "$event" \
+    -a bash -c 'end=$((SECONDS + 2)); while (( SECONDS < end )); do :; done' \
+    > $logfile 2>&1; then
+    die "${tag} period: perf record failed"
+  fi
+
+  perf script -i $perfdata -F period,event > $scriptlog 2>&1
+  read -r bad_count total_count ratio <<< "$(awk '
+    $1 ~ /^[0-9]+$/ {
+      total++
+      if ($1 > 1000000) bad++
+    }
+    END {
+      r = (total > 0) ? 100 * bad / total : 0
+      printf "%d %d %.4f", bad + 0, total + 0, r
+    }' "$scriptlog")"
+  test_print_trc "${tag} period: total samples = $total_count, implausible = $bad_count, ratio = ${ratio}%"
+
+  # Both events of the sample_read group must report an identical value, e.g.
+  #   .... group nr 2
+  #   ..... id 000000000000b395, value 0000000000002710, lost 0
+  #   ..... id 000000000000b5d5, value 0000000000002710, lost 0
+  read -r group_count mismatch_count <<< "$(perf report -D -i $perfdata 2>/dev/null | awk '
+    /group nr/ { first = ""; groups++; next }
+    /^\.+ id [0-9a-f]+, value [0-9a-f]+/ {
+      val = $5
+      sub(/,$/, "", val)
+      if (first == "") first = val
+      else if (val != first) { mismatches++; first = "SKIP" }
+    }
+    END { printf "%d %d", groups + 0, mismatches + 0 }')"
+  test_print_trc "${tag} period: sample_read groups = $group_count, value mismatches = $mismatch_count"
+
+  clear_files $perfdata $logfile $scriptlog
+  [[ $total_count -gt 0 ]] || die "${tag} period: samples = 0!"
+  [[ $bad_count -eq 0 ]] || die "${tag} period: negative counter delta detected (${ratio}% abnormal)"
+  [[ $group_count -gt 0 ]] || die "${tag} period: no sample_read group found!"
+  [[ $mismatch_count -eq 0 ]] || die "${tag} period: sample_read values differ in $mismatch_count groups!"
+}
+
+# Leader sampling where the group leader is a precise (PEBS) branches event.
+pebs_period_test() {
+  local cputype=${1:-cpu}
+  period_sample_read_check "pebs" "$cputype" \
+    "{${cputype}/branches,period=10000/p,${cputype}/branches/}:S"
+}
+
+# Leader sampling where the group leader is a non-precise (PMI) branches event.
+pmi_period_test() {
+  local cputype=${1:-cpu}
+  period_sample_read_check "pmi" "$cputype" \
+    "{${cputype}/branches,period=10000/,${cputype}/branches/}:S"
+}
+
 # ACR (Auto Counter Reload) test functions
 acr_detect_pmu() {
   local pmu
@@ -1056,6 +1147,12 @@ pmu_test() {
       ;;
     acr_period)
       acr_run_on_supported_pmus acr_period_test
+      ;;
+    pebs_period)
+      core_run_on_pmus pebs_period_test
+      ;;
+    pmi_period)
+      core_run_on_pmus pmi_period_test
       ;;
     acr_reject_freq)
       acr_reject_freq_test
