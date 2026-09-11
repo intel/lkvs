@@ -54,13 +54,17 @@ def run(test, params, env):
     vcpus = params.get_numeric("smp")
     if vm.get_cpu_count() != vcpus:
         test.fail("CPU number in guest is not same as configured vcpus number")
-    is_max_mem = params.get_boolean("is_max_mem")
-    if is_max_mem:
-        memory = utils_misc.get_usable_memory_size()
-    else:
-        memory = params.get_numeric("mem")
-        if vm.get_totalmem_sys()//1024 != memory:
-            test.fail("Memory in guest is not same as configured")
+    # Some memory sizes are not aligned to the guest memory block size, so
+    # the in-guest total memory can not match the configured value exactly.
+    # For those variants only boot success is required, skip the mem check.
+    if params.get_boolean("check_mem", True):
+        is_max_mem = params.get_boolean("is_max_mem")
+        if is_max_mem:
+            memory = utils_misc.get_usable_memory_size()
+        else:
+            memory = params.get_numeric("mem")
+            if vm.get_totalmem_sys()//1024 != memory:
+                test.fail("Memory in guest is not same as configured")
     is_nxhp = params.get_boolean("is_nxhp")
     if is_nxhp:
         is_high_mem_nxhp = params.get_boolean("is_high_mem_nxhp")
