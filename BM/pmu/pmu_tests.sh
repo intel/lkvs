@@ -232,19 +232,103 @@ arch_pebs_gp_reg_group_test() {
   reg_group_test "R8" 
 }
 
+# Detect one Arch PEBS XER vector register group in the "perf record -I?" output
+# and check that every sample carries the expected number of register entries.
+# $1: group name as printed by perf, e.g. YMM, ZMM, OPMASK
+# $2: number of 64-bit entries a single register of the group occupies
+# $3: file holding the "perf record -I?" output
+# Returns 0 when the group is available and was tested, 1 when it is missing.
+xer_vec_group_test() {
+  local name=$1
+  local qwords=$2
+  local simdfile=$3
+  local range lo hi regs csv
+
+  # Range form, e.g. "YMM0-15" or "OPMASK0-7": perf takes the bare group name.
+  range=$(tr ' ,:()' '\n' < "$simdfile" | grep -xE "${name}[0-9]+-[0-9]+" | head -1)
+  if [[ -n $range ]]; then
+    lo=${range#"$name"}
+    lo=${lo%%-*}
+    hi=${range##*-}
+    regs=$((hi - lo + 1))
+    test_print_trc "XER $name: range $range, $regs regs x $qwords entries"
+    reg_group_test_more_option "$name" "$name" $((regs * qwords))
+    return 0
+  fi
+
+  # Individual form, e.g. "YMM0 YMM1 ... YMM15": perf needs the explicit list.
+  csv=$(tr ' ,:()' '\n' < "$simdfile" | grep -xE "${name}[0-9]+" | awk '!seen[$0]++' | paste -sd,)
+  if [[ -n $csv ]]; then
+    regs=$(echo "$csv" | tr ',' '\n' | wc -l)
+    test_print_trc "XER $name: $regs regs ($csv) x $qwords entries"
+    reg_group_test_more_option "$csv" "$name" $((regs * qwords))
+    return 0
+  fi
+
+  test_print_trc "XER $name: not exposed by perf, skip"
+  return 1
+}
+
+# Check the APX extended GPRs (R16-R31) of the Arch PEBS XER group.  They need a
+# dedicated counter because "R1" style names prefix-match each other, so each
+# register is counted on its own instead of through a single grep.
+# $1: file holding the "perf record -I?" output
+# Returns 0 when the registers are available and were tested, 1 when missing.
+xer_egpr_group_test() {
+  local simdfile=$1
+  local perfdata="xer_egpr.data"
+  local logfile="xer_egpr.log"
+  local reportfile="xer_egpr_report.txt"
+  local csv regs sample_count count reg reg_count
+  local egpr_regs=()
+
+  csv=$(tr ' ,:()' '\n' < "$simdfile" | grep -xE 'R(1[6-9]|2[0-9]|3[01])' | awk '!seen[$0]++' | paste -sd,)
+  if [[ -z $csv ]]; then
+    test_print_trc "XER EGPR: R16-R31 not exposed by perf, skip"
+    return 1
+  fi
+
+  IFS=',' read -r -a egpr_regs <<< "$csv"
+  regs=${#egpr_regs[@]}
+  test_print_trc "XER EGPR: $regs regs ($csv)"
+
+  clear_files $perfdata $logfile $reportfile
+  perf record -o $perfdata -I"$csv" -e "cycles:$level" -a sleep 1 2>&1|tee $logfile
+  sample_count=$(grep "sample" $logfile | awk '{print $10}' | tr -cd "0-9")
+  perf report -D -i $perfdata > $reportfile 2>&1
+  count=0
+  for reg in "${egpr_regs[@]}"; do
+    reg_count=$(grep -v events $reportfile | grep -c "\. ${reg} ")
+    count=$((count + reg_count))
+  done
+  clear_files $perfdata $logfile $reportfile
+  test_print_trc "XER EGPR: sample_count = $sample_count, regs = $regs, count = $count"
+  sample_count=$((sample_count * regs))
+  test_print_trc "XER EGPR: expected entries = $sample_count, count = $count"
+  [[ $sample_count -eq 0 ]] && die "XER EGPR: samples = 0!"
+  [[ $sample_count -eq $count ]] || die "XER EGPR: samples does not match!"
+  return 0
+}
+
 arch_pebs_xer_group_test() {
   level="p"
   simdfile="simd.txt"
+  local tested=0
+
+  clear_files $simdfile
   do_cmd "perf record -I? 2>&1|tee $simdfile"
-  if grep 'YMM0-15' $simdfile > /dev/null; then
-    # All 16 YMM registers are recorded, so 4*16=64
-    reg_group_test_more_option "YMM" "YMM" 64
-    clear_files $simdfile
-  else
-    clear_files $simdfile
-    die "SIMD sampling format is incorrect!"
-  fi
-#  reg_group_test_more_option "ZMMH0" "ZMMLH0" 4
+
+  # Vector registers are dumped as one entry per 64-bit chunk, so a register is
+  # worth <width>/64 entries: YMM 256-bit -> 4, ZMM 512-bit -> 8.
+  xer_vec_group_test "YMM" 4 $simdfile && tested=$((tested + 1))
+  xer_vec_group_test "ZMM" 8 $simdfile && tested=$((tested + 1))
+  # AVX-512 opmask registers are 64-bit, one entry each.
+  xer_vec_group_test "OPMASK" 1 $simdfile && tested=$((tested + 1))
+  # APX extended GPRs R16-R31 are 64-bit, one entry each.
+  xer_egpr_group_test $simdfile && tested=$((tested + 1))
+
+  clear_files $simdfile
+  [[ $tested -gt 0 ]] || die "No XER register group exposed, SIMD sampling format is incorrect!"
 }
 
 arch_pebs_counter_group_test() {
