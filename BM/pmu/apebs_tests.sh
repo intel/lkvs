@@ -126,13 +126,16 @@ pebs_gpr_test() {
   event="cycles:$level"
   benchmark="sleep 1"
 
+  # SSP is part of the Arch PEBS GPR group (see struct arch_pebs_gprs), so it is
+  # sampled together with the other GPRs.  It does not collide with SP because
+  # the records are counted with a trailing space, i.e. ". SSP " vs ". SP ".
   perf record -I? 2>&1|tee "$regfile"
   gpr_csv=$(tr ' ,:()' '\n' < $regfile | awk '
     {
       tok=toupper($0)
-      if (tok == "" || tok == "SSP")
+      if (tok == "")
         next
-      if (tok ~ /^(R[0-9]+|[ABCD]X|[SD]I|BP|SP|IP|FLAGS|[CDEFGS]S)$/ && !seen[tok]++)
+      if (tok ~ /^(R[0-9]+|[ABCD]X|[SD]I|BP|SP|SSP|IP|FLAGS|[CDEFGS]S)$/ && !seen[tok]++)
         list = list ? list "," tok : tok
     }
     END { print list }
