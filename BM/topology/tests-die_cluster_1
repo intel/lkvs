@@ -1,0 +1,10 @@
+# This file collects the CPU Topology case that verifies DMR CPUID 0x1f
+# level types (thread/core/module/die) inside a guest booted with a single
+# socket DMR topology:
+#   -smp cpus=192,sockets=1,dies=4,modules=24,cores=2,threads=1 \
+#   -machine smp-cache.0.cache=l2,smp-cache.0.topology=module
+# @hw_dep:
+# @other_dep:
+# @other_warn: which cpuid 2>/dev/null @ cpuid tool is required
+
+cpu_topology.sh -t verify_qemu_dmr_one_socket_cpuid
