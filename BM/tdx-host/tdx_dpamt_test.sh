@@ -144,13 +144,24 @@ get_dpamt_kb() {
 
 # function to start function profiling for a testcase
 dpamt_profile_start() {
-  local profile=/sys/kernel/tracing/function_profile_enabled
+  local trace=/sys/kernel/tracing
+  local profile="$trace/function_profile_enabled"
+  local filter="$trace/set_ftrace_filter"
+  local available="$trace/available_filter_functions"
+  local function
 
-  if [ ! -w "$profile" ]; then
-    die "Function profiler control $profile is not writable."
-  fi
+  for function in tdh_phymem_pamt_add tdh_phymem_pamt_remove; do
+    grep -qw "$function" "$available" || \
+      die "Function $function is unavailable for ftrace."
+  done
 
   echo 0 > "$profile" || die "Failed to reset function profiling."
+  echo nop > "$trace/current_tracer" || die "Failed to select the nop tracer."
+  : > "$filter" || die "Failed to clear the ftrace function filter."
+  echo tdh_phymem_pamt_add > "$filter" || \
+    die "Failed to add tdh_phymem_pamt_add to the ftrace function filter."
+  echo tdh_phymem_pamt_remove >> "$filter" || \
+    die "Failed to add tdh_phymem_pamt_remove to the ftrace function filter."
   echo 1 > "$profile" || die "Failed to enable function profiling."
   trap dpamt_profile_stop EXIT
   test_print_trc "Function profiling enabled for dynamic PAMT accounting"
