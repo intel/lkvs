@@ -1,0 +1,8 @@
+# This file collects the CPU Topology case that verifies the number of cores
+# per socket is consistent between sysfs and lscpu inside a guest booted with
+# a two sockets topology:
+#   -smp cpus=192,sockets=2,dies=2,modules=24,cores=2,threads=1
+# @hw_dep:
+# @other_dep:
+
+cpu_topology.sh -t verify_cores_per_socket
