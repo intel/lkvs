@@ -73,13 +73,12 @@ docker run --rm \
     set -e
     cd /src/ras/rasdaemon
 
-    if [ ! -x ./configure ]; then
-      autoreconf -i
-    fi
-
-    if [ ! -f ./Makefile ]; then
-      ./configure --enable-sqlite3 --enable-mce \
-        --enable-extlog --enable-memory-failure --enable-memory-ce-pfa
+    # rasdaemon uses meson/ninja; "meson setup" is the configure step.
+    if [ -f build/build.ninja ]; then
+      meson setup build --reconfigure
+    else
+      meson setup build -Dsqlite3=enabled -Dmce=enabled \
+        -Dextlog=enabled -Dmemory-failure=enabled -Dmemory-ce-pfa=enabled
     fi
   '
 
