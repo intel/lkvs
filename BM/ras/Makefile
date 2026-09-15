@@ -19,6 +19,16 @@ endif
 # Filter out targets with custom build rules
 GENERIC_SUBDIRS := $(filter-out rasdaemon,$(SUBDIRS))
 
+# rasdaemon switched from autotools to meson/ninja. Its build runs ras-mc-ctl,
+# which requires Python >= 3.10. Override PYTHON to select the interpreter when
+# the default python3 is too old. See README.md ("Building rasdaemon") for the
+# legacy-meson + Python 3.12 distutils caveat.
+PYTHON ?= python3
+
+# Feature flags equivalent to the previous ./configure options.
+RASDAEMON_MESON_OPTS := -Dsqlite3=enabled -Dmce=enabled -Dextlog=enabled \
+	-Dmemory-failure=enabled -Dmemory-ce-pfa=enabled
+
 .PHONY: all
 all: $(SUBDIRS)
 
@@ -28,15 +38,17 @@ $(GENERIC_SUBDIRS):
 
 .PHONY: rasdaemon
 rasdaemon:
-	cd rasdaemon && \
-		if [ ! -x ./configure ]; then \
-			autoreconf -i; \
-		fi && \
-		if [ ! -f ./Makefile ]; then \
-			./configure --enable-sqlite3 --enable-mce \
-				--enable-extlog --enable-memory-failure --enable-memory-ce-pfa; \
-		fi && \
-		$(MAKE)
+	@set -e; \
+	real=$$($(PYTHON) -c 'import sys; sys.exit("ERROR: rasdaemon needs Python >= 3.10; set PYTHON=<py3.10+> (see README.md)") if sys.version_info[:2] < (3,10) else print(sys.executable)'); \
+	tmpbin=$$(mktemp -d); trap 'rm -rf "$$tmpbin"' EXIT; \
+	ln -sf "$$real" "$$tmpbin/python3"; \
+	cd rasdaemon; \
+	if [ -f build/build.ninja ]; then \
+		PATH="$$tmpbin:$$PATH" meson setup build --reconfigure; \
+	else \
+		PATH="$$tmpbin:$$PATH" meson setup build $(RASDAEMON_MESON_OPTS); \
+	fi; \
+	PATH="$$tmpbin:$$PATH" ninja -C build
 
 .PHONY: install
 install:
@@ -78,6 +90,6 @@ clean:
 	for dir in $(GENERIC_SUBDIRS); do \
 		if [ -f $$dir/Makefile ]; then $(MAKE) -C $$dir clean; fi; \
 	done
-	@# Use distclean for rasdaemon to remove autotools-generated files
-	@# so that configure is re-run on the next build.
-	if [ -f rasdaemon/Makefile ]; then $(MAKE) -C rasdaemon distclean; fi
+	@# rasdaemon uses meson/ninja; remove its build dir so the next build
+	@# reconfigures cleanly (equivalent to the old autotools distclean).
+	rm -rf rasdaemon/build

@@ -49,6 +49,25 @@ yum install rasdaemon    # or: apt install rasdaemon
 ```
 If neither is available from your distro, the Makefile will build from the submodule.
 
+### Building rasdaemon from the submodule
+
+rasdaemon has switched from autotools to a **meson/ninja** build. Two requirements:
+
+- **Python >= 3.10** — the build runs `ras-mc-ctl` to generate its man page, and
+  that tool requires Python 3.10 or newer. If your default `python3` is older
+  (e.g. EL9 ships 3.9), point the build at a newer one:
+  ```
+  make rasdaemon PYTHON=/path/to/python3.10
+  ```
+- **`meson` and `ninja`** on `PATH`.
+
+Note with legacy meson: meson **< 1.0** (e.g. 0.63.x on EL9) introspects the
+interpreter via `distutils`, which was **removed from Python in 3.12**. So with
+old meson you must use Python **3.10 or 3.11** (not 3.12+). Upgrading meson
+(`pip install --upgrade 'meson>=1.3'`) removes this upper bound, after which any
+Python >= 3.10 works. Also avoid pointing `PYTHON` at a pyenv *shim* — pass a
+real interpreter path; the Makefile resolves `sys.executable` to be safe.
+
 3. build the test suite (only builds submodules not already installed):
 ```
 make
