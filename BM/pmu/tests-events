@@ -1,0 +1,2 @@
+# This file collects the core PMU events counting test case
+pmu_tests.sh -t events
