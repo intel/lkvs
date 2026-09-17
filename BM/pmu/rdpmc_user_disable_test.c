@@ -69,6 +69,40 @@ void perf_close(struct cpu *ctx)
 		munmap(ctx->buf, pagesize);
 }
 
+static int get_rdpmc_attr(void)
+{
+	FILE *fp = fopen("/sys/devices/cpu/rdpmc", "r");
+	int val = -1;
+
+	if (fp) {
+		if (fscanf(fp, "%d", &val) != 1)
+			val = -1;
+		fclose(fp);
+	}
+	return val;
+}
+
+static int check_cap_user_rdpmc(struct cpu *ctx, int rdpmc, int pid)
+{
+	struct perf_event_mmap_page *buf = ctx->buf;
+	unsigned int seq, cap;
+	unsigned int expected = rdpmc == 2 || (rdpmc == 1 && pid != -1);
+
+	do {
+		seq = buf->lock;
+		/* Pairs with the rmb below in check_cap_user_rdpmc */
+		rmb();
+		cap = buf->cap_user_rdpmc;
+		/* Pairs with the rmb above in check_cap_user_rdpmc */
+		rmb();
+	} while ((seq & 1) || buf->lock != seq);
+
+	fprintf(stderr, "rdpmc=%d pid=%d cap_user_rdpmc=%u expected=%u: %s\n",
+		rdpmc, pid, cap, expected, cap == expected ? "PASS" : "FAIL");
+	fflush(stderr);
+	return cap == expected ? 0 : -1;
+}
+
 unsigned long long perf_read(struct cpu *ctx)
 {
 	u64 val;
@@ -105,6 +139,7 @@ int main(int argc, const char **argv)
 	int cpuid;
 	int pid;
 	int ret;
+	int rdpmc;
 
 	if (argc != 4) {
 		printf("Usage: %s <cpuid> <system | process> <gp | fixed>\n", argv[0]);
@@ -149,6 +184,13 @@ int main(int argc, const char **argv)
 
 	pagesize = sysconf(_SC_PAGESIZE);
 
+	/* Read the policy before opening the event; it applies at event init. */
+	rdpmc = get_rdpmc_attr();
+	if (rdpmc < 0 || rdpmc > 2) {
+		printf("Failed to read a valid rdpmc policy\n");
+		goto err;
+	}
+
 	/* open & enable event */
 	ret = perf_open(&cpu, cpuid, counter, pid);
 	if (ret < 0)
@@ -156,6 +198,12 @@ int main(int argc, const char **argv)
 
 	/* do something here */
 	sleep(1);
+
+	/* A capability mismatch must fail before any expected fault occurs. */
+	if (check_cap_user_rdpmc(&cpu, rdpmc, pid) < 0) {
+		perf_close(&cpu);
+		goto err;
+	}
 
 	/* read event */
 	count = perf_read(&cpu);
