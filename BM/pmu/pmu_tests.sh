@@ -594,9 +594,10 @@ rdpmc_user_disable() {
     1)
       for file in $logfile1 $logfile2;
       do
-        num=$(cat $file | awk '{print $NF}')
+        if ! cat $file | grep "Receive and handle #GP fault"; then
+          die "rdpmc user disable test fail with rdpmc 1"
+        fi
         clear_files $file
-        [ $num -eq 0 ] || die "rdpmc user disable test fail with rdpmc 1"
       done
 
       for file in $logfile3 $logfile4;
