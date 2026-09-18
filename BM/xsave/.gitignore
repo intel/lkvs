@@ -1,2 +1,4 @@
 *.o
 xstate_64
+xsave_list
+xsave_test

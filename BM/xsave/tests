@@ -1,4 +1,10 @@
 # This file collects the XSAVE feature tests on
 # Intel® Architecture-based platforms.
+# @hw_dep: cpuid_check 1 0 0 0 c 26 @ CPU doesn't support XSAVE - CPUID.(EAX=01H):ECX[bit 26]
+# @other_dep:
+# @other_warn:
 
+xsave_list
+xsave_func.sh -f offset
+xsave_func.sh -f bad_fpu -n xsave_test
 xstate_64
