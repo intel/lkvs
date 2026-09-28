@@ -18,7 +18,9 @@
 #      5: break by futex
 #  -t, --thread-count [Should not be less than 1]
 #  -c, --cycle-number [Should not be less than 1]
-#  -i, --instruction-type [0:TDPBF16PS 1:TDPBSSD 2:TDPBSUD 3:TDPBUSD 4:TDPBUUD]
+#  -i, --instruction-type [0:TDPBF16PS 1:TDPBSSD 2:TDPBSUD 3:TDPBUSD 4:TDPBUUD 5:TDPFP16PS]
+# Note: -i 5 (TDPFP16PS) requires tmul built with FP16 support ("make fp16"),
+# which needs gcc 13.3 or above (some distros backport it to gcc 12.3).
 
 # functional tests
 tmul -b 0 -t 10 -c 10 -i 0
@@ -53,3 +55,13 @@ tmul -b 4 -t 10 -c 100000 -i 1
 tmul -b 4 -t 10 -c 100000 -i 2
 tmul -b 4 -t 10 -c 100000 -i 3
 tmul -b 4 -t 10 -c 100000 -i 4
+
+# FP16 (TDPFP16PS) functional tests, tmul must be built with "make fp16"
+tmul -b 0 -t 10 -c 10 -i 5
+tmul -b 1 -t 10 -c 10 -i 5
+tmul -b 2 -t 10 -c 10 -i 5
+tmul -b 3 -t 10 -c 10 -i 5
+tmul -b 5 -t 10 -c 10 -i 5
+
+# FP16 signal break test
+tmul -b 4 -t 10 -c 100000 -i 5

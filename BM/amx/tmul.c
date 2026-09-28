@@ -1062,6 +1062,10 @@ static bool parse_options(int32_t ac, char **av)
 			break;
 		case 'i':
 			ins_type = atoi(optarg);
+#ifndef FP16
+			if (ins_type == 5)
+				fprintf(stderr, "TDPFP16PS (-i 5) unsupported: tmul built without FP16.\n");
+#endif
 			if (ins_type < INS_TDPBF16PS || ins_type > INS_MAX_NUM) {
 				help();
 				do_nothing = true;
