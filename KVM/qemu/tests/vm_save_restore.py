@@ -12,6 +12,8 @@ from avocado.utils import process
 from virttest import env_process
 from virttest import error_context
 
+from provider.cpu_utils import check_cpu_flags
+
 
 @error_context.context_aware
 def run(test, params, env):
@@ -36,6 +38,10 @@ def run(test, params, env):
     sr_timeout = params.get_numeric("sr_timeout", 600)
     login_timeout = params.get_numeric("login_timeout", 240)
     save_path = os.path.join(test.tmpdir, "vm_state")
+    flags = params.get("flags")
+
+    if flags and params.get_boolean("check_host_flags"):
+        check_cpu_flags(params, flags, test)
 
     error_context.context("Boot guest", test.log.info)
     params["start_vm"] = "yes"
@@ -46,6 +52,11 @@ def run(test, params, env):
     session = vm.wait_for_login(timeout=login_timeout)
 
     try:
+        if flags:
+            error_context.context("Check CPU flags before save/restore",
+                                  test.log.info)
+            check_cpu_flags(params, flags, test, session)
+
         # Collect pre-SR baseline if needed
         baseline = _collect_baseline(test, session, params, sr_check)
 
@@ -72,6 +83,11 @@ def run(test, params, env):
             error_context.context("Post-SR verification: %s" % sr_check,
                                   test.log.info)
             _verify_after_restore(test, session, params, sr_check, baseline)
+
+        if flags:
+            error_context.context("Check CPU flags after save/restore",
+                                  test.log.info)
+            check_cpu_flags(params, flags, test, session)
 
     finally:
         if os.path.exists(save_path):

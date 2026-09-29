@@ -10,6 +10,8 @@ from provider import dmesg_router  # pylint: disable=unused-import
 from virttest import error_context
 from virttest import utils_package
 
+from provider.cpu_utils import check_cpu_flags
+
 
 @error_context.context_aware
 def run(test, params, env):
@@ -36,11 +38,20 @@ def run(test, params, env):
     login_timeout = int(params.get("login_timeout", 360))
     mig_timeout = float(params.get("mig_timeout", 300))
     verify_target = params["verify_target"]
+    flags = params.get("flags")
+
+    if flags and params.get_boolean("check_host_flags"):
+        check_cpu_flags(params, flags, test)
 
     error_context.context("Log into guest before migration", test.log.info)
     session = vm.wait_for_login(timeout=login_timeout)
 
     try:
+        if flags:
+            error_context.context("Check CPU flags before migration",
+                                  test.log.info)
+            check_cpu_flags(params, flags, test, session)
+
         # Collect pre-migration state
         pre_state = _collect_state(test, session, params, verify_target)
 
@@ -63,6 +74,11 @@ def run(test, params, env):
             "Verify %s after migration" % verify_target, test.log.info
         )
         _verify_state(test, session, params, verify_target, pre_state)
+
+        if flags:
+            error_context.context("Check CPU flags after migration",
+                                  test.log.info)
+            check_cpu_flags(params, flags, test, session)
     finally:
         if session:
             session.close()
