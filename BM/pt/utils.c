@@ -18,7 +18,7 @@ int seek_pck_w_lib(enum pt_packet_type pt_type, __u64 *buf_ev, long bufsize)
 {
 	struct pt_packet_decoder *decoder;
 	struct pt_config config;
-	uint64_t offset;
+	uint64_t offset = 0;
 	int r_val = -1;
 	int errcode;
 	struct pt_packet packet;
@@ -26,42 +26,52 @@ int seek_pck_w_lib(enum pt_packet_type pt_type, __u64 *buf_ev, long bufsize)
 	memset(&config, 0, sizeof(config));
 	pt_config_init(&config);
 	config.begin = (uint8_t *)buf_ev;
-	config.end = (uint8_t *)(buf_ev + bufsize);
+	/*
+	 * bufsize is a byte count, so cast before doing the arithmetic.
+	 * Offsetting the __u64 pointer would put the end eight times too
+	 * far and let the decoder walk off the mapping.
+	 */
+	config.end = (uint8_t *)buf_ev + bufsize;
 
 	decoder = pt_pkt_alloc_decoder(&config);
 	if (!decoder) {
 		printf("pt_pkt_alloc_decoder is failed!\n");
-		r_val = -1;
 		return r_val;
 	}
 	errcode = pt_pkt_sync_set(decoder, 0ull);
 	if (errcode < 0) {
 		printf("sync error, %lld, errcode=%d", 0ull, errcode);
-		r_val = -1;
-		return r_val;
+		goto out;
 	}
 
 	for (;;) {
-		printf("offset = %ld\n", offset);
 		errcode = pt_pkt_get_offset(decoder, &offset);
 		if (errcode < 0) {
 			printf("error getting offset %lu %d\r\n", offset, errcode);
-				r_val = -1;
-				return r_val;
+			goto out;
 		}
+		printf("offset = %lu\n", offset);
 		errcode = pt_pkt_next(decoder, &packet, sizeof(packet));
 		if (errcode < 0) {
-			if (errcode == -pte_eos)
-				break;
+			/*
+			 * The decoder cannot move past a packet it failed to
+			 * read, so stop here instead of spinning forever on
+			 * the same offset.
+			 */
+			if (errcode != -pte_eos)
+				printf("decode error %d at offset %lu\n",
+				       errcode, offset);
+			goto out;
 		}
 		printf("packet.type = %d, pt_type=%d!\n", packet.type, pt_type);
 		if (packet.type == pt_type) {
-			printf("packet.type = %d, pt_type=%d!\n", packet.type, pt_type);
 			printf("package is found!\n");
 			r_val = 0;
-			break;
+			goto out;
 		}
 	}
+out:
+	pt_pkt_free_decoder(decoder);
 	return r_val;
 }
 
