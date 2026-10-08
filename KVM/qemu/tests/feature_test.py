@@ -16,12 +16,43 @@ from virttest import error_context
 from virttest import utils_package
 from provider.test_utils import get_baremetal_dir
 from provider.cpu_utils import check_cpu_flags
+from provider.cpuid_utils import check_cpuid, prepare_cpuid
 
 
-def prepare_test_suite(test, vm_test_path, session):
+def install_guest_dependency(test, params, session):
+    """
+    Build a library the feature test programs link against but the guest
+    distro does not ship.
+
+    Driven by cfg so the generic compile path stays feature agnostic. The
+    command is expected to be idempotent, because the same guest image may
+    be reused across cases.
+    :param test: QEMU test object
+    :param params: Dictionary with the test parameters
+    :param session: Guest session
+    """
+    dep_cmd = params.get("guest_dep_cmd")
+    if not dep_cmd:
+        return
+
+    dep_packages = params.get("guest_dep_packages")
+    if dep_packages and not utils_package.package_install(dep_packages,
+                                                          session):
+        test.cancel("Failed to install packages: %s" % dep_packages)
+
+    timeout = params.get_numeric("guest_dep_timeout", 900)
+    status, output = session.cmd_status_output(dep_cmd, timeout=timeout)
+    if status:
+        test.log.error("Guest dependency build failed (exit=%d):\n%s",
+                       status, output)
+        test.cancel("Guest dependency build failed (exit=%d)" % status)
+
+
+def prepare_test_suite(test, params, vm_test_path, session):
     """
     Compile test suite in guest.
     :param test: QEMU test object
+    :param params: Dictionary with the test parameters
     :param vm_test_path: The absolute path of test suite in guest
     :param session: Guest session
     """
@@ -31,6 +62,8 @@ def prepare_test_suite(test, vm_test_path, session):
 
     if not utils_package.package_install("gcc", session):
         test.cancel("Failed to install package gcc.")
+
+    install_guest_dependency(test, params, session)
 
     compile_cmd = "cd %s && make" % vm_test_path
     status, output = session.cmd_status_output(compile_cmd, timeout=300)
@@ -437,6 +470,11 @@ def run(test, params, env):
     :param env: Dictionary with test environment.
     """
     feature_dir_names = params["feature_dir_names"]
+    cpuid = params.get("cpuid")
+    if cpuid:
+        cpuid_dir = "%s/tools/cpuid_check" % get_baremetal_dir(params)
+        if check_cpuid(cpuid, prepare_cpuid(test, params, cpuid_dir)):
+            test.cancel("Platform doesn't support %s" % cpuid)
     vm = env.get_vm(params['main_vm'])
     session = vm.wait_for_login()
 
@@ -475,19 +513,19 @@ def run(test, params, env):
             for feature_dir_name in feature_dir_names.split():
                 vm_test_path = os.path.join(guest_bm_path, feature_dir_name)
                 try:
-                    prepare_test_suite(test, vm_test_path, session)
+                    prepare_test_suite(test, params, vm_test_path, session)
                 except aexpect.ShellError:
                     test.log.warning("SSH dropped during prepare, "
                                      "re-login once")
                     session = _reconnect(session, vm, login_timeout)
-                    prepare_test_suite(test, vm_test_path, session)
+                    prepare_test_suite(test, params, vm_test_path, session)
             session = migrate_and_verify_flags(test, params, vm, session,
                                                migrate_verify_flags)
 
         for feature_dir_name in feature_dir_names.split():
             vm_test_path = os.path.join(guest_bm_path, feature_dir_name)
             if not migrate_before_test:
-                prepare_test_suite(test, vm_test_path, session)
+                prepare_test_suite(test, params, vm_test_path, session)
             cmd_timeout = params.get_numeric("cmd_timeout", 240)
             if params.get("cmd_timeout"):
                 cmd_timeout = params.get_numeric("cmd_timeout")
