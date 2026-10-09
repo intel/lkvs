@@ -1,0 +1,10 @@
+# This file collects the Intel® Processor Trace basic function tests on
+# Intel® Architecture-based platforms.
+# @hw_dep: cpuid_check 7 0 0 0 b 25 @ CPU doesn't support Intel PT CPUID.(EAX=07H,ECX=0H):EBX[bit 25]
+# @other_dep:
+# @other_warn:
+
+# Verify the Table of Physical Addresses, the output buffer management
+# scheme. A full trace buffer has to stop the trace once it is full, while a
+# snapshot buffer has to wrap around and keep going.
+bat_ipt 1 0
