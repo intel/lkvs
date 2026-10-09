@@ -26,6 +26,20 @@ You can get them in https://github.com/intel/libipt.
 # Kernel mode trace check
 ./cpl 2
 
+# ToPA usage check: a full trace buffer has to stop the trace once it is
+# full, a snapshot buffer has to wrap around and keep tracing.
+./bat_ipt 1 0
+
+# Packet check in full trace mode, tracing the calling task, with user
+# space excluded (mode 1) or kernel space excluded (mode 2).
+./bat_ipt 3 1
+
+# Packet check in snapshot mode, without any privilege level filter.
+./bat_ipt 4 0
+
+# The same packet check in full trace mode, repeated for every CPU.
+./bat_ipt 5 0
+
 # Check if psb package there.
 ./psb
 
@@ -42,6 +56,10 @@ You can get them in https://github.com/intel/libipt.
 ## Expected result
 
 All test results should show pass, no fail.
+
+Note that bat_ipt reads the trace status out of the RTIT MSRs, so it needs
+to run as root with the msr driver available. It loads the driver itself.
+
 Usage for perf_tests.sh:
 
 1. Make sure latest perf is there.

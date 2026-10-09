@@ -27,7 +27,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -DMAINLINE -I./")
 set(SRC utils.c)
 
 # Set the binary files
-set(BIN cpl branch psb nonroot_test negative_test sort_test)
+set(BIN bat_ipt cpl branch psb nonroot_test negative_test sort_test)
 
 # Set the libraries
 set(LFLAGS -L./ -lipt)
