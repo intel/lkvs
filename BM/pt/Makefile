@@ -3,12 +3,15 @@
 
 CC       ?= "${CC}" -g -Wall
 CFLAGS += -DMAINLINE -I./
-BIN	 = cpl branch psb nonroot_test negative_test sort_test
+BIN	 = bat_ipt cpl branch psb nonroot_test negative_test sort_test
 LFLAGS	= -L./ -lipt
 
 
 all: $(BIN)
 
+
+bat_ipt:
+	$(CC)	-o  $@ $@.c utils.c ${CFLAGS} ${LFLAGS}
 
 cpl:
 	$(CC)	-o  $@ $@.c utils.c ${CFLAGS} ${LFLAGS}

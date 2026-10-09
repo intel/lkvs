@@ -1,7 +1,9 @@
+bat_ipt
 cpl
 branch
 psb
 nonroot_test
 negative_test
+sort_test
 intel-pt.h
 libipt.so
