@@ -1,0 +1,24 @@
+# This file collects the Intel® Processor Trace full trace mode tests on
+# Intel® Architecture-based platforms.
+# @hw_dep: cpuid_check 7 0 0 0 b 25 @ CPU doesn't support Intel PT CPUID.(EAX=07H,ECX=0H):EBX[bit 25]
+# @other_dep:
+# @other_warn:
+
+# Full trace of the calling task with user space excluded, check the packets
+# the decoder is expected to find
+bat_ipt 3 1
+
+# Same check with kernel space excluded
+bat_ipt 3 2
+
+# Repeat the check on every CPU, without any privilege level filter
+bat_ipt 5 0
+
+# Same per CPU check with user space excluded
+bat_ipt 5 1
+
+# Same per CPU check with kernel space excluded
+bat_ipt 5 2
+
+# Doing the full trace check with non root user
+nonroot_test 1
