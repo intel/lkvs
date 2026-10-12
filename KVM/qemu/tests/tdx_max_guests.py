@@ -40,6 +40,7 @@ def run(test, params, env):
     1) Caculate the platform supported maximum number of TDs
     2) Boot up all TDVMs
     3) Shutdown all of TDVMs
+    4) Repeat 2) and 3) for the configured number of cycles
 
     :param test: QEMU test object
     :param params: Dictionary with the test parameters
@@ -50,6 +51,8 @@ def run(test, params, env):
         xfail = True
     timeout = params.get_numeric("login_timeout", 240)
     serial_login = params.get("serial_login", "no") == "yes"
+    cycles = int(params.get_numeric("cycles", 1))
+    gracefully = params.get("destroy_gracefully", "yes") == "yes"
 
     tdx_kids = get_tdx_kids(params, test)
     # The TDX module itself requires one KeyID
@@ -66,26 +69,30 @@ def run(test, params, env):
     error_context.context("Booting multiple %d TDVM " % td_vms, test.log.info)
     env_process.preprocess(test, params, env)
     vms = env.get_all_vms()
-    has_error = False
-    try:
-        for vm in vms:
-            vm.create()
-    except:
-        has_error = True
-        if xfail is False:
-            raise
-    if (has_error is False) and (xfail is True):
-        test.fail("Test was expected to fail, but it didn't")
+    for cycle in range(1, cycles + 1):
+        if cycles > 1:
+            error_context.context("Boot %d TDVMs, cycle %d/%d"
+                                  % (td_vms, cycle, cycles), test.log.info)
+        has_error = False
+        try:
+            for vm in vms:
+                vm.create()
+        except:
+            has_error = True
+            if xfail is False:
+                raise
+        if (has_error is False) and (xfail is True):
+            test.fail("Test was expected to fail, but it didn't")
 
-    if xfail is False:
-        for vm in vms:
-            vm.verify_alive()
-            if serial_login:
-                session = vm.wait_for_serial_login(timeout=timeout)
-            else:
-                session = vm.wait_for_login(timeout=timeout)
-            session.close()
-            vm.destroy()
-    else:
-        for vm in vms:
-            vm.destroy(gracefully=False)
+        if xfail is False:
+            for vm in vms:
+                vm.verify_alive()
+                if serial_login:
+                    session = vm.wait_for_serial_login(timeout=timeout)
+                else:
+                    session = vm.wait_for_login(timeout=timeout)
+                session.close()
+                vm.destroy(gracefully=gracefully)
+        else:
+            for vm in vms:
+                vm.destroy(gracefully=False)
