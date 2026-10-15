@@ -122,14 +122,11 @@ void parse_input(char *s)
 	if (space) {
 		size_t length_case = space - s;
 
-		strscpy(case_name, s, length_case + 1);
-
-		size_t length_ver = strlen(space + 1);
-
-		strscpy(version_name, space + 1, length_ver + 1);
+		strscpy(case_name, s, min(length_case + 1, sizeof(case_name)));
+		strscpy(version_name, space + 1, sizeof(version_name));
 	} else {
-		strcpy(case_name, s);
-		strcpy(version_name, "generic");
+		strscpy(case_name, s, sizeof(case_name));
+		strscpy(version_name, "generic", sizeof(version_name));
 	}
 
 	parse_version();
