@@ -3,6 +3,7 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/list.h>
+#include <linux/string.h>
 
 #include <linux/kprobes.h>
 
@@ -121,12 +122,11 @@ void parse_input(char *s)
 	if (space) {
 		size_t length_case = space - s;
 
-		strncpy(case_name, s, length_case);
-		case_name[length_case] = '\0';
+		strscpy(case_name, s, length_case + 1);
 
 		size_t length_ver = strlen(space + 1);
 
-		strncpy(version_name, space + 1, length_ver);
+		strscpy(version_name, space + 1, length_ver + 1);
 	} else {
 		strcpy(case_name, s);
 		strcpy(version_name, "generic");
@@ -154,7 +154,13 @@ static int run_cpuid(struct test_cpuid *t)
 	tdcs_td_ctl = t->tdcs_td_ctl;
 	tdcs_feature_pv_ctl = t->tdcs_feature_pv_ctl;
 	setup_tdcs_ctl();
-	__cpuid(&t->regs.eax.val, &t->regs.ebx.val, &t->regs.ecx.val, &t->regs.edx.val);
+	asm volatile("cpuid"
+		     : "=a" (t->regs.eax.val),
+		       "=b" (t->regs.ebx.val),
+		       "=c" (t->regs.ecx.val),
+		       "=d" (t->regs.edx.val)
+		     : "0" (t->leaf), "2" (t->subleaf)
+		     : "memory");
 	pr_info("From CPU core %d\n", cpu_id);
 
 	return 0;
