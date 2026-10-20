@@ -67,9 +67,16 @@ def run(test, params, env):
                 test.fail("%s cpuid check fail in guest." % cpuid_arg)
         test.log.info("Guest cpuid check %s pass.", cpuid_args)
 
+    def guest_check_no_cpuid():
+        for cpuid_arg in no_cpuid_args.split(","):
+            if not check_cpuid(cpuid_arg, vm_exec_bin, session):
+                test.fail("%s cpuid should not be present in guest." % cpuid_arg)
+        test.log.info("Guest no cpuid check %s pass.", no_cpuid_args)
+
     test_dir = params["test_dir"]
     feature_names = params.get("features")
     cpuid_args = params.get("cpuid")
+    no_cpuid_args = params.get("no_cpuid")
     if feature_names is None and cpuid_args is None:
         test.error("Failed to find feature or CPUID bit in config file")
     bm_dir = get_baremetal_dir(params)
@@ -94,8 +101,10 @@ def run(test, params, env):
         vm_exec_bin = prepare_cpuid(test, params, src_dir, vm, session)
         if feature_names:
             guest_feature_cpuid()
-        if cpuid_args:
+        if cpuid_args and cpuid_args != no_cpuid_args:
             guest_check_cpuid()
+        if no_cpuid_args:
+            guest_check_no_cpuid()
 
     finally:
         if check_host_cpuid:

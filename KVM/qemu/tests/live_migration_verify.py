@@ -10,7 +10,8 @@ from provider import dmesg_router  # pylint: disable=unused-import
 from virttest import error_context
 from virttest import utils_package
 
-from provider.cpu_utils import check_cpu_flags
+from provider.cpuid_utils import check_cpuid, prepare_cpuid
+from provider.test_utils import get_baremetal_dir
 
 
 @error_context.context_aware
@@ -38,19 +39,20 @@ def run(test, params, env):
     login_timeout = int(params.get("login_timeout", 360))
     mig_timeout = float(params.get("mig_timeout", 300))
     verify_target = params["verify_target"]
-    flags = params.get("flags")
 
-    if flags and params.get_boolean("check_host_flags"):
-        check_cpu_flags(params, flags, test)
+    cpuid = params.get("cpuid")
+    cpuid_dir = "%s/tools/cpuid_check" % get_baremetal_dir(params)
+    if cpuid and check_cpuid(cpuid, prepare_cpuid(test, params, cpuid_dir)):
+        test.cancel("Platform doesn't support %s" % cpuid)
 
     error_context.context("Log into guest before migration", test.log.info)
     session = vm.wait_for_login(timeout=login_timeout)
 
     try:
-        if flags:
-            error_context.context("Check CPU flags before migration",
-                                  test.log.info)
-            check_cpu_flags(params, flags, test, session)
+        if cpuid:
+            vm_cpuid = prepare_cpuid(test, params, cpuid_dir, vm, session)
+            if check_cpuid(cpuid, vm_cpuid, session):
+                test.fail("%s cpuid check fail before migration" % cpuid)
 
         # Collect pre-migration state
         pre_state = _collect_state(test, session, params, verify_target)
@@ -75,10 +77,8 @@ def run(test, params, env):
         )
         _verify_state(test, session, params, verify_target, pre_state)
 
-        if flags:
-            error_context.context("Check CPU flags after migration",
-                                  test.log.info)
-            check_cpu_flags(params, flags, test, session)
+        if cpuid and check_cpuid(cpuid, vm_cpuid, session):
+            test.fail("%s cpuid check fail after migration" % cpuid)
     finally:
         if session:
             session.close()
