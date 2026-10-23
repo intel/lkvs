@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (c) 2026 Intel Corporation
 #
-# Nested L2 hardware feature validation (PKU, vPMU).
+# Nested L2 hardware feature validation (PKU, vPMU, CET SHSTK).
 #
 # Reuses nested_boot infrastructure to boot L2 inside L1, then runs
 # a feature-specific test inside L2. See nested_boot.py for the
@@ -11,10 +11,17 @@
 
 import logging
 import os
+import re
+import tarfile
+import tempfile
 
 from virttest import data_dir
 from virttest import error_context
 
+from provider.cpu_utils import check_cpu_flags
+from provider.test_utils import get_baremetal_dir
+
+import feature_test
 import nested_boot
 
 LOG = logging.getLogger("avocado.test." + __name__)
@@ -31,6 +38,17 @@ def _scp_to_l2(session, ssh_port, password, src, dst, timeout=60):
         % (password, ssh_port, src, dst)
     )
     session.cmd(scp_cmd, timeout=timeout)
+
+
+def _ssh_l2_status(session, ssh_port, password, command, timeout=120):
+    """Run a command in L2 and return (exit status or None, output)."""
+    out = nested_boot._ssh_l2(session, ssh_port, password,
+                              "(%s) 2>&1; echo LKVS_RC=$?" % command,
+                              timeout=timeout)
+    match = re.search(r"LKVS_RC=(\d+)\s*$", out)
+    if not match:
+        return None, out
+    return int(match.group(1)), out[:match.start()]
 
 
 # ---------- Feature tests inside L2 ----------
@@ -108,16 +126,155 @@ def _run_vpmu_test(test, session, ssh_port, password):
                       % (event, out))
 
 
+def _pack_cet_payload(bm_dir, bm_paths):
+    """Tar the BM pieces needed by BM/cet, skipping prebuilt binaries."""
+    def _skip_built(info):
+        if not info.isfile():
+            return info
+        if info.name.endswith((".o", ".ko")):
+            return None
+        src = os.path.join(os.path.dirname(bm_dir), info.name)
+        with open(src, "rb") as f:
+            if f.read(4) == b"\x7fELF":
+                return None
+        return info
+
+    fd, tar_path = tempfile.mkstemp(suffix=".tar.gz")
+    os.close(fd)
+    with tarfile.open(tar_path, "w:gz") as tar:
+        for rel in bm_paths:
+            tar.add(os.path.join(bm_dir, rel),
+                    arcname=os.path.join("BM", rel), filter=_skip_built)
+    return tar_path
+
+
+def _run_cet_shstk_test(test, params, session, vm, ssh_port, password):
+    cet_flags = params.get("cet_flags", "user_shstk")
+    error_context.context("Verify CET flags %s in L1" % cet_flags, LOG.info)
+    check_cpu_flags(params, cet_flags, test, session)
+
+    error_context.context("Verify CET flags %s in L2" % cet_flags, LOG.info)
+    out = nested_boot._ssh_l2(session, ssh_port, password,
+                              "lscpu | grep Flags")
+    missing = [f for f in cet_flags.split() if f not in out.split()]
+    if missing:
+        test.fail("Flag %s not in L2" % missing)
+
+    error_context.context("Install gcc/make in L2", LOG.info)
+    _ssh_l2_status(session, ssh_port, password,
+                   "command -v gcc && command -v make || "
+                   "dnf install -y gcc make || "
+                   "apt-get install -y gcc make", timeout=600)
+    rc, out = _ssh_l2_status(session, ssh_port, password,
+                             "command -v gcc && command -v make")
+    if rc != 0:
+        test.error("Could not install/find gcc and make in L2: %s" % out)
+
+    error_context.context("Copy BM/cet payload into L2", LOG.info)
+    l2_cet_root = params["cet_l2_root"]
+    payload = params["cet_payload"]
+    bm_dir = get_baremetal_dir(params)
+    tar_path = _pack_cet_payload(bm_dir, params.objects("cet_bm_paths"))
+    try:
+        vm.copy_files_to(tar_path, payload)
+    finally:
+        os.remove(tar_path)
+    _scp_to_l2(session, ssh_port, password, payload, payload)
+    session.cmd("rm -f %s" % payload, ignore_all_errors=True)
+    rc, out = _ssh_l2_status(session, ssh_port, password,
+                             "rm -rf %s && mkdir -p %s && tar xzf %s -C %s"
+                             % (l2_cet_root, l2_cet_root, payload,
+                                l2_cet_root))
+    if rc != 0:
+        test.error("Failed to extract BM/cet payload in L2: %s" % out)
+
+    l2_bm = l2_cet_root + "/BM"
+    feature_path = l2_bm + "/cet"
+    error_context.context("Build cpuid_check and CET tests in L2", LOG.info)
+    for build in ("cd %s/tools/cpuid_check && make" % l2_bm,
+                  "cd %s && make %s" % (feature_path,
+                                        params["cet_make_targets"])):
+        rc, out = _ssh_l2_status(session, ssh_port, password, build,
+                                 timeout=300)
+        if rc != 0:
+            test.error("Build failed in L2 (%s):\n%s" % (build, out))
+
+    scen = params.get("cet_test_scen", "tests-shstk")
+    with open(os.path.join(bm_dir, "cet", scen)) as f:
+        lines = f.read().splitlines()
+
+    # Same PATH layout and dependency header semantics as feature_test.
+    env_prefix = ('PATH="$PATH:%s:%s/common:%s/tools/cpuid_check"'
+                  % (feature_path, l2_bm, l2_bm))
+    subtest_timeout = params.get_numeric("cet_subtest_timeout", 120)
+    subtests = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        kind, dep_cmd, reason = feature_test._parse_dep_line(line)
+        if kind is not None:
+            if dep_cmd is None:
+                continue
+            rc, _ = _ssh_l2_status(session, ssh_port, password,
+                                   "cd %s && %s %s"
+                                   % (feature_path, env_prefix, dep_cmd))
+            if rc == 0:
+                continue
+            reason = reason or dep_cmd
+            if kind == "other_warn":
+                LOG.warning("L2 scenario %s dependency warning: %s",
+                            scen, reason)
+                continue
+            if kind == "hw_dep":
+                # Host and L1 expose CET, so missing CPUID in L2 is a
+                # nested CET virtualization failure, not an unsupported host.
+                test.fail("L2 missing CET hardware dependency: %s" % reason)
+            test.cancel("L2 cannot run scenario %s: %s" % (scen, reason))
+        if stripped.startswith("#"):
+            continue
+        subtests.append(stripped)
+
+    if not subtests:
+        test.error("Scenario %s has no runnable subtests" % scen)
+
+    failures = []
+    total = len(subtests)
+    for idx, cmd in enumerate(subtests, 1):
+        error_context.context("[L2 %s %d/%d] %s" % (scen, idx, total, cmd),
+                              LOG.info)
+        rc, out = _ssh_l2_status(
+            session, ssh_port, password,
+            "cd %s && %s timeout %d %s"
+            % (feature_path, env_prefix, subtest_timeout, cmd),
+            timeout=subtest_timeout + 30)
+        if rc != 0:
+            failures.append(cmd)
+            LOG.warning("[L2 %s %d/%d] FAIL rc=%s\n%s",
+                        scen, idx, total, rc, out.strip())
+
+    if failures:
+        test.fail("CET %s failed in L2: %d/%d subtests failed: %s"
+                  % (scen, len(failures), total, failures))
+    LOG.info("CET %s passed in L2: %d/%d subtests", scen, total, total)
+
+
 # ---------- Entry point ----------
 
 @error_context.context_aware
 def run(test, params, env):
-    """Nested L2 feature test (PKU or vPMU) using L2 image as L1's vdb."""
+    """Nested L2 feature test (PKU, vPMU or CET SHSTK) using L2 image as
+    L1's vdb."""
     l2_state = None
     session = None
     l2_booted = False
     ssh_port = params.get_numeric("l2_ssh_port", 2222)
     password = params.get("password", "")
+    l2_test_type = params.get("l2_test_type")
+
+    if l2_test_type == "cet_shstk":
+        error_context.context("Verify host CET flags", LOG.info)
+        check_cpu_flags(params, params.get("cet_flags", "user_shstk"), test)
 
     try:
         error_context.context("Prepare L2 image on host", LOG.info)
@@ -167,13 +324,15 @@ def run(test, params, env):
             LOG.info("L2 serial tail:\n%s", l2_log)
             test.fail("L2 SSH did not become ready within %ds" % boot_timeout)
 
-        l2_test_type = params.get("l2_test_type")
         error_context.context("Run L2 feature test: %s" % l2_test_type,
                               LOG.info)
         if l2_test_type == "pku":
             _run_pku_test(test, session, vm, ssh_port, password)
         elif l2_test_type == "vpmu":
             _run_vpmu_test(test, session, ssh_port, password)
+        elif l2_test_type == "cet_shstk":
+            _run_cet_shstk_test(test, params, session, vm, ssh_port,
+                                password)
         else:
             test.error("Unknown l2_test_type: %s" % l2_test_type)
 
