@@ -59,8 +59,13 @@ def run(test, params, env):
             session.cmd(src_version_cmd, timeout)  # pylint: disable=E0606
             session.cmd(compile_cmd, timeout)  # pylint: disable=E0606
         s, output = session.cmd_status_output(run_cmd, safe=True)
-        if "done (all tests OK)" not in output:
-            test.fail("Protection key test runs failed.")
+        success_markers = ("done (all tests OK)", "all tests OK",
+                           "Totals: pass:")
+        summary_ok = "fail:0" in output and "Totals:" in output
+        if s != 0 or (not any(marker in output for marker in success_markers)
+                      and not summary_ok):
+            test.fail("Protection key test runs failed. status=%s\n%s" %
+                      (s, output))
 
         vm.verify_kernel_crash()
     finally:
