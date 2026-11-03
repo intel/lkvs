@@ -366,7 +366,15 @@ arch_pebs_counter_group_stress_test() {
   logfile="temp.txt"
   #because nmi_watchdog will occupy one fix counter, so disable it
   echo 0 > /proc/sys/kernel/nmi_watchdog
-  event="{branches,branches,branches,branches,branches,branches,branches,branches,cycles,instructions,ref-cycles,topdown-bad-spec,topdown-fe-bound,topdown-retiring}"
+  get_cpu_model
+  case "$CPU_MODEL" in
+    06-dd-*)  #CWF
+      event="{branches,branches,branches,branches,branches,branches,branches,branches,cycles,instructions,ref-cycles,topdown-bad-spec,topdown-fe-bound,topdown-retiring}"
+      ;;
+    13-01-*|13-08-*) #DMR, COR
+      event="{branches,branches,branches,branches,branches,branches,branches,branches,cycles,instructions,ref-cycles}"
+      ;;
+  esac
   perf record -o $perfdata -e "$event:p" -a -- sleep 1 2>&1|tee $logfile
   if grep "Error" $logfile > /dev/null; then
     clear_files $logfile $perfdata
