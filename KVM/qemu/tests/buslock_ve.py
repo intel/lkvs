@@ -274,7 +274,7 @@ def run(test, params, env):
       the host kvm_exit tracepoint.
     - ``ratelimit_effect``: boot two VMs sequentially (baseline vs.
       ``bus-lock-ratelimit=20``), run ``bus_lock_ct`` in the guest and sample
-      the host ``bus_lock.split_locks`` performance counter with ``perf stat``;
+        the host raw bus-lock performance counter with ``perf stat``;
       assert the ratelimited run reports no more bus locks than the baseline
       run.
 
