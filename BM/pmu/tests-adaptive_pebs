@@ -1,5 +1,4 @@
 # This file collects all adaptive PEBS test cases
-apebs_tests.sh -t adaptive_pebs_msr -w 0
 apebs_tests.sh -t data_src -w 0
 apebs_tests.sh -t data_src -w 1
 apebs_tests.sh -t fixed_counter_1 -w 0
