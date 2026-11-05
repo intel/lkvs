@@ -412,11 +412,26 @@ arch_pebs_basic_group_test() {
 }
 
 bitmap_6_test() {
-  search="Intel PMU"
-  gbitmap=$(dmesg | grep -A 8  "$search" | grep "generic bitmap" | awk '{print $6}')
-  fbitmap=$(dmesg | grep -A 8  "$search" | grep "fixed-purpose bitmap" | awk '{print $6}')
+  local search="Intel PMU"
+  local gbitmap fbitmap expected_fbitmap
+
+  get_cpu_model
+  case "$CPU_MODEL" in
+    06-dd-*)  # CWF
+      expected_fbitmap="0000000000000077"
+      ;;
+    13-01-*|13-08-*)  # DMR, COR
+      expected_fbitmap="000000000000000f"
+      ;;
+    *)
+      die "Unsupported CPU model for PMU v6 bitmap test: $CPU_MODEL"
+      ;;
+  esac
+
+  gbitmap=$(dmesg | grep -A 8 "$search" | grep "generic bitmap" | awk '{print $6}')
+  fbitmap=$(dmesg | grep -A 8 "$search" | grep "fixed-purpose bitmap" | awk '{print $6}')
   [[ $gbitmap = "00000000000000ff" ]] || die "gbitmap = $gbitmap not expected!"
-  [[ $fbitmap = "0000000000000077" ]] || die "fbitmap = $fbitmap not expected!"
+  [[ $fbitmap = "$expected_fbitmap" ]] || die "fbitmap = $fbitmap not expected (expected $expected_fbitmap for $CPU_MODEL)!"
 }
 
 umask2_cpuid_test() {
