@@ -155,23 +155,38 @@ def _l1_install_deps(session):
 
 
 def _l1_copy_host_qemu(vm, session, params):
-    """Copy host qemu binary and its data dir into L1."""
+    """Copy host QEMU and its firmware into the L1 -L directory."""
     host_qemu = vm.qemu_binary
     l1_qemu_path = "/usr/local/bin/qemu-system-x86_64"
     vm.copy_files_to(host_qemu, l1_qemu_path)
     session.cmd("chmod +x %s" % l1_qemu_path, timeout=10)
 
-    # Copy QEMU data directory (BIOS, firmware ROMs) so the binary
-    # can find bios-256k.bin and other required files inside L1.
+    # -L help lists several search directories on packaged QEMU builds.
+    # SeaBIOS, VGA BIOS and other ROMs can live in different directories;
+    # merge their files into the single directory passed to L2 with -L.
     r = process.run("%s -L help" % host_qemu,
                     ignore_status=True, shell=True, timeout=10)
+    if r.exit_status != 0:
+        raise RuntimeError("Cannot locate host QEMU firmware directories")
+    l1_datadir = "/usr/local/share/qemu"
+    session.cmd("mkdir -p %s" % l1_datadir, timeout=10)
+    copied = set()
     for line in r.stdout_text.splitlines():
         path = line.strip()
-        if path and os.path.isdir(path) and "share" in path:
-            session.cmd("mkdir -p /usr/local/share", timeout=10)
-            session.cmd("rm -rf /usr/local/share/qemu", timeout=10)
-            vm.copy_files_to(path, "/usr/local/share/")
-            break
+        if not os.path.isdir(path):
+            continue
+        for name in sorted(os.listdir(path)):
+            source = os.path.join(path, name)
+            if name in copied or not os.path.isfile(source):
+                continue
+            # Follow package symlinks: their targets are not necessarily
+            # present at the same relative path inside L1.
+            vm.copy_files_to(os.path.realpath(source),
+                             os.path.join(l1_datadir, name))
+            copied.add(name)
+    if "bios-256k.bin" not in copied:
+        raise RuntimeError("Host QEMU BIOS bios-256k.bin not found")
+    session.cmd("test -s %s/bios-256k.bin" % l1_datadir, timeout=10)
 
 
 def _l1_verify_kvm(session, test):
