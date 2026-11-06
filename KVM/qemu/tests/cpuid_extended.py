@@ -80,10 +80,11 @@ def run(test, params, env):
             expected_key = "expected_%s" % reg_name
             if params.get(expected_key) is not None:
                 expected = params.get_numeric(expected_key)
-                if regs[reg_name] != expected:
+                mask = params.get_numeric("%s_mask" % expected_key, 0xFFFFFFFF)
+                if regs[reg_name] & mask != expected & mask:
                     failures.append(
-                        "%s: got 0x%x, expected 0x%x"
-                        % (reg_name, regs[reg_name], expected)
+                        "%s: got 0x%x, expected 0x%x with mask 0x%x"
+                        % (reg_name, regs[reg_name], expected, mask)
                     )
 
         if failures:
