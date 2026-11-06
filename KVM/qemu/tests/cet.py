@@ -100,10 +100,11 @@ def run(test, params, env):
     grub_disabled = False
     try:
         if cet_test_type == "unexposed" and params["disable_method"] == "host":
+            # This case requires host kernel cmdline "ibt=off clearcpuid=519".
             error_context.context("Check host CET is disabled", test.log.info)
             if _host_flags(cet_flags):
-                test.cancel("Host CET is enabled, this case needs host CET "
-                            "disabled on the host kernel cmdline")
+                test.cancel("Host CET is enabled; boot the host with "
+                            "'ibt=off clearcpuid=519' on the kernel cmdline")
 
         if params.get_boolean("check_host_cpuid"):
             error_context.context("Check CET CPUID on host", test.log.info)
