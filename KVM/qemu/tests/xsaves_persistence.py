@@ -8,32 +8,27 @@
 # History:  Jul. 2026 - Farrah Chen - creation
 
 import os
-import re
 import time
 
+from avocado.utils import download
 from provider import cpu_utils
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider import nbench_utils
 
 from virttest import data_dir, env_process, error_context, utils_package
 from virttest.staging import utils_memory
 
 
-_NBENCH_RESULT_RE = re.compile(
-    r"^\s*(NUMERIC SORT|STRING SORT|BITFIELD|FP EMULATION|FOURIER|"
-    r"ASSIGNMENT|IDEA|HUFFMAN|NEURAL NET|LU DECOMPOSITION)\b"
-)
-
-
-def _prepare_nbench(session, deps_dir, guest_workdir, params, vm):
+def _prepare_nbench(session, deps_dir, guest_workdir, params, vm, test):
     session.cmd("mkdir -p %s" % guest_workdir)
     session.cmd("rm -rf %s/*" % guest_workdir, ignore_all_errors=True)
 
     tarball = params["nbench_tarball"]
     extracted = params["nbench_extracted_dir"]
-
     src = os.path.join(deps_dir, tarball)
     if not os.path.isfile(src):
-        raise IOError("deps file not found: %s" % src)
+        test.log.info("Download nbench tarball to host cache: %s", src)
+        download.url_download(params["nbench_url"], src, timeout=120)
     vm.copy_files_to(src, guest_workdir)
 
     session.cmd(
@@ -44,37 +39,6 @@ def _prepare_nbench(session, deps_dir, guest_workdir, params, vm):
         % (guest_workdir, extracted),
         timeout=180,
     )
-
-
-def _run_nbench_short(session, guest_workdir, params, test, label):
-    extracted = params["nbench_extracted_dir"]
-    max_seconds = int(params["nbench_max_runtime_seconds"])
-    min_lines = int(params["nbench_min_result_lines"])
-
-    out = session.cmd_output(
-        "cd %s/%s && stdbuf -oL timeout %d ./nbench 2>&1"
-        % (guest_workdir, extracted, max_seconds),
-        timeout=max_seconds + 60,
-    )
-    result_lines = [
-        line for line in out.splitlines() if _NBENCH_RESULT_RE.match(line)
-    ]
-    test.log.info(
-        "%s: nbench emitted %d result lines (need >= %d)",
-        label, len(result_lines), min_lines,
-    )
-    for line in result_lines[:min_lines]:
-        test.log.info("  %s", line)
-    if len(result_lines) < min_lines:
-        test.fail(
-            "%s: nbench produced %d result lines; expected >= %d. Tail:\n%s"
-            % (
-                label,
-                len(result_lines),
-                min_lines,
-                "\n".join(out.splitlines()[-10:]),
-            )
-        )
 
 
 def _do_save_restore(vm, test, params):
@@ -174,12 +138,16 @@ def run(test, params, env):
             )
 
         deps_dir = data_dir.get_deps_dir(deps_subdir)
-        _prepare_nbench(session, deps_dir, guest_workdir, params, vm)
+        _prepare_nbench(
+            session, deps_dir, guest_workdir, params, vm, test,
+        )
 
         error_context.context(
             "Run baseline nbench workload (pre-%s)" % mode, test.log.info,
         )
-        _run_nbench_short(session, guest_workdir, params, test, "pre-%s" % mode)
+        nbench_utils.run_nbench(
+            session, guest_workdir, params, test, "pre-%s" % mode,
+        )
 
         if mode == "sr":
             session.close()
@@ -202,7 +170,7 @@ def run(test, params, env):
         error_context.context(
             "Re-run nbench workload (post-%s)" % mode, test.log.info,
         )
-        _run_nbench_short(
+        nbench_utils.run_nbench(
             session, guest_workdir, params, test, "post-%s" % mode,
         )
     finally:
