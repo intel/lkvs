@@ -8,10 +8,10 @@ from collections import Counter
 import os
 import re
 import time
-from aexpect import exceptions as aexpect_exceptions
+from aexpect import exceptions as aexpect_exceptions, remote
 from avocado.core import exceptions
 from avocado.utils import process
-from virttest import data_dir, error_context
+from virttest import data_dir, error_context, virt_vm
 from virttest import utils_misc, utils_package
 from provider.cpu_utils import check_cpu_flags
 from provider.cpuid_utils import check_cpuid, prepare_cpuid
@@ -99,6 +99,83 @@ def _prepare_guest_bus_lock_tool(test, params, vm, session):
 
     session.cmd("rm -f %s/%s" % (test_dir, " ".join(copied_files)))
     return os.path.join(test_dir, exec_file)
+
+
+def _serial_since_marker(vm, marker):
+    """Return guest serial output generated after the test marker."""
+    serial_output = vm.serial_console.get_output()
+    _, marker_found, new_output = serial_output.rpartition(marker)
+    return new_output if marker_found else ""
+
+
+def _run_tdx_ac_handle(test, params, env):
+    """Trigger split-lock #AC and verify that the TD handles it gracefully."""
+    vm = env.get_vm(params["main_vm"])
+    vm.verify_alive()
+    timeout = params.get_numeric("login_timeout", 240)
+    session = vm.wait_for_login(timeout=timeout)
+    guest_tool = None
+
+    try:
+        if not utils_package.package_install("gcc", session):
+            test.cancel("Failed to install gcc in the guest")
+
+        error_context.context("Compile the split-lock trigger in the TD", test.log.info)
+        guest_tool = _prepare_guest_bus_lock_tool(test, params, vm, session)
+
+        marker = "tdx_ac_handle_%s" % utils_misc.generate_random_string(8)
+        session.cmd("echo '%s' > /dev/kmsg" % marker)
+
+        error_context.context("Trigger #AC in the TD guest", test.log.info)
+        trigger_cmd = (
+            "nohup sh -c 'sleep %s; exec %s' >%s/tdx_ac_handle.log "
+            "2>&1 </dev/null &"
+            % (params.get_numeric("trigger_delay", 2), guest_tool,
+               params["test_dir"])
+        )
+        if session.cmd_status(trigger_cmd):
+            raise exceptions.TestError("Failed to start the split-lock trigger")
+        session.close()
+        session = None
+
+        ac_seen = utils_misc.wait_for(
+            lambda: re.search(
+                params["ac_log_pattern"],
+                _serial_since_marker(vm, marker),
+                re.MULTILINE,
+            ),
+            timeout=params.get_numeric("trigger_timeout", 30),
+            first=1,
+            step=1,
+        )
+        time.sleep(params.get_numeric("dmesg_settle_time", 2))
+        new_dmesg = _serial_since_marker(vm, marker)
+        test.log.debug("Guest serial output after split-lock trigger:\n%s", new_dmesg)
+
+        failures = []
+        if re.search(params["ac_failure_pattern"], new_dmesg, re.MULTILINE):
+            failures.append(
+                "TD guest produced a kernel call trace or fatal error after #AC"
+            )
+        if not ac_seen:
+            failures.append("No split-lock #AC record was found in guest dmesg")
+
+        error_context.context("Verify the TD guest remains accessible", test.log.info)
+        try:
+            session = vm.wait_for_login(
+                timeout=params.get_numeric("guest_recovery_timeout", 30)
+            )
+            session.cmd("true", timeout=30)
+        except (remote.LoginError, virt_vm.VMError) as err:
+            failures.append("TD guest became inaccessible after #AC: %s" % err)
+
+        if failures:
+            test.fail("; ".join(failures) + "\nGuest serial output:\n" + new_dmesg)
+    finally:
+        if session:
+            if guest_tool:
+                session.cmd("rm -f %s" % guest_tool, ignore_all_errors=True)
+            session.close()
 
 
 def _get_bus_lock_db_lines(session):
@@ -276,6 +353,10 @@ def _check_exception_nmi_in_trace(test, expect_present, retry_count=0):
 @error_context.context_aware
 def run(test, params, env):
     """Test bus_lock_detect feature with various split_lock_detect modes and verify guest/host behavior."""
+    if params.get("buslock_de_action") == "tdx_ac_handle":
+        _run_tdx_ac_handle(test, params, env)
+        return
+
     _check_host_split_lock_cmdline()
 
     vm_name = params["main_vm"]
