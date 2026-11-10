@@ -141,9 +141,9 @@ Attention: Select appropriate test set according to your software stack and your
 
 ```bash
 # To get all available cases from provider(lkvs)
-avocado list |grep myprovider
+avocado list --vt-machine-type q35 | grep myprovider
 # For tdx cases, string td/tdx can be found in case name
-avocado list |grep myprovider|grep td
+avocado list --vt-machine-type q35 | grep myprovider | grep td
 [root@localhost ~]# avocado list |grep myprovider|grep td
 avocado-vt type_specific.myprovider.td_boot_multimes.one_socket.one_cpu
 avocado-vt type_specific.myprovider.td_boot_multimes.one_socket.four_cpu
@@ -204,7 +204,7 @@ In tdx_temp.cfg, shell prompt for RHEL9 and Ubuntu24.04 like below, choose(or ma
 
 ```bash
 #For RHEL9.4 guest
-shell_prompt = "^\[.*\][\#\$]\s*$"
+shell_prompt = "[\#\$]\s*$"
 #For Ubuntu24.04 guest
 #shell_prompt = "^.*@.*:.*[\#\$]\s*$"
 ```
