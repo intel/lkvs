@@ -8,6 +8,7 @@
 # History:  Jul. 2026 - Farrah Chen - creation
 
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider.test_utils import require_guest_command
 
 from virttest import env_process, error_context, utils_package
 
@@ -47,8 +48,8 @@ def run(test, params, env):
 
     error_context.context("Ensure perf tool is available in guest",
                           test.log.info)
-    if not utils_package.package_install("perf", session):
-        test.cancel("Failed to install perf in guest")
+    utils_package.package_install("perf", session)
+    require_guest_command(test, session, "perf", "perf")
 
     error_context.context(
         "Collect hardware events for %d seconds in guest" % perf_duration,

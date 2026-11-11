@@ -11,8 +11,9 @@ import time
 
 from provider import dmesg_router  # pylint: disable=unused-import
 from provider import ept_poison_utils as ept
+from provider.test_utils import require_guest_command
 
-from virttest import data_dir, env_process, error_context
+from virttest import data_dir, env_process, error_context, utils_package
 
 
 READY_RE = re.compile(r"\bREADY gva=0x([0-9a-fA-F]+) gpa=0x([0-9a-fA-F]+)\b")
@@ -74,8 +75,8 @@ def _build_guest_victim(test, params, vm, session):
     binary = os.path.join(guest_dir, "guest_victim")
     if session.cmd_output("id -u").strip() != "0":
         test.cancel("Guest root is needed to read physical PFNs from pagemap")
-    if session.cmd_status("command -v gcc >/dev/null 2>&1"):
-        test.cancel("Guest gcc is needed to compile guest_victim.c")
+    utils_package.package_install("gcc", session)
+    require_guest_command(test, session, "gcc", "gcc")
     vm.copy_files_to(src, dest)
     cmd = "gcc -O2 -Wall -Wextra %s -o %s" % (
         shlex.quote(dest), shlex.quote(binary))

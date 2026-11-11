@@ -11,14 +11,15 @@
 from pathlib import Path
 
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider.test_utils import require_guest_command
 from avocado.utils import process
 from virttest import env_process, error_context
 from virttest import utils_package
 
 
 def aia_test(vm, test, session, command):
-    if not utils_package.package_install("gcc", session):
-        test.cancel("Failed to install package gcc.")
+    utils_package.package_install("gcc", session)
+    require_guest_command(test, session, "gcc", "gcc")
     if not utils_package.package_install("make", session):
         test.cancel("Failed to install package make.")
 

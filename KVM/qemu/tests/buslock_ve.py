@@ -8,6 +8,7 @@ import time
 
 from provider import dmesg_router  # pylint: disable=unused-import
 from provider import kvm_trace_utils
+from provider.test_utils import require_guest_command, require_host_command
 
 from avocado.utils import process
 from virttest import data_dir, env_process, error_context, utils_package
@@ -30,6 +31,8 @@ BUS_LOCK_FILTER = "exit_reason & 0x%x" % BUS_LOCK_EXIT_REASON_MASK
 
 def _check_host_bus_lock_msr(test, params):
     """Ensure host CPU exposes BUS_LOCK_DETECT via IA32_VMX_PROCBASED_CTLS2."""
+    utils_package.package_install("msr-tools")
+    require_host_command(test, "rdmsr", "msr-tools")
     process.run("modprobe msr", shell=True, ignore_status=True)
     probe_cmd = params["host_msr_probe"]
     result = process.run(probe_cmd, shell=True, ignore_status=True)
@@ -42,8 +45,8 @@ def _check_host_bus_lock_msr(test, params):
 
 def _install_guest_gcc(test, session):
     """Ensure gcc is available inside the guest for compiling the bus-lock tool."""
-    if not utils_package.package_install("gcc", session):
-        test.cancel("Failed to install gcc in guest")
+    utils_package.package_install("gcc", session)
+    require_guest_command(test, session, "gcc", "gcc")
 
 
 def _prepare_guest_bus_lock_tool(test, params, vm, session, source_file,
@@ -150,6 +153,7 @@ def _run_bus_lock_exit(test, params, env):
 def _measure_bus_lock_count(test, params, env, run_label, machine_extra):
     """Boot a VM with the given machine params, run bus_lock_ct in guest,
     sample host perf-kvm counters, return the second-interval count."""
+    require_host_command(test, "perf", "perf")
     run_params = params.copy()
     run_params["machine_type_extra_params"] = machine_extra
 

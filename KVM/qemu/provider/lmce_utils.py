@@ -19,6 +19,7 @@ import os
 
 from virttest import data_dir as virttest_data_dir
 from virttest import utils_package
+from provider.test_utils import require_guest_command
 
 
 # IA32 MSR addresses used to probe LMCE support and configuration.
@@ -53,8 +54,8 @@ MCG_STATUS_LOCAL = MCG_STATUS_SRAO_LOCAL
 
 def install_msr_tools(test, session):
     """Ensure rdmsr is available inside the guest."""
-    if not utils_package.package_install("msr-tools", session):
-        test.cancel("Failed to install msr-tools inside guest.")
+    utils_package.package_install("msr-tools", session)
+    require_guest_command(test, session, "rdmsr", "msr-tools")
 
 
 def rdmsr_hex(session, msr):
@@ -144,8 +145,8 @@ def build_victim(test, params, vm, session):
     exec_file = params["exec_file"]
     test_dir = params["test_dir"]
     deps_dir = virttest_data_dir.get_deps_dir("ras")
-    if not utils_package.package_install("gcc", session):
-        test.cancel("Failed to install gcc inside guest.")
+    utils_package.package_install("gcc", session)
+    require_guest_command(test, session, "gcc", "gcc")
     vm.copy_files_to(os.path.join(deps_dir, source_file), test_dir)
     compile_cmd = "cd %s && gcc %s -o %s" % (test_dir, source_file, exec_file)
     if session.cmd_status(compile_cmd) != 0:

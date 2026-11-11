@@ -6,6 +6,7 @@
 import os
 
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider.test_utils import require_guest_command, require_host_command
 from avocado.utils import process
 from virttest import data_dir, env_process, error_context, utils_package
 
@@ -30,6 +31,8 @@ def run(test, params, env):
 
     def _compile_and_run_host():
         error_context.context("Compile and run CPUID 0x1F check on host", test.log.info)
+        utils_package.package_install("gcc")
+        require_host_command(test, "gcc", "gcc")
         host_bin = os.path.join(deps_dir, exec_file)
         compile_cmd = "gcc -o %s %s" % (host_bin, src_path)
         result = process.run(compile_cmd, shell=True)
@@ -56,8 +59,8 @@ def run(test, params, env):
         vm.verify_alive()
         session = vm.wait_for_login()
         try:
-            if not utils_package.package_install("gcc", session):
-                test.cancel("Failed to install gcc in guest.")
+            utils_package.package_install("gcc", session)
+            require_guest_command(test, session, "gcc", "gcc")
             vm.copy_files_to(src_path, test_dir)
             guest_src = os.path.join(test_dir, source_file)
             guest_bin = os.path.join(test_dir, exec_file)

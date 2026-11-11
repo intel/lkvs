@@ -8,6 +8,7 @@
 # History: Feb. 2025 - Xudong Hao - creation
 
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider.test_utils import require_guest_command
 import os
 
 from virttest import data_dir, utils_package, utils_misc
@@ -32,8 +33,8 @@ def compile_test_tool(test, params, vm, session):
     session.cmd(rm_cmd)
     vm.copy_files_to(src_file, test_dir)
 
-    if not utils_package.package_install("gcc", session):
-        test.cancel("Failed to install package gcc.")
+    utils_package.package_install("gcc", session)
+    require_guest_command(test, session, "gcc", "gcc")
     compile_cmd = "cd %s && gcc -O2 -lpthread -DCONFIG_SMP -o %s %s" % (test_dir, test_bin, test_src)
     guest_status = session.cmd_status(compile_cmd)
     if guest_status:

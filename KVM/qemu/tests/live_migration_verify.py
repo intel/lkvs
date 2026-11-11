@@ -11,7 +11,7 @@ from virttest import error_context
 from virttest import utils_package
 
 from provider.cpuid_utils import check_cpuid, prepare_cpuid
-from provider.test_utils import get_baremetal_dir
+from provider.test_utils import ensure_cpuid_command, get_baremetal_dir
 
 
 @error_context.context_aware
@@ -49,6 +49,10 @@ def run(test, params, env):
     session = vm.wait_for_login(timeout=login_timeout)
 
     try:
+        if verify_target == "cpuid":
+            utils_package.package_install("cpuid", session)
+            ensure_cpuid_command(test, vm, session)
+
         if cpuid:
             vm_cpuid = prepare_cpuid(test, params, cpuid_dir, vm, session)
             if check_cpuid(cpuid, vm_cpuid, session):
@@ -96,9 +100,6 @@ def _collect_state(test, session, params, verify_target):
 
     elif verify_target == "cpuid":
         cpuid_cmd = params.get("cpuid_dump_cmd", "cpuid -1 -r")
-        if session.cmd_status("which cpuid") != 0:
-            if not utils_package.package_install("cpuid", session):
-                test.cancel("cpuid package is not available in guest")
         output = session.cmd_output(cpuid_cmd, timeout=60)
         state["cpuid"] = output.strip()
         test.log.info(

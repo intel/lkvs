@@ -11,8 +11,10 @@ Boots a guest and checks specific CPUID leaves (e.g. 0x80000005,
 """
 
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider.test_utils import ensure_cpuid_command
 from virttest import env_process
 from virttest import error_context
+from virttest import utils_package
 
 
 def _read_cpuid_leaf(session, leaf):
@@ -64,6 +66,8 @@ def run(test, params, env):
 
     session = vm.wait_for_login(timeout=login_timeout)
     try:
+        utils_package.package_install("cpuid", session)
+        ensure_cpuid_command(test, vm, session)
         error_context.context("Read CPUID leaf %s in guest" % cpuid_leaf, test.log.info)
         regs = _read_cpuid_leaf(session, cpuid_leaf)
         test.log.info(

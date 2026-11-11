@@ -9,7 +9,7 @@ from virttest import data_dir, env_process, error_context, utils_package
 from virttest.utils_sys import check_dmesg_output
 
 from provider import dmesg_router  # pylint: disable=unused-import
-from provider.test_utils import get_baremetal_dir
+from provider.test_utils import get_baremetal_dir, require_guest_command
 
 
 def _prepare_guest_tdx_compliance_tree(test, params, vm, session, caselist_header):
@@ -148,9 +148,10 @@ def run(test, params, env):
         session = vm.wait_for_login(timeout=timeout)
 
         error_context.context("Install guest build prerequisites", test.log.info)
-        for pkg in ["gcc", "make"]:
-            if not utils_package.package_install(pkg, session):
-                test.cancel("Failed to install %s in guest" % pkg)
+        utils_package.package_install("gcc", session)
+        require_guest_command(test, session, "gcc", "gcc")
+        if not utils_package.package_install("make", session):
+            test.cancel("Failed to install make in guest")
 
         if case_action == "ve_check":
             error_context.context("Check guest dmesg for REDUCE_VE marker", test.log.info)

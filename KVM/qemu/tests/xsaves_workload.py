@@ -9,6 +9,7 @@ import re
 from provider import cpu_utils
 from provider import dmesg_router  # pylint: disable=unused-import
 from provider import nbench_utils
+from provider.test_utils import require_guest_command
 
 from virttest import data_dir, env_process, error_context, utils_package
 
@@ -179,10 +180,14 @@ def run(test, params, env):
             % " ".join(workload_packages),
             test.log.info,
         )
-        if not utils_package.package_install(workload_packages, session):
+        utils_package.package_install("gcc", session)
+        require_guest_command(test, session, "gcc", "gcc")
+        other_packages = [pkg for pkg in workload_packages if pkg != "gcc"]
+        if (other_packages and
+                not utils_package.package_install(other_packages, session)):
             test.cancel(
                 "Failed to install build dependencies %s inside guest"
-                % workload_packages
+                % other_packages
             )
 
         deps_dir = data_dir.get_deps_dir(deps_subdir)

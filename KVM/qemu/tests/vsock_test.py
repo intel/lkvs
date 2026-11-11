@@ -12,6 +12,7 @@
 # Copy from tp-qemu
 
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider.test_utils import require_guest_command, require_host_command
 import logging
 import os
 import random
@@ -19,7 +20,7 @@ import time
 
 import aexpect
 from avocado.utils import path, process
-from virttest import data_dir, error_context, utils_misc
+from virttest import data_dir, error_context, utils_misc, utils_package
 
 LOG_JOB = logging.getLogger("avocado.test")
 
@@ -44,6 +45,10 @@ def compile_nc_vsock(test, vm, session):
     cmd_cp = "cp %s %s" % (src_file, nc_vsock_dir)
     process.system(cmd_cp)
     vm.copy_files_to(src_file, nc_vsock_dir)
+    utils_package.package_install("gcc")
+    require_host_command(test, "gcc", "gcc")
+    utils_package.package_install("gcc", session)
+    require_guest_command(test, session, "gcc", "gcc")
     compile_cmd = "cd %s && gcc -o %s %s" % (nc_vsock_dir, nc_vsock_bin, nc_vsock_c)
     host_status = process.system(compile_cmd, shell=True)
     guest_status = session.cmd_status(compile_cmd)

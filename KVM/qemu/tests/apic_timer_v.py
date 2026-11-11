@@ -11,7 +11,8 @@ from provider import dmesg_router  # pylint: disable=unused-import
 import os
 import time
 from avocado.utils import process, cpu
-from virttest import error_context, data_dir, utils_misc
+from virttest import error_context, data_dir, utils_misc, utils_package
+from provider.test_utils import require_host_command
 
 
 @error_context.context_aware
@@ -80,6 +81,8 @@ def run(test, params, env):
     if cpu.get_cpu_vendor_name() != 'intel':
         test.cancel("This test is supposed to run on Intel host")
 
+    utils_package.package_install("msr-tools")
+    require_host_command(test, "rdmsr", "msr-tools")
     rdmsr_cmd = params["rdmsr_cmd"]
     if process.getoutput(rdmsr_cmd) != "1":
         test.fail("Platform does not support APIC Timer Virtualization")
@@ -88,11 +91,15 @@ def run(test, params, env):
     module = params["module_name"]
     mod_param = params["mod_param"]
     user_on_off = params.get_boolean("check_interface")
+    test_enable = params.get_boolean("test_enable")
+    test_disable = params.get_boolean("test_disable")
+    perf_vmexit = params.get_boolean("perf_vmexit")
+    if params.get("perf_cmd") or perf_vmexit:
+        require_host_command(test, "perf", "perf")
     if user_on_off:
         reload_module("Y")
         reload_module("N")
 
-    test_enable = params.get_boolean("test_enable")
     if test_enable:
         reload_module("Y")
         source_file = params["source_file1"]
@@ -100,7 +107,6 @@ def run(test, params, env):
         source_file = params["source_file2"]
         run_unit_test(source_file)
 
-    test_disable = params.get_boolean("test_disable")
     if test_disable:
         reload_module("N")
         source_file = params["source_file1"]
@@ -108,7 +114,6 @@ def run(test, params, env):
         source_file = params["source_file2"]
         run_unit_test(source_file)
 
-    perf_vmexit = params.get_boolean("perf_vmexit")
     if perf_vmexit:
         source_file = params["source_file2"]
         reload_module("N")

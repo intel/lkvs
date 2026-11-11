@@ -12,6 +12,7 @@ zero.
 """
 
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider.test_utils import require_host_command
 from avocado.utils import process
 from virttest import env_process
 from virttest import error_context
@@ -35,6 +36,7 @@ def run(test, params, env):
     perf_event = params["perf_event"]
     perf_duration = params.get_numeric("perf_duration", 10)
     login_timeout = params.get_numeric("login_timeout", 240)
+    require_host_command(test, "perf", "perf")
 
     params["start_vm"] = "yes"
     vm_name = params["main_vm"]

@@ -15,15 +15,14 @@ from virttest import data_dir, error_context, virt_vm
 from virttest import utils_misc, utils_package
 from provider.cpu_utils import check_cpu_flags
 from provider.cpuid_utils import check_cpuid, prepare_cpuid
-from provider.test_utils import get_baremetal_dir
+from provider.test_utils import get_baremetal_dir, require_guest_command
 
 
-def _install_guest_packages(test, session):
+def _install_guest_packages(session):
     """Install the required guest packages for compilation and MSR checks."""
     pkg_candidates = ["gcc", "msr-tools"]
     for pkg_name in pkg_candidates:
-        if not utils_package.package_install(pkg_name, session):
-            test.cancel("Failed to install package %s" % pkg_name)
+        utils_package.package_install(pkg_name, session)
 
 
 def _check_guest_bus_lock_capability(test, params, vm, session):
@@ -74,6 +73,7 @@ def _update_split_lock_mode(test, session, split_lock_mode):
 
 def _prepare_guest_bus_lock_tool(test, params, vm, session):
     """Copy and compile bus_lock test tool in guest."""
+    require_guest_command(test, session, "gcc", "gcc")
     deps_subdir = params["deps_subdir"]
     source_file = params.get("bus_lock_source_file_tdx", params["bus_lock_source_file"])
     exec_file = params.get("bus_lock_exec_file_tdx", params["bus_lock_exec_file"])
@@ -117,8 +117,7 @@ def _run_tdx_ac_handle(test, params, env):
     guest_tool = None
 
     try:
-        if not utils_package.package_install("gcc", session):
-            test.cancel("Failed to install gcc in the guest")
+        utils_package.package_install("gcc", session)
 
         error_context.context("Compile the split-lock trigger in the TD", test.log.info)
         guest_tool = _prepare_guest_bus_lock_tool(test, params, vm, session)
@@ -189,8 +188,9 @@ def _get_bus_lock_db_lines(session):
     return lines
 
 
-def _get_guest_msr_bit(session):
+def _get_guest_msr_bit(test, session):
     """Read IA32_DEBUGCTL[2] raw value from guest."""
+    require_guest_command(test, session, "rdmsr", "msr-tools")
     session.cmd("modprobe msr")
     return session.cmd_output("rdmsr 0x01d9 -0 --bitfield 2:2").strip()
 
@@ -391,7 +391,7 @@ def run(test, params, env):
     trace_retry = ratelimit_retry if not is_tdx else False
     try:
         error_context.context("Install required packages in guest", test.log.info)
-        _install_guest_packages(test, session)
+        _install_guest_packages(session)
 
         error_context.context("Check guest bus lock capability", test.log.info)
         _check_guest_bus_lock_capability(test, params, vm, session)
@@ -414,7 +414,7 @@ def run(test, params, env):
         )
 
         error_context.context("Check guest MSR bit for bus lock detection", test.log.info)
-        msr_bit_value = _get_guest_msr_bit(session)
+        msr_bit_value = _get_guest_msr_bit(test, session)
         if msr_bit_value != str(expected_msr_bit):
             test.fail("Guest MSR bit[2] mismatch for split_lock_detect=%s" % split_lock_mode)
 
