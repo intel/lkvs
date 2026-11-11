@@ -9,8 +9,9 @@
 
 from provider import dmesg_router  # pylint: disable=unused-import
 from avocado.utils import process, cpu
-from virttest import error_context, env_process
+from virttest import error_context, env_process, utils_package
 from provider.cpu_utils import check_cpu_flags
+from provider.test_utils import require_host_command
 
 
 @error_context.context_aware
@@ -28,6 +29,8 @@ def run(test, params, env):
     if cpu.get_cpu_vendor_name() != 'intel':
         test.cancel("This test is supposed to run on Intel host")
 
+    utils_package.package_install("msr-tools")
+    require_host_command(test, "rdmsr", "msr-tools")
     rdmsr_cmd = params["rdmsr_cmd"]
     if process.getoutput(rdmsr_cmd) != "1":
         test.fail("Platform does not support TDX-SEAM")

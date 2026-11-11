@@ -7,6 +7,7 @@
 #
 # History:  Aug. 2024 - Xudong Hao - creation
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider.test_utils import require_host_command
 from avocado.utils import process
 
 from virttest import env_process
@@ -22,9 +23,8 @@ def get_tdx_kids(params, test):
     :param test: QEMU test object
     """
     msr_pkg = params.get("msr_pkg")
-    if not utils_package.package_install(msr_pkg):
-        test.cancel("Failed to install package %s." % msr_pkg)
-
+    utils_package.package_install(msr_pkg)
+    require_host_command(test, "rdmsr", msr_pkg)
     output = process.getoutput(params.get("rdmsr_cmd"))
     # Bit [63:32]:   Number of TDX private KeyIDs
     tdx_kids = int(output[:-8], 16)

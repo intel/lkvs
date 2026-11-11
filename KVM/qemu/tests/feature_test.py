@@ -14,7 +14,7 @@ import aexpect
 from avocado.core import exceptions
 from virttest import error_context
 from virttest import utils_package
-from provider.test_utils import get_baremetal_dir
+from provider.test_utils import get_baremetal_dir, require_guest_command
 from provider.cpu_utils import check_cpu_flags
 from provider.cpuid_utils import check_cpuid, prepare_cpuid
 
@@ -60,8 +60,8 @@ def prepare_test_suite(test, params, vm_test_path, session):
     if session.cmd_status("test -f %s" % vm_test_makefile):
         return
 
-    if not utils_package.package_install("gcc", session):
-        test.cancel("Failed to install package gcc.")
+    utils_package.package_install("gcc", session)
+    require_guest_command(test, session, "gcc", "gcc")
 
     install_guest_dependency(test, params, session)
 
@@ -86,8 +86,8 @@ def _build_cpuid_check(test, guest_bm_path, session):
     session so the sequential runner can resolve it via PATH.
     """
     tool_path = os.path.join(guest_bm_path, "tools", "cpuid_check")
-    if not utils_package.package_install("gcc", session):
-        test.cancel("Failed to install package gcc.")
+    utils_package.package_install("gcc", session)
+    require_guest_command(test, session, "gcc", "gcc")
     build_cmd = "cd %s && make" % tool_path
     status, output = session.cmd_status_output(build_cmd, timeout=120)
     if status:

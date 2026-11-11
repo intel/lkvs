@@ -20,7 +20,10 @@ This handler validates the hypervisor side of CET, covering:
 from provider import dmesg_router  # pylint: disable=unused-import
 from avocado.utils import process
 from virttest import error_context, env_process, utils_package
-from provider.test_utils import get_baremetal_dir
+from provider.test_utils import (
+    get_baremetal_dir,
+    require_guest_command,
+)
 from provider.cpuid_utils import check_cpuid, prepare_cpuid
 from provider.cpu_utils import check_cpu_flags
 
@@ -138,8 +141,8 @@ def run(test, params, env):
         if cet_test_type == "xsave":
             error_context.context("Check IA32_XSS CET bit on guest",
                                   test.log.info)
-            if not utils_package.package_install("msr-tools", session):
-                test.cancel("Failed to install msr-tools in guest")
+            utils_package.package_install("msr-tools", session)
+            require_guest_command(test, session, "rdmsr", "msr-tools")
             msr_cmd = "modprobe msr && rdmsr %s -f %s" % (
                 params["xss_msr"], params["xss_msr_bitfield"])
             xss_value = session.cmd_output(msr_cmd).strip()

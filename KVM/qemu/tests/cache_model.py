@@ -16,6 +16,7 @@ against the expected values (parallels XVS ``check_cpuid_cache_info``).
 import re
 
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider.test_utils import ensure_cpuid_command
 from avocado.utils import process
 from virttest import env_process
 from virttest import error_context
@@ -223,17 +224,8 @@ def run(test, params, env):
 
             # Ensure the `cpuid` tool is available in guest.
             cpuid_pkg = params.get("cpuid_pkg", "cpuid")
-            if session.cmd_status("which cpuid") != 0:
-                if not utils_package.package_install(cpuid_pkg, session):
-                    test.cancel(
-                        "Failed to install '%s' package in guest; "
-                        "cannot verify CPUID.4 cache descriptors" % cpuid_pkg
-                    )
-                if session.cmd_status("which cpuid") != 0:
-                    test.error(
-                        "'cpuid' tool still not found in guest after "
-                        "installing package '%s'" % cpuid_pkg
-                    )
+            utils_package.package_install(cpuid_pkg, session)
+            ensure_cpuid_command(test, vm, session)
 
             guest_cpuid = _parse_guest_cpuid_cache(session)
             if guest_cpuid is None:

@@ -9,6 +9,7 @@ from avocado.core import exceptions
 from avocado.utils import process
 
 from virttest import utils_package
+from provider.test_utils import require_guest_command, require_host_command
 
 
 def prepare_cpuid(test, params, src_dir, vm=None, session=None):
@@ -31,8 +32,11 @@ def prepare_cpuid(test, params, src_dir, vm=None, session=None):
     else:
         test_dir = src_dir
 
-    if not utils_package.package_install("gcc", session):
-        test.cancel("Failed to install package gcc.")
+    utils_package.package_install("gcc", session)
+    if session:
+        require_guest_command(test, session, "gcc", "gcc")
+    else:
+        require_host_command(test, "gcc", "gcc")
 
     compile_cmd = "cd %s && gcc %s -o %s" % (test_dir, source_file, exec_file)
     if session:

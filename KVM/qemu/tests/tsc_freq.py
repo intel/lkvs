@@ -13,19 +13,21 @@ from avocado.utils import process
 from virttest import error_context, env_process
 from virttest.utils_misc import verify_dmesg
 from virttest import utils_package
+from provider.test_utils import ensure_cpuid_command
 
 
-def get_tsc_freq(params, test, session=None):
+def get_tsc_freq(params, test, vm=None, session=None):
     """
     Check tsc frequency on host or guest.(only for Linux now)
     :param params: Dictionary with the test parameters
     :param test: QEMU test object
+    :param vm: VM object used to install the fallback binary in the guest
     :param session: guest session
     """
     cpuid_pkg = params.get("cpuid_pkg")
     # Set up guest environment
-    if not utils_package.package_install(cpuid_pkg, session):
-        test.cancel("Failed to install package %s." % cpuid_pkg)
+    utils_package.package_install(cpuid_pkg, session)
+    ensure_cpuid_command(test, vm, session)
 
     check_cpuid_entry_cmd = params.get("cpuid_entry_cmd")
     func = process.getoutput
@@ -77,7 +79,7 @@ def run(test, params, env):
             expect_tsc_freq = host_tsc_freq
 
         error_context.context("Get TSC frequency from VM", test.log.info)
-        vm_tsc_freq = get_tsc_freq(params, test, session)
+        vm_tsc_freq = get_tsc_freq(params, test, vm, session)
         if vm_tsc_freq != expect_tsc_freq:
             test.fail("TSC value in guest is not as expected")
     finally:
