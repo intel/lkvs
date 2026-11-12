@@ -150,7 +150,7 @@ timed_pebs_msr_test() {
 
 # Test Uncore Events
 uncore_events_test() {
-  uncore_events=$(perf list | grep uncore | grep "PMU event" | awk '{print $1}') 
+  uncore_events=$(perf list | grep uncore | grep "PMU event" | awk '{print $1}')
   for uncore_event in $uncore_events; do
     test_print_trc "uncore_event=$uncore_event"
     do_cmd "perf stat -e $uncore_event sleep 1"
