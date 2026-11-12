@@ -1,0 +1,6 @@
+# Negative test: MCA bank 4 is intentionally NOT present in dmr_mcbanks[]
+# (drivers/edac/intel-bff.c), so a yellow-status corrected error logged on
+# this bank must be ignored by the BFF driver (no reset, no overflow report).
+CPU 0 BANK 4
+MCGSTATUS TES_P
+STATUS CORRECTED TES_YELLOW

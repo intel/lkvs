@@ -1,0 +1,13 @@
+# Negative test: log an uncorrected (UC) error that also carries yellow
+# TES bits. bff_mce_notify() checks `mce->status & MCI_STATUS_UC` and bails
+# out (TES is undefined for uncorrected errors per the driver comment)
+# before ever checking TES, so this must produce no reset/overflow report.
+#
+# The POLL keyword forces mce-inject's non-exception/logged-only path
+# (MCJ_EXCEPTION cleared) instead of the default behavior of raising a real
+# synchronous #MC exception for UC errors, so this injection is safe to run
+# and still reaches the MCE decoder notifier chain via machine_check_poll().
+CPU 0 BANK 3
+MCGSTATUS TES_P
+STATUS UNCORRECTED TES_YELLOW
+POLL

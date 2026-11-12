@@ -1,0 +1,7 @@
+# Log a corrected error with yellow status on MCA bank 17 (IOCACHE - I/O
+# Cache). Unlike the cache-scoped banks, HSF/IOCACHE instances are
+# identified by IMH (Integrated Memory Hub) id, derived from socket id and
+# APICID bit 2 (see bff_set_imh_id() in drivers/edac/intel-bff.c).
+CPU 0 BANK 17
+MCGSTATUS TES_P
+STATUS CORRECTED TES_YELLOW

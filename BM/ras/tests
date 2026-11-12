@@ -42,7 +42,12 @@ lmce_test.sh -t diffaddr_diffsocket_instr/data
 lmce_test.sh -t diffddr_diffsocket_data/data
 
 # MCE corrected error threshold (yellow status) test
+bff_test.sh -t bff_support_check
 bff_test.sh -t bff_yellow
+bff_test.sh -t bff_bank_coverage
+bff_test.sh -t bff_unsupported_bank
+bff_test.sh -t bff_uc_ignored
+bff_test.sh -t bff_frequent_overflow
 
 # EINJ v2 error injection test cases
 einjv2_test.sh -t einjv2_memory
