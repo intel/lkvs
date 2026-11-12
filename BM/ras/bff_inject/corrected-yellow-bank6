@@ -1,0 +1,6 @@
+# Log a corrected error with yellow status on MCA bank 6 (CCF - Core/Cache
+# Coherency Fabric), one of the bitfix-filter-capable banks on Diamond
+# Rapids (see dmr_mcbanks[] in drivers/edac/intel-bff.c).
+CPU 0 BANK 6
+MCGSTATUS TES_P
+STATUS CORRECTED TES_YELLOW

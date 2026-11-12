@@ -10,6 +10,7 @@ Current BM/ras covers following features:
 * EINJv2 memory error injection
 * LMCE (Local Machine Check Exception)
 * MCE corrected error threshold (yellow status via mce-inject)
+* BFF (Bitfix Filter) corrected error threshold and overflow handling (DMR+)
 
 ## Submodules
 
