@@ -57,8 +57,17 @@ def run(test, params, env):
     tdx_kids = get_tdx_kids(params, test)
     # The TDX module itself requires one KeyID
     td_vms = tdx_kids - 1
-    if (params.get("overrange_tdx_kids") is not None) and (params['overrange_tdx_kids'] == 'yes'):
+    overrange_tdx_kids = params.get("overrange_tdx_kids") == "yes"
+    if overrange_tdx_kids:
         td_vms = tdx_kids
+    max_guest_count = params.get_numeric("max_guest_count", 0)
+    if max_guest_count and td_vms > max_guest_count:
+        if overrange_tdx_kids:
+            test.cancel(
+                "Cannot test the out-of-range TDX KeyID at %d guests; "
+                "network limit is %d" % (td_vms, max_guest_count)
+            )
+        td_vms = max_guest_count
     vms_list = ["vm" + str(x) for x in range(1, td_vms + 1)]
     params['vms'] = " ".join(vms_list)
 
