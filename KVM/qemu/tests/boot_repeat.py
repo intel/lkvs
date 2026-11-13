@@ -12,14 +12,13 @@ from virttest import error_context
 from virttest import utils_misc
 
 
-def _boot_vms_and_verify(test, env, vm_names, timeout, params, started_vms, mem_size=None):
+def _boot_vms_and_verify(test, env, vm_names, params, started_vms, mem_size=None):
     """
     Helper function to boot VMs, verify and login, then destroy.
 
     :param test: Test object
     :param env: Environment object
     :param vm_names: List of VM names to boot
-    :param timeout: Login timeout in seconds
     :param params: Test parameters dict
     :param started_vms: List to track created VMs for cleanup
     :param mem_size: Optional memory size in MB to set for VMs
@@ -40,7 +39,7 @@ def _boot_vms_and_verify(test, env, vm_names, timeout, params, started_vms, mem_
             started_vms.append(vm)
         for vm in started_vms:
             vm.verify_alive()
-            session = vm.wait_for_login(timeout=timeout)
+            session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
             session.close()
     finally:
         for vm in started_vms:
@@ -60,7 +59,6 @@ def run(test, params, env):
     :param env: Dictionary with test environment
     """
 
-    timeout = int(params.get_numeric("login_timeout", 240))
     cycles = int(params.get_numeric("cycles", 1))
     vm_names = params.objects("vms")
     if not vm_names:
@@ -103,7 +101,7 @@ def run(test, params, env):
             )
 
             started_vms = []
-            _boot_vms_and_verify(test, env, vm_names, timeout, params, started_vms, mem_size)
+            _boot_vms_and_verify(test, env, vm_names, params, started_vms, mem_size)
     else:
         # Original boot_repeat logic for iterations
         for iteration in range(1, cycles + 1):
@@ -112,4 +110,4 @@ def run(test, params, env):
                 "Boot repeat iteration %s/%s" % (iteration, cycles),
                 test.log.info,
             )
-            _boot_vms_and_verify(test, env, vm_names, timeout, params, started_vms)
+            _boot_vms_and_verify(test, env, vm_names, params, started_vms)

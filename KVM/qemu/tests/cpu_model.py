@@ -81,8 +81,7 @@ def run(test, params, env):
                     test.fail("%s cpuid check fail in guest." % cpuid_arg)
             test.log.info("Guest cpuid check %s pass.", cpuid_args)
 
-        timeout = params.get_numeric("login_timeout", 240)
-        session = vm.wait_for_login(timeout=timeout)
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
         feature_names = params.get("features")
         cpuid_args = params.get("cpuid")
         if feature_names is None and cpuid_args is None:

@@ -34,7 +34,6 @@ def run(test, params, env):
     perf_events = params["perf_events"]
     perf_duration = params.get_numeric("perf_duration", 5)
     expected_output = params["perf_expected_output"]
-    login_timeout = params.get_numeric("login_timeout", 240)
 
     event_args = " ".join("-e %s" % ev.strip() for ev in perf_events.split(","))
     perf_cmd = "perf stat %s -a -- sleep %d 2>&1" % (event_args, perf_duration)
@@ -44,7 +43,7 @@ def run(test, params, env):
     env_process.preprocess_vm(test, params, env, params["main_vm"])
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
-    session = vm.wait_for_login(timeout=login_timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
     error_context.context("Ensure perf tool is available in guest",
                           test.log.info)

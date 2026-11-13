@@ -41,7 +41,7 @@ def run(test, params, env):
         if serial_login:
             session = vm.wait_for_serial_login(timeout=timeout)
         else:
-            session = vm.wait_for_login(timeout=timeout)
+            session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
         session.close()
 
     if params.get("rh_perf_envsetup_script"):
@@ -49,7 +49,7 @@ def run(test, params, env):
             if serial_login:
                 session = vm.wait_for_serial_login(timeout=timeout)
             else:
-                session = vm.wait_for_login(timeout=timeout)
+                session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
             utils_test.service_setup(vm, session, test.virtdir)
             session.close()
     if params.get("reboot_method"):
@@ -62,7 +62,7 @@ def run(test, params, env):
             if serial_login:
                 session = vm.wait_for_serial_login(timeout=timeout)
             else:
-                session = vm.wait_for_login(timeout=timeout)
+                session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
             for i in range(int(params.get("reboot_count", 1))):
                 session = vm.reboot(session,
                                     params["reboot_method"],

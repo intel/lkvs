@@ -43,7 +43,6 @@ def _prepare_nbench(session, deps_dir, guest_workdir, params, vm, test):
 
 def _do_save_restore(vm, test, params):
     save_file = params["save_file"]
-    login_timeout = int(params.get("login_timeout", 240))
 
     error_context.context("Pause VM", test.log.info)
     vm.pause()
@@ -62,7 +61,7 @@ def _do_save_restore(vm, test, params):
     vm.restore_from_file(save_file)
     vm.resume()
 
-    session = vm.wait_for_login(timeout=login_timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     return session
 
 
@@ -75,9 +74,7 @@ def _do_live_migrate(vm, test, params):
     )
     vm.migrate(mig_timeout, mig_protocol)
 
-    session = vm.wait_for_login(
-        timeout=int(params.get("login_timeout", 240)),
-    )
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     return session
 
 
@@ -114,9 +111,7 @@ def run(test, params, env):
 
     session = None
     try:
-        session = vm.wait_for_login(
-            timeout=int(params.get("login_timeout", 240)),
-        )
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
         error_context.context(
             "Verify %s exposed to guest before %s" % (xsaves_flag, mode),

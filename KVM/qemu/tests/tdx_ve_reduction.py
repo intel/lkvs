@@ -135,7 +135,6 @@ def run(test, params, env):
     :param env: Dictionary with test environment
     """
     case_action = params["case_action"]
-    timeout = params.get_numeric("login_timeout", 240)
     vm_name = params["main_vm"]
 
     session = None
@@ -145,7 +144,7 @@ def run(test, params, env):
         env_process.preprocess_vm(test, params, env, vm_name)
         vm = env.get_vm(vm_name)
         vm.verify_alive()
-        session = vm.wait_for_login(timeout=timeout)
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
         error_context.context("Install guest build prerequisites", test.log.info)
         utils_package.package_install("gcc", session)

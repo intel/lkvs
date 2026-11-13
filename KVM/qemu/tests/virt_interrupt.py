@@ -35,7 +35,6 @@ def run(test, params, env):
     """
     perf_event = params["perf_event"]
     perf_duration = params.get_numeric("perf_duration", 10)
-    login_timeout = params.get_numeric("login_timeout", 240)
     require_host_command(test, "perf", "perf")
 
     params["start_vm"] = "yes"
@@ -59,7 +58,7 @@ def run(test, params, env):
         env_process.preprocess_vm(test, params, env, vm_name)
         vm = env.get_vm(vm_name)
         vm.verify_alive()
-        session = vm.wait_for_login(timeout=login_timeout)
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
         error_context.context("Wait for perf recording to complete", test.log.info)
         perf_proc.wait()

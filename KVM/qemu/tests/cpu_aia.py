@@ -59,8 +59,7 @@ def run(test, params, env):
     env_process.preprocess_vm(test, params, env, params["main_vm"])
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
-    timeout = params.get_numeric("login_timeout", 240)
-    session = vm.wait_for_login(timeout=timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
     command = params["test_command"]
     aia_test(vm, test, session, command)

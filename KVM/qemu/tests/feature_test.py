@@ -194,7 +194,6 @@ def migrate_and_verify_flags(test, params, vm, session, flags):
     :return: New guest session after the migration
     """
     mig_timeout = float(params.get("mig_timeout", 300))
-    login_timeout = params.get_numeric("login_timeout", 240)
 
     error_context.context("Verify host exposes flags before migration.",
                           test.log.info)
@@ -212,7 +211,7 @@ def migrate_and_verify_flags(test, params, vm, session, flags):
     error_context.context("Live migrate the guest.", test.log.info)
     vm.migrate(timeout=mig_timeout)
 
-    session = vm.wait_for_login(timeout=login_timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     error_context.context("Verify guest keeps flags after migration.",
                           test.log.info)
     try:
@@ -221,7 +220,7 @@ def migrate_and_verify_flags(test, params, vm, session, flags):
         # Occasionally the freshly-attached SSH channel drops right after
         # migration. Re-login once and retry the post-migration verification.
         test.log.warning("Post-migrate session dropped, re-login once")
-        session = _reconnect(session, vm, login_timeout)
+        session = _reconnect(session, vm, params)
         check_cpu_flags(params, flags, test, session)
     return session
 
@@ -258,35 +257,35 @@ def _parse_dep_line(line):
     return kind, cmd, reason
 
 
-def _reconnect(session, vm, login_timeout):
+def _reconnect(session, vm, params):
     """Best-effort close-and-relogin used when the guest SSH channel drops."""
     try:
         session.close()
     except Exception:  # pylint: disable=broad-except
         pass
-    return vm.wait_for_login(timeout=login_timeout)
+    return vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
 
-def _read_scenario_lines(session, vm, login_timeout, scen_path):
+def _read_scenario_lines(session, vm, params, scen_path):
     """
     Return the raw lines of a scenario file inside the guest.
 
     :param session: Guest session
     :param vm: The vm object (used to re-login on transient SSH drop)
-    :param login_timeout: seconds to allow for a re-login attempt
+    :param params: Dictionary with the test parameters
     :param scen_path: Absolute path of the scenario file in the guest
     :return: (session, list of raw lines) - session may be a fresh re-login
     """
     try:
         output = session.cmd_output("cat %s" % scen_path)
     except aexpect.ShellError:
-        session = _reconnect(session, vm, login_timeout)
+        session = _reconnect(session, vm, params)
         output = session.cmd_output("cat %s" % scen_path)
     return session, output.splitlines()
 
 
 def _run_one_subtest(test, session, vm, feature_path, env_prefix, cmd,
-                     per_subtest_timeout, login_timeout):
+                     per_subtest_timeout, params):
     """
     Run one subtest command in the guest via the current shell session.
 
@@ -305,7 +304,7 @@ def _run_one_subtest(test, session, vm, feature_path, env_prefix, cmd,
     except aexpect.ShellError as err:
         test.log.warning("Guest SSH dropped mid-subtest (%s), re-login once",
                          err)
-    session = _reconnect(session, vm, login_timeout)
+    session = _reconnect(session, vm, params)
     try:
         status, output = session.cmd_status_output(
             run_cmd, timeout=session_timeout, safe=True)
@@ -344,8 +343,7 @@ def run_scenarios_sequential(test, params, session, vm, guest_bm_path,
     del cmd_timeout  # kept for signature symmetry with the nested-avocado path
     feature_path = os.path.join(guest_bm_path, feature_dir_name)
     scen_path = os.path.join(feature_path, scen)
-    session, lines = _read_scenario_lines(
-        session, vm, params.get_numeric("login_timeout", 240), scen_path)
+    session, lines = _read_scenario_lines(session, vm, params, scen_path)
 
     # BM/runtests.py extends PATH with common/ and tools/cpuid_check so
     # bare names like general_test.sh and cpuid_check resolve. Include the
@@ -354,7 +352,6 @@ def run_scenarios_sequential(test, params, session, vm, guest_bm_path,
     env_prefix = ('PATH="$PATH:%s:%s/common:%s/tools/cpuid_check"'
                   % (feature_path, guest_bm_path, guest_bm_path))
     per_subtest_timeout = params.get_numeric("subtest_timeout", 120)
-    login_timeout = params.get_numeric("login_timeout", 240)
 
     subtests = []
     for line in lines:
@@ -371,7 +368,7 @@ def run_scenarios_sequential(test, params, session, vm, guest_bm_path,
                 status = session.cmd_status(
                     dep_run, timeout=per_subtest_timeout)
             except aexpect.ShellError:
-                session = _reconnect(session, vm, login_timeout)
+                session = _reconnect(session, vm, params)
                 status = session.cmd_status(
                     dep_run, timeout=per_subtest_timeout)
             if status == 0:
@@ -397,7 +394,7 @@ def run_scenarios_sequential(test, params, session, vm, guest_bm_path,
         test.log.info("[seq %s %d/%d] %s", scen, idx, total, cmd)
         session, status, output = _run_one_subtest(
             test, session, vm, feature_path, env_prefix, cmd,
-            per_subtest_timeout, login_timeout)
+            per_subtest_timeout, params)
         # BM/cet's "no_cp" glibc_shstk_test subtests occasionally SIGSEGV or
         # emit a spurious dmesg hit on this host. Give any non-zero exit
         # (including timeouts) a single retry so the migrate-verification
@@ -410,7 +407,7 @@ def run_scenarios_sequential(test, params, session, vm, guest_bm_path,
                              scen, idx, total, reason)
             session, status, output = _run_one_subtest(
                 test, session, vm, feature_path, env_prefix, cmd,
-                per_subtest_timeout, login_timeout)
+                per_subtest_timeout, params)
         if status is None or status == 124:
             timeouts.append(cmd)
             continue
@@ -476,7 +473,7 @@ def run(test, params, env):
         if check_cpuid(cpuid, prepare_cpuid(test, params, cpuid_dir)):
             test.cancel("Platform doesn't support %s" % cpuid)
     vm = env.get_vm(params['main_vm'])
-    session = vm.wait_for_login()
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
     # Copy BM test suite to guest
     test_dir = params["test_dir"]
@@ -485,7 +482,6 @@ def run(test, params, env):
     guest_bm_path = os.path.join(test_dir, "BM")
     migrate_before_test = params.get_boolean("migrate_before_test")
     migrate_verify_flags = params.get("migrate_verify_flags", "")
-    login_timeout = params.get_numeric("login_timeout", 240)
     # Variants that migrate before running subtests execute each subtest
     # directly over the shell (see run_scenarios_sequential); guest avocado
     # is not required for that path, so skip the pip install to reduce SSH
@@ -508,7 +504,7 @@ def run(test, params, env):
             except aexpect.ShellError:
                 test.log.warning("SSH dropped during cpuid_check build, "
                                  "re-login once")
-                session = _reconnect(session, vm, login_timeout)
+                session = _reconnect(session, vm, params)
                 _build_cpuid_check(test, guest_bm_path, session)
             for feature_dir_name in feature_dir_names.split():
                 vm_test_path = os.path.join(guest_bm_path, feature_dir_name)
@@ -517,7 +513,7 @@ def run(test, params, env):
                 except aexpect.ShellError:
                     test.log.warning("SSH dropped during prepare, "
                                      "re-login once")
-                    session = _reconnect(session, vm, login_timeout)
+                    session = _reconnect(session, vm, params)
                     prepare_test_suite(test, params, vm_test_path, session)
             session = migrate_and_verify_flags(test, params, vm, session,
                                                migrate_verify_flags)

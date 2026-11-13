@@ -27,8 +27,7 @@ def run(test, params, env):
 
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
-    timeout = params.get_numeric("login_timeout", 240)
-    session = vm.wait_for_login(timeout=timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     if (params.get("nmi") == "yes"):
         error_context.context("Inject NMI to TDVM", test.log.info)
         vm.monitor.cmd("inject-nmi")

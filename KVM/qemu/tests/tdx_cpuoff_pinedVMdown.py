@@ -37,8 +37,7 @@ def run(test, params, env):
         env_process.preprocess_vm(test, params, env, params["main_vm"])
         vm = env.get_vm(params["main_vm"])
         vm.verify_alive()
-        timeout = params.get_numeric("login_timeout", 240)
-        session = vm.wait_for_login(timeout=timeout)
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
         flags = params["guest_flags"]
         check_cpu_flags(params, flags, test, session)
         pid = vm.get_pid()

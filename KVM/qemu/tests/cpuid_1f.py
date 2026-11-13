@@ -57,7 +57,7 @@ def run(test, params, env):
         env_process.preprocess_vm(test, params, env, vm_name)
         vm = env.get_vm(vm_name)
         vm.verify_alive()
-        session = vm.wait_for_login()
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
         try:
             utils_package.package_install("gcc", session)
             require_guest_command(test, session, "gcc", "gcc")

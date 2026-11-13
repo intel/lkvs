@@ -37,7 +37,6 @@ def run(test, params, env):
     sr_iterations = params.get_numeric("sr_iterations", 1)
     sr_check = params.get("sr_check", "none")
     sr_timeout = params.get_numeric("sr_timeout", 600)
-    login_timeout = params.get_numeric("login_timeout", 240)
     save_path = os.path.join(test.tmpdir, "vm_state")
 
     cpuid = params.get("cpuid")
@@ -51,7 +50,7 @@ def run(test, params, env):
     env_process.preprocess_vm(test, params, env, vm_name)
     vm = env.get_vm(vm_name)
     vm.verify_alive()
-    session = vm.wait_for_login(timeout=login_timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
     try:
         if cpuid:
@@ -77,7 +76,7 @@ def run(test, params, env):
             error_context.context("Restore VM from file", test.log.info)
             vm.restore_from_file(save_path)
             vm.resume()
-            session = vm.wait_for_login(timeout=login_timeout)
+            session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
             test.log.info("Iteration %d: VM restored and login successful.", i)
 
         # Post-SR verification

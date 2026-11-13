@@ -71,7 +71,7 @@ def run(test, params, env):
     if test_tool == "mem_coh.c":
         tmp_file = "/tmp/smp-test-flag1_%s" % utils_misc.generate_random_string(6)
     vm.verify_alive()
-    session = vm.wait_for_login()
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
     tool_bin = compile_test_tool(test, params, vm, session)
     if test_tool == "mem_coh.c":

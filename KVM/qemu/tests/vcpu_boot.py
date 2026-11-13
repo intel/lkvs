@@ -40,8 +40,7 @@ def run(test, params, env):
     vm = env.get_vm(vm_name)
     vm.verify_alive()
 
-    timeout = params.get_numeric("login_timeout", 240)
-    session = vm.wait_for_login(timeout=timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     try:
         error_context.context(
             "Verify guest vCPU count is %d" % expected_vcpu, test.log.info

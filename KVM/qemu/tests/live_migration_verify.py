@@ -36,7 +36,6 @@ def run(test, params, env):
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
 
-    login_timeout = int(params.get("login_timeout", 360))
     mig_timeout = float(params.get("mig_timeout", 300))
     verify_target = params["verify_target"]
 
@@ -46,7 +45,7 @@ def run(test, params, env):
         test.cancel("Platform doesn't support %s" % cpuid)
 
     error_context.context("Log into guest before migration", test.log.info)
-    session = vm.wait_for_login(timeout=login_timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
     try:
         if verify_target == "cpuid":
@@ -73,7 +72,7 @@ def run(test, params, env):
 
         # Log in after migration
         error_context.context("Log into guest after migration", test.log.info)
-        session = vm.wait_for_login(timeout=30)
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
         # Verify post-migration state
         error_context.context(

@@ -121,9 +121,7 @@ def _run_bus_lock_exit(test, params, env):
     """Verify a BUS_LOCK VM exit is recorded on host."""
     vm = _boot_vm(test, params, env)
     try:
-        session = vm.wait_for_login(
-            timeout=params.get_numeric("login_timeout", 240)
-        )
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
         try:
             _install_guest_gcc(test, session)
             exec_path = _prepare_guest_bus_lock_tool(
@@ -164,9 +162,7 @@ def _measure_bus_lock_count(test, params, env, run_label, machine_extra):
     )
     vm = _boot_vm(test, run_params, env)
     try:
-        session = vm.wait_for_login(
-            timeout=run_params.get_numeric("login_timeout", 240)
-        )
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
         try:
             _install_guest_gcc(test, session)
             exec_path = _prepare_guest_bus_lock_tool(

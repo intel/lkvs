@@ -53,8 +53,7 @@ def run(test, params, env):
     env_process.preprocess_vm(test, params, env, params["main_vm"])
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
-    timeout = params.get_numeric("login_timeout", 240)
-    session = vm.wait_for_login(timeout=timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     copy_result = check_confident(vm, session, dump_memory_path)
     if not copy_result:
         test.fail("Secret is not found in memory dump of legacy VM")
@@ -66,8 +65,7 @@ def run(test, params, env):
     env_process.preprocess_vm(test, params, env, params["main_vm"])
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
-    timeout = params.get_numeric("login_timeout", 240)
-    session = vm.wait_for_login(timeout=timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     flags = params["guest_flags"]
     check_cpu_flags(params, flags, test, session)
     copy_result = check_confident(vm, session, dump_memory_path)

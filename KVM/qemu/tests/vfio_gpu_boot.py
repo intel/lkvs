@@ -50,7 +50,6 @@ def run(test, params, env):
             test.log.info("Cuda test pass")
 
     error_context.context("Start GPU passthrough test", test.log.info)
-    timeout = params.get_numeric("login_timeout", 240)
     vm_type = params.get("vm_secure_guest_type")
     vm_name = params['main_vm']
     if not params.get("vm_hostdev_iommufd") and vm_type == "tdx":
@@ -77,7 +76,7 @@ def run(test, params, env):
         vm.create(params=vm.params)
         vm.verify_alive()
         vm.params["vm_hostdev_slots"] = pci_slots
-        session = vm.wait_for_login(timeout=timeout)
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
         # Check GPU in guest
         try:
