@@ -230,7 +230,7 @@ def run(test, params, env):
     vm = env.get_vm(params["main_vm"])
     tmp_file = "/tmp/vsock_file_%s" % utils_misc.generate_random_string(6)
     vm.verify_alive()
-    session = vm.wait_for_login()
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     vsock_dev = params["vsocks"].split()[0]
     guest_cid = vm.devices.get(vsock_dev).get_param("guest-cid")
     port = random.randrange(1, 6000)
@@ -260,7 +260,7 @@ def run(test, params, env):
     check_guest_vsock_conn_exit(test, session, close_session=True)
 
     # Transfer data from guest to host
-    session = vm.wait_for_login()
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     rec_session = send_data_from_guest_to_host(session, tool_bin, guest_cid, tmp_file)
     utils_misc.wait_for(lambda: not rec_session.is_alive(), timeout=20)
     check_guest_vsock_conn_exit(test, session)

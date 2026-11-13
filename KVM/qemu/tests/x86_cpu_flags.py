@@ -50,7 +50,7 @@ def run(test, params, env):
 
     vm = env.get_vm(vm_name)
     error_context.context("Try to log into guest", test.log.info)
-    session = vm.wait_for_login()
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     if params["os_type"] == "linux":
         if params.get("guest_flags"):
             flags = params.get("guest_flags")

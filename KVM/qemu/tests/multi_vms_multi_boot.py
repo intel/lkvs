@@ -180,8 +180,6 @@ def run(test, params, env):
     :param env: Dictionary with test environment
     """
 
-    timeout = int(params.get_numeric("login_timeout", 240))
-
     auto_calc_guest_count = params.get("auto_calc_guest_count", "no") == "yes"
     original_nofile_limits = None
     try:
@@ -232,7 +230,7 @@ def run(test, params, env):
 
                 for vm in started_vms:
                     vm.verify_alive()
-                    session = vm.wait_for_login(timeout=timeout)
+                    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
                     session.close()
             finally:
                 for vm in started_vms:

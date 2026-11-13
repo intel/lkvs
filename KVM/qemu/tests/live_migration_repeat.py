@@ -26,13 +26,12 @@ def run(test, params, env):
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
 
-    login_timeout = int(params.get("login_timeout", 360))
     migration_iterations = int(params.get("migration_iterations", 1))
     iteration_sleep_time = int(params.get("iteration_sleep_time", 5))
     mig_timeout = float(params.get("mig_timeout", 300))
 
     error_context.context("Verify guest is bootable before migration", test.log.info)
-    session = vm.wait_for_login(timeout=login_timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     session.close()
 
     try:
@@ -47,7 +46,7 @@ def run(test, params, env):
             error_context.context(
                 "Verify guest alive after migration %d" % i, test.log.info
             )
-            session = vm.wait_for_login(timeout=30)
+            session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
             session.close()
             test.log.info("Migration iteration %d PASS", i)
     finally:

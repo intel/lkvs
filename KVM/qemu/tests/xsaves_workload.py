@@ -164,9 +164,7 @@ def run(test, params, env):
 
     session = None
     try:
-        session = vm.wait_for_login(
-            timeout=int(params.get("login_timeout", 240)),
-        )
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
         error_context.context(
             "Verify %s exposed to guest" % xsaves_flag, test.log.info,

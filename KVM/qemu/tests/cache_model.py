@@ -177,8 +177,7 @@ def run(test, params, env):
     vm = env.get_vm(vm_name)
     vm.verify_alive()
 
-    login_timeout = params.get_numeric("login_timeout", 240)
-    session = vm.wait_for_login(timeout=login_timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     try:
         error_context.context("Collect guest cache share scope", test.log.info)
         guest_scopes = _get_cache_share_scope(session)

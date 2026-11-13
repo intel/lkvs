@@ -112,8 +112,7 @@ def _run_tdx_ac_handle(test, params, env):
     """Trigger split-lock #AC and verify that the TD handles it gracefully."""
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
-    timeout = params.get_numeric("login_timeout", 240)
-    session = vm.wait_for_login(timeout=timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     guest_tool = None
 
     try:
@@ -161,9 +160,7 @@ def _run_tdx_ac_handle(test, params, env):
 
         error_context.context("Verify the TD guest remains accessible", test.log.info)
         try:
-            session = vm.wait_for_login(
-                timeout=params.get_numeric("guest_recovery_timeout", 30)
-            )
+            session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
             session.cmd("true", timeout=30)
         except (remote.LoginError, virt_vm.VMError) as err:
             failures.append("TD guest became inaccessible after #AC: %s" % err)
@@ -205,7 +202,7 @@ def _verify_guest_cmdline_with_retry(
     vm,
     session,
     split_lock_mode,
-    timeout,
+    params,
     retry_count=3,
     retry_sleep=5,
 ):
@@ -239,7 +236,7 @@ def _verify_guest_cmdline_with_retry(
                 retry_count,
                 err,
             )
-            session = vm.wait_for_login(timeout=timeout)
+            session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
             time.sleep(retry_sleep)
 
     return session
@@ -366,14 +363,13 @@ def run(test, params, env):
     expected_dmesg_count = params.get_numeric("expected_dmesg_count", 0)
     expect_bus_error = params.get_boolean("expect_bus_error")
     check_core_dump = params.get_boolean("check_core_dump")
-    timeout = params.get_numeric("login_timeout", 240)
     reboot_settle_time = params.get_numeric("reboot_settle_time", 20)
     cmdline_check_retry = params.get_numeric("cmdline_check_retry", 3)
     cmdline_check_retry_sleep = params.get_numeric("cmdline_check_retry_sleep", 5)
 
     vm = env.get_vm(vm_name)
     vm.verify_alive()
-    session = vm.wait_for_login(timeout=timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
     test_dir = params["test_dir"]
     guest_tool = None
@@ -400,7 +396,7 @@ def run(test, params, env):
                               test.log.info)
         _update_split_lock_mode(test, session, split_lock_mode)
         session.close()
-        session = vm.wait_for_login(timeout=timeout)
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
         time.sleep(reboot_settle_time)
 
         session = _verify_guest_cmdline_with_retry(
@@ -408,7 +404,7 @@ def run(test, params, env):
             vm,
             session,
             split_lock_mode,
-            timeout,
+            params,
             retry_count=cmdline_check_retry,
             retry_sleep=cmdline_check_retry_sleep,
         )

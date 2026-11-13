@@ -236,13 +236,12 @@ def run(test, params, env):
     """
     action = params["lmce_action"]
     expected_state = params["lmce_state"]
-    login_timeout = params.get_numeric("login_timeout", 240)
 
     params["start_vm"] = "yes"
     env_process.preprocess_vm(test, params, env, params["main_vm"])
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
-    session = vm.wait_for_login(timeout=login_timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
     try:
         lmce_utils.install_msr_tools(test, session)

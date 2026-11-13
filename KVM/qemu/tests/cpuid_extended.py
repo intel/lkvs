@@ -56,7 +56,6 @@ def run(test, params, env):
     :param env: Dictionary with test environment
     """
     cpuid_leaf = params["cpuid_leaf"]
-    login_timeout = params.get_numeric("login_timeout", 240)
 
     params["start_vm"] = "yes"
     vm_name = params["main_vm"]
@@ -64,7 +63,7 @@ def run(test, params, env):
     vm = env.get_vm(vm_name)
     vm.verify_alive()
 
-    session = vm.wait_for_login(timeout=login_timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     try:
         utils_package.package_install("cpuid", session)
         ensure_cpuid_command(test, vm, session)

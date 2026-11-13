@@ -99,7 +99,7 @@ def run(test, params, env):
                 if serial_login:
                     session = vm.wait_for_serial_login(timeout=timeout)
                 else:
-                    session = vm.wait_for_login(timeout=timeout)
+                    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
                 session.close()
                 vm.destroy(gracefully=gracefully)
         else:

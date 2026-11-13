@@ -190,7 +190,7 @@ def run(test, params, env):
         env_process.preprocess_vm(test, params, env, params["main_vm"])
         vm = env.get_vm(params["main_vm"])
         vm.verify_alive()
-        session = vm.wait_for_login(timeout=int(params.get("login_timeout", "120")))
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
         binary = _build_guest_victim(test, params, vm, session)
         fifo, guest_log, guest_status = _start_victim(session, binary, params)
         ready = _wait_for(lambda: _get_ready(session, guest_log), 30, 0.5)

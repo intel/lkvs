@@ -289,7 +289,7 @@ def run(test, params, env):
         vm = env.get_vm(params["main_vm"])
         vm.create(params=params)
         vm.verify_alive()
-        session = vm.wait_for_login(timeout=360)
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
         error_context.context("Verify nested KVM in L1", LOG.info)
         nested_boot._l1_verify_kvm(session, test)

@@ -58,14 +58,13 @@ def run(test, params, env):
     :param env: Dictionary with test environment.
     """
     error_context.context("Start tsc frequency test", test.log.info)
-    timeout = params.get_numeric("login_timeout", 240)
 
     vm_name = params['main_vm']
     env_process.preprocess_vm(test, params, env, vm_name)
     vm = env.get_vm(vm_name)
     vm.create()
     vm.verify_alive()
-    session = vm.wait_for_login(timeout=timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     try:
         verify_dmesg()
 

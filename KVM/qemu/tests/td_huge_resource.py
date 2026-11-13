@@ -31,7 +31,6 @@ def run(test, params, env):
     if (params.get("xfail") is not None) and (params.get("xfail") == "yes"):
         xfail = True
 
-    timeout = params.get_numeric("login_timeout", 240)
     params["start_vm"] = 'yes'
     host_cpu = cpu.online_count()
     host_free_mem = utils_misc.get_usable_memory_size()
@@ -60,6 +59,6 @@ def run(test, params, env):
     if xfail is False:
         vm = env.get_vm(vm_name)
         vm.verify_alive()
-        session = vm.wait_for_login(timeout=timeout)
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
         session.close()
         vm.destroy()

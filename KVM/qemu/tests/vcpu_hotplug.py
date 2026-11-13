@@ -101,7 +101,6 @@ def run(test, params, env):
     action = params["vcpu_action"]
     iterations = params.get_numeric("vcpu_iterations", 1)
     verify_timeout = params.get_numeric("verify_wait_timeout", 60)
-    login_timeout = params.get_numeric("login_timeout", 240)
     smp = params.get_numeric("smp")
     vcpu_devices = params.objects("vcpu_devices")
 
@@ -109,7 +108,7 @@ def run(test, params, env):
     env_process.preprocess_vm(test, params, env, params["main_vm"])
     vm = env.get_vm(params["main_vm"])
     vm.verify_alive()
-    session = vm.wait_for_login(timeout=login_timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
     try:
         initial_ids = _get_present_cpu_ids(session)

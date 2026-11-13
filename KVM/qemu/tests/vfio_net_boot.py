@@ -946,8 +946,7 @@ def _verify_bridge_nic(test, params, vm):
     error_context.context(
         f"Verify bridge NIC connectivity on {vm.name}", test.log.info
     )
-    login_timeout = params.get_numeric("login_timeout", 360)
-    session = vm.wait_for_login(timeout=login_timeout)
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     try:
         guest_ip = vm.get_address()
     finally:

@@ -87,7 +87,7 @@ def run(test, params, env):
         vm_name = params['main_vm']
         env_process.preprocess_vm(test, params, env, vm_name)
         vm = env.get_vm(vm_name)
-        session = vm.wait_for_login()
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
         vm_exec_bin = lmce_utils.build_victim(test, params, vm, session)
         vmpha_log = '/tmp/vmpha.log'
         session.cmd('%s -d -k 0 > %s 2>&1 &' % (vm_exec_bin, vmpha_log))

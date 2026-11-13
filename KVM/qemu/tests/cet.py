@@ -94,7 +94,6 @@ def run(test, params, env):
     cet_test_type = params["cet_test_type"]
     cet_flags = params["cet_flags"]
     test_dir = params["test_dir"]
-    login_timeout = params.get_numeric("login_timeout", 360)
     bm_dir = get_baremetal_dir(params)
     src_dir = "%s/%s" % (bm_dir, params["cpuid_src_subdir"])
 
@@ -122,7 +121,7 @@ def run(test, params, env):
         vm_name = params["main_vm"]
         env_process.preprocess_vm(test, params, env, vm_name)
         vm = env.get_vm(vm_name)
-        session = vm.wait_for_login()
+        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
         if cet_test_type in ("exposed", "xsave"):
             error_context.context("Check CET CPUID on guest", test.log.info)
@@ -154,7 +153,8 @@ def run(test, params, env):
             if params["disable_method"] == "guest_cmdline":
                 error_context.context("Disable CET on guest cmdline",
                                       test.log.info)
-                session = _disable_guest_cet(test, vm, session, login_timeout)
+                session = _disable_guest_cet(
+                    test, vm, session, params.get_numeric("login_timeout"))
                 grub_disabled = True
             error_context.context("Check CET flags are absent on guest",
                                   test.log.info)

@@ -36,7 +36,7 @@ def run(test, params, env):
 
     vm = env.get_vm(vm_name)
     error_context.context("Try to log into guest", test.log.info)
-    session = vm.wait_for_login()
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
     guest_dir = params["guest_dir"]
     timeout = params.get_numeric("timeout")

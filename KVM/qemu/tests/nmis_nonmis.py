@@ -34,7 +34,7 @@ def run(test, params, env):
     env_process.preprocess_vm(test, params, env, vm_name)
     vm = env.get_vm(vm_name)
     vm.verify_alive()
-    session = vm.wait_for_login()
+    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
     try:
         exec_bin = prepare_cpuid(test, params, src_dir, vm, session)
 
