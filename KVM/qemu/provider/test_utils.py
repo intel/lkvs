@@ -8,6 +8,7 @@
 # History: Sept. 2024 - Xudong Hao - creation
 
 import os
+import resource
 import shlex
 import shutil
 from virttest import data_dir, asset
@@ -17,6 +18,36 @@ from virttest import data_dir, asset
 # Source: https://www.etallen.com/cpuid/cpuid-20260503.x86_64.tar.gz
 CPUID_BINARY = os.path.join(data_dir.get_deps_dir("cpuid"), "cpuid")
 CPUID_INSTALL_PATH = "/usr/local/bin/cpuid"
+
+
+def set_host_nofile_limit(test, params):
+    """Raise the nofile soft limit and return the original limits."""
+    target_nofile = int(params.get_numeric("host_nofile_limit", 65536))
+    original_limits = resource.getrlimit(resource.RLIMIT_NOFILE)
+    soft_limit, hard_limit = original_limits
+    if hard_limit == resource.RLIM_INFINITY:
+        new_soft_limit = target_nofile
+    else:
+        new_soft_limit = min(target_nofile, hard_limit)
+
+    if soft_limit < new_soft_limit:
+        resource.setrlimit(resource.RLIMIT_NOFILE, (new_soft_limit, hard_limit))
+        if new_soft_limit < target_nofile:
+            test.log.warning(
+                "Host nofile hard limit is %s; soft limit set to %s instead of %s",
+                hard_limit,
+                new_soft_limit,
+                target_nofile,
+            )
+        else:
+            test.log.info("Host nofile soft limit set to %s", new_soft_limit)
+
+    return original_limits
+
+
+def restore_host_nofile_limit(original_limits):
+    """Restore a nofile limit returned by set_host_nofile_limit()."""
+    resource.setrlimit(resource.RLIMIT_NOFILE, original_limits)
 
 
 def require_host_command(test, command, package=None):

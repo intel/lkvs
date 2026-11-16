@@ -7,12 +7,16 @@
 #
 # History:  Aug. 2024 - Xudong Hao - creation
 from provider import dmesg_router  # pylint: disable=unused-import
-from provider.test_utils import require_host_command
+from provider.test_utils import (
+    require_host_command,
+    restore_host_nofile_limit,
+    set_host_nofile_limit,
+)
 from avocado.utils import process
 
 from virttest import env_process
 from virttest import error_context
-from virttest import utils_misc, utils_package
+from virttest import utils_misc, utils_package, virt_vm
 
 
 def get_tdx_kids(params, test):
@@ -54,54 +58,62 @@ def run(test, params, env):
     cycles = int(params.get_numeric("cycles", 1))
     gracefully = params.get("destroy_gracefully", "yes") == "yes"
 
-    tdx_kids = get_tdx_kids(params, test)
-    # The TDX module itself requires one KeyID
-    td_vms = tdx_kids - 1
-    overrange_tdx_kids = params.get("overrange_tdx_kids") == "yes"
-    if overrange_tdx_kids:
-        td_vms = tdx_kids
-    max_guest_count = params.get_numeric("max_guest_count", 0)
-    if max_guest_count and td_vms > max_guest_count:
+    original_nofile_limits = set_host_nofile_limit(test, params)
+    try:
+        tdx_kids = get_tdx_kids(params, test)
+        # The TDX module itself requires one KeyID
+        td_vms = tdx_kids - 1
+        overrange_tdx_kids = params.get("overrange_tdx_kids") == "yes"
         if overrange_tdx_kids:
-            test.cancel(
-                "Cannot test the out-of-range TDX KeyID at %d guests; "
-                "network limit is %d" % (td_vms, max_guest_count)
-            )
-        td_vms = max_guest_count
-    vms_list = ["vm" + str(x) for x in range(1, td_vms + 1)]
-    params['vms'] = " ".join(vms_list)
+            td_vms = tdx_kids
+        max_guest_count = params.get_numeric("max_guest_count", 0)
+        if max_guest_count and td_vms > max_guest_count:
+            if overrange_tdx_kids:
+                test.cancel(
+                    "Cannot test the out-of-range TDX KeyID at %d guests; "
+                    "network limit is %d" % (td_vms, max_guest_count)
+                )
+            td_vms = max_guest_count
+        vms_list = ["vm" + str(x) for x in range(1, td_vms + 1)]
+        params['vms'] = " ".join(vms_list)
 
-    host_free_mem = utils_misc.get_usable_memory_size()
-    if (int(params['mem']) * td_vms > int(host_free_mem)):
-        test.cancel("Not enough memory resource for %d TDVMs." % td_vms)
+        host_free_mem = utils_misc.get_usable_memory_size()
+        if (int(params['mem']) * td_vms > int(host_free_mem)):
+            test.cancel("Not enough memory resource for %d TDVMs." % td_vms)
 
-    error_context.context("Booting multiple %d TDVM " % td_vms, test.log.info)
-    env_process.preprocess(test, params, env)
-    vms = env.get_all_vms()
-    for cycle in range(1, cycles + 1):
-        if cycles > 1:
-            error_context.context("Boot %d TDVMs, cycle %d/%d"
-                                  % (td_vms, cycle, cycles), test.log.info)
-        has_error = False
-        try:
-            for vm in vms:
-                vm.create()
-        except:
-            has_error = True
+        error_context.context("Booting multiple %d TDVM " % td_vms, test.log.info)
+        env_process.preprocess(test, params, env)
+        vms = env.get_all_vms()
+        for cycle in range(1, cycles + 1):
+            if cycles > 1:
+                error_context.context("Boot %d TDVMs, cycle %d/%d"
+                                      % (td_vms, cycle, cycles), test.log.info)
+            has_error = False
+            for vm_index, vm in enumerate(vms, start=1):
+                try:
+                    vm.create()
+                except virt_vm.VMCreateError as error:
+                    has_error = True
+                    if (xfail is False) or (vm_index != td_vms):
+                        raise
+                    test.log.info(
+                        "The over-limit TDVM failed to start as expected: %s", error
+                    )
+                    break
+            if (has_error is False) and (xfail is True):
+                test.fail("Test was expected to fail, but it didn't")
+
             if xfail is False:
-                raise
-        if (has_error is False) and (xfail is True):
-            test.fail("Test was expected to fail, but it didn't")
-
-        if xfail is False:
-            for vm in vms:
-                vm.verify_alive()
-                if serial_login:
-                    session = vm.wait_for_serial_login(timeout=timeout)
-                else:
-                    session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
-                session.close()
-                vm.destroy(gracefully=gracefully)
-        else:
-            for vm in vms:
-                vm.destroy(gracefully=False)
+                for vm in vms:
+                    vm.verify_alive()
+                    if serial_login:
+                        session = vm.wait_for_serial_login(timeout=timeout)
+                    else:
+                        session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
+                    session.close()
+                    vm.destroy(gracefully=gracefully)
+            else:
+                for vm in vms:
+                    vm.destroy(gracefully=False)
+    finally:
+        restore_host_nofile_limit(original_nofile_limits)
