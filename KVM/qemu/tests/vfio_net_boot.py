@@ -284,6 +284,12 @@ def _verify_slots(test, params, vm, pci_slots, ext_host, ip_version):
     """
     verify_mode = params.get("hostdev_verify_mode", "ssh")
     if verify_mode == "serial":
+        if len(pci_slots) > 1:
+            test.fail(
+                "The 2vfs boot/scp cases require "
+                "hostdev_verify_mode = ssh; serial per-interface ping is "
+                "unreliable when both VFs are active on the same subnet"
+            )
         session = _open_serial_session(vm)
         try:
             for slot in pci_slots:
@@ -1028,6 +1034,14 @@ def run(test, params, env):
     executed for TDX guests where the default kernel limit is otherwise hit
     during hostdev setup; other guest types keep the kernel default.
     """
+    verify_mode = params.get("hostdev_verify_mode", "ssh")
+    if (params.get("hostdev_assignment_type") == "pf"
+            and verify_mode != "serial"):
+        test.fail(
+            "PF passthrough requires hostdev_verify_mode = serial; assigning "
+            "the PF to the guest removes the host's NIC on the test subnet, "
+            "so host-to-guest SSH verification is unavailable"
+        )
     if params.get("viommu_net_check"):
         _run_viommu_net(test, params, env)
         return
