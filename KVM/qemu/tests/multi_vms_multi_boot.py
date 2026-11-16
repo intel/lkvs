@@ -5,42 +5,14 @@
 
 import logging
 import random
-import resource
 
 from virttest import env_process
 from virttest import error_context
 from virttest import utils_misc
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider.test_utils import restore_host_nofile_limit, set_host_nofile_limit
 
 LOG = logging.getLogger("avocado.test")
-
-
-def _set_host_nofile_limit(test, params):
-    """Set host nofile soft limit for a large number of guest cases and return original limits."""
-    target_nofile = int(params.get_numeric("host_nofile_limit", 65536))
-    original_limits = resource.getrlimit(resource.RLIMIT_NOFILE)
-    soft_limit, hard_limit = original_limits
-
-    if hard_limit == resource.RLIM_INFINITY:
-        new_soft_limit = target_nofile
-    else:
-        new_soft_limit = min(target_nofile, hard_limit)
-
-    if soft_limit >= new_soft_limit:
-        return original_limits
-
-    resource.setrlimit(resource.RLIMIT_NOFILE, (new_soft_limit, hard_limit))
-    if new_soft_limit < target_nofile:
-        test.log.warning(
-            "host nofile hard limit is %s, case soft limit set to %s instead of %s",
-            hard_limit,
-            new_soft_limit,
-            target_nofile,
-        )
-    else:
-        test.log.info("host nofile soft limit set to %s for this case", new_soft_limit)
-
-    return original_limits
 
 
 def _prepare_auto_calc_guest_count(params):
@@ -184,7 +156,7 @@ def run(test, params, env):
     original_nofile_limits = None
     try:
         if auto_calc_guest_count:
-            original_nofile_limits = _set_host_nofile_limit(test, params)
+            original_nofile_limits = set_host_nofile_limit(test, params)
 
         vm_names = params.objects("vms")
         # If auto_calc_guest_count is disabled, vms must be explicitly configured
@@ -237,4 +209,4 @@ def run(test, params, env):
                     vm.destroy(gracefully=False)
     finally:
         if original_nofile_limits is not None:
-            resource.setrlimit(resource.RLIMIT_NOFILE, original_nofile_limits)
+            restore_host_nofile_limit(original_nofile_limits)
