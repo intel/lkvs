@@ -7,19 +7,49 @@
 #
 # History:  June. 2025 - Xudong Hao - creation
 
+import os
+import posixpath
+import shlex
+
 from provider import dmesg_router  # pylint: disable=unused-import
-from virttest import cpu, env_process, error_context
+from virttest import cpu, data_dir, env_process, error_context
+
+
+def _get_deps_dir(deps_subdir):
+    """Resolve a deps directory relative to this test provider."""
+    return data_dir.get_deps_dir(deps_subdir)
+
+
+def _copy_sources(vm, session, deps_dir, guest_dir):
+    """Copy the vendored Linux PKU selftest source tree into the guest."""
+    quoted_guest_dir = shlex.quote(guest_dir)
+    session.cmd("rm -rf %s && mkdir -p %s" %
+                (quoted_guest_dir, quoted_guest_dir))
+    for root, dirs, files in os.walk(deps_dir):
+        dirs.sort()
+        files.sort()
+        relative_dir = os.path.relpath(root, deps_dir)
+        guest_subdir = guest_dir
+        if relative_dir != ".":
+            guest_subdir = posixpath.join(guest_dir, relative_dir)
+            session.cmd("mkdir -p %s" % shlex.quote(guest_subdir))
+        for filename in files:
+            if filename == "README.md":
+                continue
+            vm.copy_files_to(
+                os.path.join(root, filename),
+                posixpath.join(guest_subdir, filename),
+            )
 
 
 @error_context.context_aware
 def run(test, params, env):
     """
-    Get kernel src code from kernel.org and run protection key tests in VM.
+    Build and run the vendored Linux protection key selftest in the VM.
 
-    1) Download Linux kernel source if no prepared execuable protection_keys
-    2) Checkout the correct code version and compile protection_keys.c
-    3) Run executable file 'protection_keys'
-    4) Check results
+    1) Copy the source and helper files from the LKVS deps directory
+    2) Compile the protection_keys executable in the guest
+    3) Run the executable and check its results
 
     :param test:   QEMU test object.
     :param params: Dictionary with the test parameters.
@@ -38,27 +68,25 @@ def run(test, params, env):
     error_context.context("Try to log into guest", test.log.info)
     session = vm.wait_for_login(timeout=params.get_numeric("login_timeout"))
 
-    guest_dir = params["guest_dir"]
+    guest_dir = params["guest_dir"].rstrip("/")
     timeout = params.get_numeric("timeout")
-    if params["tool_pre_compile"] == "yes":
-        run_cmd = params["tool_pre_path"]
-    else:
-        kernel_v = session.cmd_output("uname -r").strip().rsplit(".", 1)[0]
-        mkdir_cmd = session.cmd("mkdir -p %s" % guest_dir)
-        download_src_cmd = "cd %s && git clone %s" % (guest_dir, params["kernel_repo"])
-        src_version_cmd = "cd %s && git checkout %s" % (guest_dir + "linux", "v" + kernel_v)
-        test_dir = guest_dir + "linux" + params["test_dir"]
-        compile_cmd = "cd %s && " % test_dir + params["compile_cmd"]
-        run_cmd = "cd %s && " % test_dir + params["run_cmd"]
+    deps_dir = _get_deps_dir(params["deps_subdir"])
+    compile_cmd = "cd %s && %s" % (
+        shlex.quote(guest_dir), params["compile_cmd"]
+    )
+    run_cmd = "cd %s && %s" % (
+        shlex.quote(guest_dir), params["run_cmd"]
+    )
 
     try:
-        if params["tool_pre_compile"] != "yes":
-            session.cmd(mkdir_cmd)  # pylint: disable=E0606
-            error_context.context("Get kernel source code", test.log.info)
-            session.cmd(download_src_cmd, timeout=1200)  # pylint: disable=E0606
-            session.cmd(src_version_cmd, timeout)  # pylint: disable=E0606
-            session.cmd(compile_cmd, timeout)  # pylint: disable=E0606
+        if session.cmd_status("command -v gcc >/dev/null 2>&1"):
+            test.cancel("gcc is required to build the vendored PKU selftest")
+        error_context.context("Copy and compile the PKU selftest", test.log.info)
+        _copy_sources(vm, session, deps_dir, guest_dir)
+        session.cmd(compile_cmd, timeout)
         s, output = session.cmd_status_output(run_cmd, safe=True)
+        if s == 0 and "running PKEY tests for unsupported CPU/OS" in output:
+            test.cancel("Guest CPU or kernel does not support protection keys")
         success_markers = ("done (all tests OK)", "all tests OK",
                            "Totals: pass:")
         summary_ok = "fail:0" in output and "Totals:" in output
@@ -69,6 +97,6 @@ def run(test, params, env):
 
         vm.verify_kernel_crash()
     finally:
-        if params["tool_pre_compile"] == "yes":
-            session.cmd("rm -rf %s" % guest_dir)
+        session.cmd("rm -rf %s" % shlex.quote(guest_dir),
+                    ignore_all_errors=True)
         session.close()
