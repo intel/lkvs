@@ -8,6 +8,7 @@
 # History: Nov. 2025 - Farrah Chen - creation
 
 from provider import dmesg_router  # pylint: disable=unused-import
+from provider import ept_poison_utils
 from provider import lmce_utils
 import logging
 import os
@@ -56,7 +57,8 @@ def error_inject(test, params, addr):
 def run(test, params, env):
     """
     Inject error to guest memory.
-    0) Before executing this case, enable error injection, disable Patrol Scrub in BIOS
+    0) Before executing this case, enable error injection in BIOS, and set
+       Patrol Scrub: enabled for srao_* (AO), disabled for srar_* (AR)
     1) Boot up guest
     2) Run victim in guest to get a physical address in guest
     3) Run gpa2hpa in QEMU monitor to get it's host physical address
@@ -82,6 +84,7 @@ def run(test, params, env):
     lmce_state = params.get("lmce_state")
     session = None
     vm_exec_bin = None
+    kmsg = None
     test_dir = params["test_dir"]
     try:
         vm_name = params['main_vm']
@@ -101,26 +104,60 @@ def run(test, params, env):
         guest_pha = '0x%x' % guest_pha_int
         output = vm.monitor.send_args_cmd("gpa2hpa %s" % guest_pha)
         host_pha = output.split()[7]
+        host_pha_int = int(host_pha, 16)
+        vm_dmesg_start = len(session.cmd_output('dmesg').splitlines())
+        kmsg = ept_poison_utils.KmsgReader()
         error_inject(test, params, host_pha)
         vm_trigger_cmd = 'echo "trigger" > %s/trigger_start' % test_dir
         session.cmd(vm_trigger_cmd)
-        hw_mce = 'err_code:0x00a0:0x0090  SystemAddress:0x%s' % host_pha.lstrip('0x')
-        vm_mce = 'mce: Uncorrected hardware memory error in user-access at %s' % guest_pha.lstrip('0x')
+        # err_code depends on how the platform detects the poison (read vs. patrol scrub).
+        hw_mce = r'err_code:0x[0-9a-f]+:(0x[0-9a-f]+)\s+SystemAddress:0x%x\b' % host_pha_int
+        # Fallback for hosts without the skx/i10nm EDAC decoder (e.g. firmware-first).
+        hw_sigbus = r'Memory failure: 0x%x: Sending SIGBUS to ' % (host_pha_int >> 12)
+        mce_type = params.get("mce_type", "srao")
+        if mce_type == "srar":
+            vm_mce = 'mce: Uncorrected hardware memory error in user-access at %x' % guest_pha_int
+        else:
+            # The AO path only logs guest memory_failure(), no user-access line.
+            vm_mce = r'Memory failure: 0x%x:' % (guest_pha_int >> 12)
+
         # The poisoned page is consumed asynchronously: the guest victim's
         # poll loop wakes up on the trigger file, reads the page, the memory
         # controller raises the MCE, KVM forwards it, then the host EDAC path
         # decodes and logs it. Poll both dmesg streams instead of racing them.
+        def _host_log():
+            kmsg.drain()
+            return "\n".join(kmsg.records)
+
+        def _vm_log():
+            return "\n".join(session.cmd_output('dmesg').splitlines()[vm_dmesg_start:])
+
         hw_status = utils_misc.wait_for(
-            lambda: re.search(hw_mce, process.system_output('dmesg').decode('utf-8')),
+            lambda: re.search(hw_mce, _host_log()) or re.search(hw_sigbus, _host_log()),
             timeout=30, first=1, step=1)
         if not hw_status:
             raise exceptions.TestError("Failed to trigger MCE in host")
         vm_status = utils_misc.wait_for(
-            lambda: re.search(vm_mce, session.cmd_output('dmesg')),
+            lambda: re.search(vm_mce, _vm_log()),
             timeout=30, first=1, step=1)
+        edac = re.search(hw_mce, _host_log())
+        if edac:
+            mcacod = edac.group(1)
+            # SDM memory controller MCACOD 000F 0000 1MMM CCCC: MMM=100 means patrol scrub.
+            scrub = (int(mcacod, 16) & 0xeff0) == 0x00c0
+            if mce_type == "srar" and scrub:
+                test.cancel(
+                    "SRAR not exercised: host reported a patrol scrub error (MCACOD %s) "
+                    "at %s, so the guest got SRAO (AO). Disable Patrol Scrub in BIOS "
+                    "to run srar_* variants." % (mcacod, host_pha))
+            if mce_type == "srao" and not scrub:
+                test.cancel(
+                    "SRAO not exercised: host reported a non-scrub error (MCACOD %s) "
+                    "at %s, so the guest got SRAR (AR). Enable Patrol Scrub in BIOS "
+                    "to run srao_* variants." % (mcacod, host_pha))
         if not vm_status:
             raise exceptions.TestError("Failed to trigger MCE in guest")
-        vm_dmesg = session.cmd_output('dmesg')
+        vm_dmesg = _vm_log()
         vm.verify_dmesg()
 
         # LMCE variants additionally verify that KVM forwarded the MCE with
@@ -132,6 +169,8 @@ def run(test, params, env):
             lmce_utils.check_lmce_state(test, session, lmce_state)
             lmce_utils.check_lmce_marker(test, vm_dmesg, lmce_state)
 
+    except exceptions.TestCancel:
+        raise
     except Exception:
         # Only the broadcast SRAO path is exposed to the rendezvous panic;
         # emit the retry hint only for that variant so lmce=on failures are
@@ -147,6 +186,8 @@ def run(test, params, env):
             )
         raise
     finally:
+        if kmsg is not None:
+            kmsg.close()
         # Guard against the guest being unreachable after a rendezvous
         # panic: any of these cleanup commands may hang or fail, and we
         # must not mask the original exception with a cleanup NameError.
