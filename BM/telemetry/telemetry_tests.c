@@ -17,8 +17,6 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define SAMPLE_SIZE 8
-
 void print_bin(uint8_t n)
 {
 	uint8_t l = sizeof(n) * 8;
@@ -33,26 +31,30 @@ int telem_test(char *telem_dev, int size, int idx)
 	int offset = idx * getpagesize();
 	char *ptr;
 	int fd;
-	int i = 0;
+
+	if (size <= 0) {
+		printf("invalid telemetry size: %d\n", size);
+		return -1;
+	}
 
 	fd = open(telem_dev, O_RDONLY);
 	if (fd == -1) {
 		printf("open telem device failure with %s!\n", telem_dev);
 		return -1;
 	}
-	ptr = (char *)malloc(SAMPLE_SIZE * size * sizeof(char));
+	ptr = (char *)malloc(size);
 	if (!ptr) {
 		printf("malloc failure\n");
 		close(fd);
 		return -1;
 	}
-	if (read(fd, ptr, SAMPLE_SIZE * size) != SAMPLE_SIZE * size) {
+	if (read(fd, ptr, size) != size) {
 		printf("read telem device %s failure!\n", telem_dev);
 		free(ptr);
 		close(fd);
 		return -1;
 	}
-	for (i = size; i >= 0; i--) {
+	for (int i = size - 1; i >= 0; i--) {
 		printf("telem value 0x%x= ", i);
 		print_bin(ptr[i]);
 		printf("\n");

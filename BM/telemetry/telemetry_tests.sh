@@ -52,7 +52,6 @@ telem_data_test() {
   for id in $ids; do
     test_print_trc "id=$id!"
     size=$(cat "$SYSFS_PATH"/"$id"/size)
-    size=$((size - 1))
     do_cmd "ls $SYSFS_PATH/$id/telem"
     do_cmd "$tel_bin 1 $SYSFS_PATH/$id/telem $size $offset"
   done
