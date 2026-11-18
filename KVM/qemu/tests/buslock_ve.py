@@ -10,8 +10,9 @@ from provider import dmesg_router  # pylint: disable=unused-import
 from provider import kvm_trace_utils
 from provider.test_utils import require_guest_command, require_host_command
 
+from avocado.core import exceptions
 from avocado.utils import process
-from virttest import data_dir, env_process, error_context, utils_package
+from virttest import data_dir, env_process, error_context, utils_misc, utils_package
 
 
 HOST_TRACE_FILE = kvm_trace_utils.HOST_TRACE_FILE
@@ -27,6 +28,22 @@ HOST_TRACE_FILE = kvm_trace_utils.HOST_TRACE_FILE
 # Case B rows print the other basic reason name, not "BUS_LOCK").
 BUS_LOCK_EXIT_REASON_MASK = 0x4000000
 BUS_LOCK_FILTER = "exit_reason & 0x%x" % BUS_LOCK_EXIT_REASON_MASK
+
+
+def _check_host_split_lock_cmdline():
+    """Ensure host kernel cmdline contains split_lock_detect=off."""
+    try:
+        host_cmdline = utils_misc.get_ker_cmd().strip()
+    except Exception as err:  # pylint: disable=broad-except
+        raise exceptions.TestError(
+            "Failed to read host /proc/cmdline: %s" % str(err)
+        )
+
+    if "split_lock_detect=off" not in host_cmdline:
+        raise exceptions.TestError(
+            "Host kernel cmdline must include split_lock_detect=off before "
+            "running this test"
+        )
 
 
 def _check_host_bus_lock_msr(test, params):
@@ -135,9 +152,10 @@ def _run_bus_lock_exit(test, params, env):
                 error_context.context(
                     "Trigger a bus lock inside guest", test.log.info,
                 )
-                session.cmd_status(exec_path,
-                                   timeout=params.get_numeric(
-                                       "bus_lock_run_timeout", 30))
+                session.cmd(
+                    exec_path,
+                    timeout=params.get_numeric("bus_lock_run_timeout", 30),
+                )
                 time.sleep(params.get_numeric("trace_settle_time", 3))
                 _verify_host_bus_lock_exit(test)
             finally:
@@ -283,6 +301,7 @@ def run(test, params, env):
     :param env: Dictionary with test environment.
     """
     action = params["buslock_ve_action"]
+    _check_host_split_lock_cmdline()
     _check_host_bus_lock_msr(test, params)
 
     if action == "bus_lock_exit":
